@@ -2,6 +2,7 @@
 (function () {
   G.clock.init();
   G.weather.init();
+  G.events.init();
   G.indexData();
   G.tts.init();
   G.world.build();
@@ -19,6 +20,7 @@
   menu('mNet', () => G.online.panel());
   document.getElementById('mini').addEventListener('click', () => { G.audio.unlock(); G.ui.map(); });
   document.getElementById('hQuest').addEventListener('click', () => { G.audio.unlock(); G.ui.quests(); });
+  document.getElementById('hEvent').addEventListener('click', () => { G.audio.unlock(); G.events.panel(); });
   document.getElementById('hotbar').addEventListener('pointerdown', (e) => {
     const b = e.target.closest('[data-i]');
     if (!b) return;

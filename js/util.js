@@ -266,6 +266,7 @@ G.itemInfo = function (id) { return G.items[id]; };
 G.sellPrice = function (id) {
   const it = G.items[id];
   if (!it || !it.price) return 0;
-  if (it.kind === 'mod' || it.kind === 'crop') return it.price;
+  if (it.kind === 'crop') return it.price * (G.events ? G.events.sellMul(id) : 1);
+  if (it.kind === 'mod') return it.price;
   return Math.max(1, Math.floor(it.price * 0.5));
 };

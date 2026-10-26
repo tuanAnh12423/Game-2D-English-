@@ -430,6 +430,7 @@ G.ui = {
         <button class="btn ghost" data-close>Quay lại sau</button>`);
       return;
     }
+    if (G.events.door(b)) return;
     const f = this['b_' + b.t];
     if (f) f.call(this, b); else this.b_house(b);
   },
@@ -987,7 +988,8 @@ G.ui = {
         ${st === 'cur' ? `<div class="qd">${G.esc(q.desc)}</div><div class="bar"><i style="width:${Math.min(100, (pr.cur / pr.max) * 100)}%"></i></div>
         <small>${Math.min(pr.cur, pr.max)}/${pr.max} · Thưởng ${q.coins} 🪙 ${q.xp ? '+ ' + q.xp + ' XP' : ''}${q.unlock && q.unlock.length ? ' · 🔓 mở: ' + q.unlock.map((k) => FEATURES[k].icon + ' ' + FEATURES[k].name).join(', ') : ''}</small>` : ''}</div>`;
     };
-    this.open(`<h2>📜 Nhiệm vụ</h2>
+    const p = this.open(`<h2>📜 Nhiệm vụ</h2>
+      ${G.feat.has('events') ? '<button class="btn small ghost" id="qev">📢 Sự kiện & thông báo</button>' : ''}
       ${job ? `<div class="job active"><div class="jt">🔧 ${G.esc(job.vi)}: ${G.esc(job.sv)}</div><div>📍 ${G.esc(jb ? jb.name + ' — ' + jb.region.name : '')}</div>
         <div class="need">${Object.keys(job.need).map((id) => this.partChip(id, job.need[id])).join(' ')}</div></div>` : ''}
       <div class="qlist">${cur ? card(cur, 'cur') : '<div class="res good">🌟 Bạn đã hoàn thành toàn bộ cốt truyện!</div>'}
@@ -995,6 +997,7 @@ G.ui = {
         ${rest > 0 ? `<p class="hint">…và còn ${rest} nhiệm vụ nữa sẽ hiện ra dần dần.</p>` : ''}
         ${done.length ? `<h3>Đã hoàn thành (${done.length})</h3>` + done.slice().reverse().map((q) => card(q, 'done')).join('') : ''}</div>
       ${feats.length ? `<h3>🔓 Tính năng đã mở</h3><div class="need">${feats.map((k) => `<span class="chip ok">${FEATURES[k].icon} ${G.esc(FEATURES[k].name)}</span>`).join('')}</div>` : ''}`);
+    this.on(p, '#qev', () => G.events.panel());
   },
   map() {
     const g = G.game, L = g.level;

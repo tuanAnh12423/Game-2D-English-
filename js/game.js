@@ -569,6 +569,7 @@ G.game = {
         else G.ui.toast('☀️ The sun is out! — Trời nắng đẹp.');
       }
       this.dayTick();
+      G.events.tick();
       this.updateHud(); this.checkStory();
     }
   },
@@ -720,6 +721,8 @@ G.game = {
   guideTarget() {
     const job = this.jobBuilding();
     if (job) return { x: job.dx, y: job.dy + 1, label: 'Khách hàng' };
+    const evt = G.events.guideTarget();
+    if (evt) return evt;
     const q = this.curQuest();
     if (!q) return null;
     let type = null;
@@ -764,6 +767,7 @@ G.game = {
     else if (q) { const pr = this.storyProgress(q); txt = '📜 ' + q.title + ' (' + Math.min(pr.cur, pr.max) + '/' + pr.max + ')'; }
     else txt = '🌟 Bạn đã hoàn thành cốt truyện! Tiếp tục khám phá nhé.';
     set('hQuest', txt);
+    G.events.hud();
   },
 
   // ---------- Vẽ ----------

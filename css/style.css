@@ -385,6 +385,28 @@ img.bigprev { width: 100%; max-width: 320px; height: 100px; object-fit: contain;
 .tchip .dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; box-shadow: 0 0 0 1px #ccd; }
 @media (max-width: 520px) { .tryon { flex-direction: column; } .tryon img { width: 100%; } }
 
+/* ---------- Sự kiện ---------- */
+#hEvent {
+  position: fixed; left: calc(6px + var(--sal)); top: calc(100px + var(--sat)); max-width: min(62vw, 440px); display: none;
+  background: linear-gradient(90deg, #fff3b0, #ffe3ee); border-radius: 14px; padding: 5px 12px; font-size: 12px; font-weight: 800;
+  box-shadow: 0 3px 10px rgba(160,80,130,.2); z-index: 5; border: 2px solid #ffd166; color: #8a4b00; cursor: pointer;
+}
+#hEvent.live { background: linear-gradient(90deg, #ff9ec7, #c3a6ff); color: #fff; border-color: #fff; animation: evpulse 1.6s ease-in-out infinite; }
+@keyframes evpulse { 50% { transform: scale(1.03); } }
+.evcard { border: 2px solid var(--line); background: #fff; border-radius: 18px; padding: 10px 12px; margin: 8px 0; font-size: 13.5px; line-height: 1.5; }
+.evcard.live { border-color: #ff9ec7; background: #fff3f8; box-shadow: 0 0 0 3px rgba(255,158,199,.25); }
+.evcard.soon { border-color: #ffd166; background: #fffbea; text-align: left; }
+.evcard.lockd { opacity: .7; border-style: dashed; }
+.evh { font-size: 15px; margin-bottom: 2px; }
+.evh small { color: var(--muted); font-weight: 600; }
+.kind.live { background: #ff6f9f; color: #fff; } .kind.ok { background: #d9f5e5; color: #2f7a52; } .kind.cert { background: #efe7ff; color: #6a4bc4; }
+.stamps { display: flex; justify-content: center; gap: 10px; font-size: 34px; margin: 8px 0; }
+.stamps span { width: 54px; height: 54px; border-radius: 50%; border: 3px dashed #ffb3d1; display: flex; align-items: center; justify-content: center; color: #ffc4d9; }
+.stamps span.on { border-style: solid; background: #fff0f6; }
+.cert { border: 4px double #e0b34a; background: linear-gradient(#fffdf3, #fff4d6); border-radius: 14px; padding: 12px; margin: 10px auto; max-width: 360px; }
+.cert small { display: block; letter-spacing: 1.5px; color: #a07a24; font-weight: 800; }
+.cert b { display: block; font-size: 22px; color: #c2255c; margin: 4px 0; }
+
 /* ---------- Màn hình tiêu đề ---------- */
 #title {
   position: fixed; inset: 0; z-index: 40; display: flex; padding: 16px;
@@ -411,6 +433,7 @@ img.bigprev { width: 100%; max-width: 320px; height: 100px; object-fit: contain;
   .hmenu { gap: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: 120px; }
   #mini { top: calc(90px + var(--sat)); width: 96px; height: 72px; }
   #hQuest { max-width: calc(100vw - 120px); font-size: 11.5px; }
+  #hEvent { max-width: calc(100vw - 120px); font-size: 11px; top: calc(96px + var(--sat)); }
   #btnA { width: 74px; height: 74px; font-size: 26px; bottom: calc(76px + var(--sab)); }
   #phone { right: calc(14px + var(--sar)); bottom: calc(160px + var(--sab)); width: 62px; height: 62px; }
   .opts { grid-template-columns: 1fr; }
@@ -424,6 +447,7 @@ img.bigprev { width: 100%; max-width: 320px; height: 100px; object-fit: contain;
   .hslot { width: 42px; height: 42px; }
   .hslot img { width: 32px; height: 32px; }
   #hQuest { top: calc(60px + var(--sat)); }
+  #hEvent { top: calc(92px + var(--sat)); }
   #mini { top: calc(52px + var(--sat)); }
   #banner .bn { font-size: 24px; }
 }

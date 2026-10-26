@@ -57,7 +57,7 @@ G.tea = {
   price(shop, o) {
     const d = shop.drinks.find((v) => v.id === o.drink), si = shop.sizes.findIndex((v) => v.id === o.size);
     const tp = shop.toppings.find((v) => v.id === o.top);
-    return Math.round(d.price[si] / 2) + ((tp && tp.coins) || 0);
+    return Math.max(1, Math.round((Math.round(d.price[si] / 2) + ((tp && tp.coins) || 0)) * G.events.teaMul()));
   },
   orderVi(shop, o) {
     const d = shop.drinks.find((v) => v.id === o.drink), sz = shop.sizes.find((v) => v.id === o.size);
@@ -257,6 +257,7 @@ G.tea = {
     setTimeout(() => G.tts.speak(line), 200);
     s.phrases[this.orderEn(shop, o)] = { th: 'cafe', tip: 'Order trà sữa ở ' + shop.name, t: Date.now() };
     g.addXp(xp);
+    G.events.onDrink();
     g.checkStory();
   },
 

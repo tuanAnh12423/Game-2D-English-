@@ -568,6 +568,7 @@ G.world = {
       ctx.fillStyle = '#6b3d5a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(label, X + W / 2 - 2, sy + 10.5);
       ctx.textBaseline = 'alphabetic';
+      G.events.decorate(ctx, b, t);
     });
   },
 

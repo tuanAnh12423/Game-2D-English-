@@ -183,6 +183,7 @@ window.FEATURES = {
   farm: { icon: '🌱', name: 'Trồng trọt & thanh đồ nhanh', how: 'Bạn nhận được bình tưới và hạt giống. Chọn hạt ở thanh đồ nhanh dưới màn hình, đứng trên ruộng cạnh nhà bấm 🌱 Gieo, rồi 💧 Tưới. Cây lớn theo giờ thực!' },
   tea: { icon: '🧋', name: 'Quán trà sữa KOI Thé & Phê La', how: 'Chọn món rồi tự NÓI order bằng tiếng Anh. Nhân viên rất khó tính — sai 2 lần là bị từ chối phục vụ!' },
   mall: { icon: '🛍️', name: 'Trung Tâm Thương Mại & tủ đồ', how: 'Khu Mua Sắm (phía đông Chợ Linh Kiện): mua quần áo, giày, phụ kiện bằng tiếng Anh với nhân viên bán hàng, rồi thay đồ cho nhân vật trong Tủ đồ.' },
+  events: { icon: '📢', name: 'Sự kiện & thông báo', how: 'Hội thảo máy giặt, tủ lạnh, máy lọc nước, Ngày hội trà sữa, Chợ phiên… diễn ra theo giờ thật mỗi tuần. Bạn được báo trước 3 ngày và nhắc trước khi bắt đầu. Bấm dòng 📢 dưới nhiệm vụ để xem lịch.' },
   afterhours: { icon: '📵', name: 'Khách gọi ngoài giờ', how: 'Buổi tối hoặc ngày nghỉ, khách có thể gọi bắt bạn đến ngay. Hãy từ chối lịch sự bằng tiếng Anh và hẹn ngày làm việc kế tiếp.' },
 };
 
@@ -200,7 +201,7 @@ window.STORY = [
   { id: 'q_words5', title: 'Thợ săn từ vựng', desc: 'Chạm vào các quả cầu chữ phát sáng trên đường và trả lời đúng để thu thập 5 từ tiếng Anh.', type: 'words', n: 5, coins: 20, xp: 30, unlock: ['library'] },
   { id: 'q_parts3', title: 'Nhặt linh kiện', desc: 'Nhặt 3 loại linh kiện khác nhau đang phát sáng trên đường (điện trở, tụ, LED...).', type: 'parts', n: 3, coins: 20, xp: 30, unlock: ['jobs'] },
   { id: 'q_job1', title: 'Đơn sửa chữa đầu tiên', desc: 'Nhận 1 đơn ở Trung Tâm Bảo Hành và đến nhà khách hàng sửa xong.', type: 'jobs', n: 1, coins: 40, xp: 50, unlock: ['work', 'phone'] },
-  { id: 'q_talk3', title: 'Trò chuyện', desc: 'Trò chuyện tốt (2 sao trở lên) với 3 người — bấm 💬 khi đứng gần.', type: 'talk', n: 3, coins: 30, xp: 40, unlock: ['farm'] },
+  { id: 'q_talk3', title: 'Trò chuyện', desc: 'Trò chuyện tốt (2 sao trở lên) với 3 người — bấm 💬 khi đứng gần.', type: 'talk', n: 3, coins: 30, xp: 40, unlock: ['farm', 'events'] },
   { id: 'q_plant3', title: 'Nhà nông tập sự', desc: 'Gieo 3 hạt giống ở ruộng cạnh nhà (chọn hạt ở thanh đồ nhanh, đứng trên ruộng, bấm 🌱). Nhớ tưới nước!', type: 'plant', n: 3, coins: 25, xp: 30, unlock: ['tea'] },
   { id: 'q_tea1', title: 'Một ly trà sữa', desc: 'Vào 🧋 KOI Thé (Phố Trung Tâm) và order thành công một ly bằng giọng nói tiếng Anh. Nhân viên rất khó tính!', type: 'drinks', n: 1, coins: 30, xp: 40, unlock: ['mall'] },
   { id: 'q_call1', title: 'Nghe máy tổng đài', desc: 'Hỗ trợ khách qua điện thoại bằng tiếng Anh: nghe máy khi điện thoại 📞 đổ chuông trong giờ làm, hoặc luyện ở Trung Tâm Bảo Hành → “Luyện nghe máy tổng đài”.', type: 'calls', n: 1, coins: 30, xp: 40 },
