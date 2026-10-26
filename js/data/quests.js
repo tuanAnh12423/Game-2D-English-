@@ -170,23 +170,28 @@ window.DIALOGS = {
 };
 
 // ============================================================
-// CỐT TRUYỆN CHÍNH — chuỗi nhiệm vụ theo thứ tự.
-//   type: enter (vào toà nhà loại `target`), words, parts (số loại),
-//         jobs, craft, talk, level, regions
+// CỐT TRUYỆN CHÍNH — làm lần lượt; mỗi nhiệm vụ có `id` riêng (không đổi id
+// đã có, để file lưu cũ vẫn đúng). Thêm nhiệm vụ mới: chèn vào vị trí bất kỳ.
+//   type: enter (vào toà nhà loại `target`), words, parts (số loại), jobs,
+//         craft, talk, level, regions, plant, harvest, calls, convo3
 // ============================================================
 window.STORY = [
-  { title: 'Ngày đầu đi làm', desc: 'Đi đến Trung tâm Bảo hành ở Phố Trung Tâm (phía đông nhà bạn) để nhận việc.', type: 'enter', target: 'service', n: 1, coins: 20, xp: 20 },
-  { title: 'Thợ săn từ vựng', desc: 'Thu thập 5 từ tiếng Anh (quả cầu chữ phát sáng).', type: 'words', n: 5, coins: 20, xp: 30 },
-  { title: 'Nhặt linh kiện', desc: 'Nhặt 3 loại linh kiện khác nhau rơi trên đường.', type: 'parts', n: 3, coins: 20, xp: 30 },
-  { title: 'Đơn sửa chữa đầu tiên', desc: 'Nhận 1 đơn ở Trung tâm Bảo hành và đến nhà khách hàng sửa xong.', type: 'jobs', n: 1, coins: 40, xp: 50 },
-  { title: 'Trò chuyện', desc: 'Trả lời đúng khi nói chuyện với 3 người (bấm nút 💬 khi đứng gần).', type: 'talk', n: 3, coins: 30, xp: 40 },
-  { title: 'Ghé Chợ Linh Kiện', desc: 'Đến Chợ Linh Kiện (cần Level 2) để mua bán linh kiện.', type: 'enter', target: 'shop', n: 1, coins: 30, xp: 30 },
-  { title: 'Kỹ sư tập sự', desc: 'Lắp ráp 1 mạch ở Xưởng Lắp Ráp (Chợ Linh Kiện).', type: 'craft', n: 1, coins: 40, xp: 60 },
-  { title: 'Vốn từ 30', desc: 'Sở hữu 30 từ vựng trong Từ điển.', type: 'words', n: 30, coins: 60, xp: 80 },
-  { title: 'Lên Level 5', desc: 'Đạt cấp độ 5 để mở các vùng đất xa hơn.', type: 'level', n: 5, coins: 80, xp: 0 },
-  { title: 'Nhà sưu tầm', desc: 'Sưu tầm 15 loại linh kiện khác nhau.', type: 'parts', n: 15, coins: 100, xp: 120 },
-  { title: 'Kỹ thuật viên lành nghề', desc: 'Hoàn thành 10 đơn sửa chữa.', type: 'jobs', n: 10, coins: 150, xp: 150 },
-  { title: 'Nhà thám hiểm', desc: 'Đặt chân tới tất cả các vùng đất.', type: 'regions', n: 0, coins: 200, xp: 200 },
-  { title: 'Bậc thầy từ vựng', desc: 'Sở hữu 100 từ vựng.', type: 'words', n: 100, coins: 300, xp: 300 },
-  { title: 'Chuyên gia linh kiện', desc: 'Sưu tầm đủ tất cả các loại linh kiện.', type: 'parts', n: 0, coins: 300, xp: 300 },
+  { id: 'q_work', title: 'Ngày đầu đi làm', desc: 'Đi đến Trung Tâm Bảo Hành ở Phố Trung Tâm (phía đông nhà bạn) để nhận việc.', type: 'enter', target: 'service', n: 1, coins: 20, xp: 20 },
+  { id: 'q_words5', title: 'Thợ săn từ vựng', desc: 'Thu thập 5 từ tiếng Anh (quả cầu chữ phát sáng).', type: 'words', n: 5, coins: 20, xp: 30 },
+  { id: 'q_parts3', title: 'Nhặt linh kiện', desc: 'Nhặt 3 loại linh kiện khác nhau rơi trên đường.', type: 'parts', n: 3, coins: 20, xp: 30 },
+  { id: 'q_plant3', title: 'Nhà nông tập sự', desc: 'Gieo 3 hạt giống ở ruộng cạnh nhà (chọn hạt ở thanh đồ nhanh, đứng trên ruộng, bấm 🌱). Nhớ tưới nước!', type: 'plant', n: 3, coins: 25, xp: 30 },
+  { id: 'q_job1', title: 'Đơn sửa chữa đầu tiên', desc: 'Nhận 1 đơn ở Trung Tâm Bảo Hành và đến nhà khách hàng sửa xong.', type: 'jobs', n: 1, coins: 40, xp: 50 },
+  { id: 'q_talk3', title: 'Trò chuyện', desc: 'Trò chuyện tốt (2 sao trở lên) với 3 người — bấm 💬 khi đứng gần.', type: 'talk', n: 3, coins: 30, xp: 40 },
+  { id: 'q_call1', title: 'Nghe máy tổng đài', desc: 'Khi điện thoại 📞 đổ chuông, bấm vào để nghe và hỗ trợ khách hàng bằng tiếng Anh.', type: 'calls', n: 1, coins: 30, xp: 40 },
+  { id: 'q_harvest5', title: 'Mùa thu hoạch', desc: 'Thu hoạch 5 nông sản. Cây lớn theo thời gian thực, kể cả khi bạn tắt game!', type: 'harvest', n: 5, coins: 40, xp: 50 },
+  { id: 'q_shop', title: 'Ghé Chợ Linh Kiện', desc: 'Đến Chợ Linh Kiện (cần Level 2) để mua bán linh kiện.', type: 'enter', target: 'shop', n: 1, coins: 30, xp: 30 },
+  { id: 'q_craft', title: 'Kỹ sư tập sự', desc: 'Lắp ráp 1 mạch ở Xưởng Lắp Ráp (Chợ Linh Kiện).', type: 'craft', n: 1, coins: 40, xp: 60 },
+  { id: 'q_words30', title: 'Vốn từ 30', desc: 'Sở hữu 30 từ vựng trong Từ điển.', type: 'words', n: 30, coins: 60, xp: 80 },
+  { id: 'q_convo5', title: 'Giao tiếp tự tin', desc: 'Đạt ⭐⭐⭐ trong 5 cuộc hội thoại khác nhau.', type: 'convo3', n: 5, coins: 80, xp: 100 },
+  { id: 'q_lv5', title: 'Lên Level 5', desc: 'Đạt cấp độ 5 để mở các vùng đất xa hơn.', type: 'level', n: 5, coins: 80, xp: 0 },
+  { id: 'q_parts15', title: 'Nhà sưu tầm', desc: 'Sưu tầm 15 loại linh kiện khác nhau.', type: 'parts', n: 15, coins: 100, xp: 120 },
+  { id: 'q_jobs10', title: 'Kỹ thuật viên lành nghề', desc: 'Hoàn thành 10 đơn sửa chữa.', type: 'jobs', n: 10, coins: 150, xp: 150 },
+  { id: 'q_regions', title: 'Nhà thám hiểm', desc: 'Đặt chân tới tất cả các vùng đất.', type: 'regions', n: 0, coins: 200, xp: 200 },
+  { id: 'q_words100', title: 'Bậc thầy từ vựng', desc: 'Sở hữu 100 từ vựng.', type: 'words', n: 100, coins: 300, xp: 300 },
+  { id: 'q_partsall', title: 'Chuyên gia linh kiện', desc: 'Sưu tầm đủ tất cả các loại linh kiện.', type: 'parts', n: 0, coins: 300, xp: 300 },
 ];

@@ -10,21 +10,24 @@
 //   sea     : true = có biển ở mép dưới · river: {x, w} = sông dọc
 //   ponds   : số hồ nước · deco: mật độ cây/hoa/đá/bụi
 //   dialog  : chủ đề hội thoại của người đi đường (quests.js)
+//   farms   : các thửa ruộng [{x, y, w, h}] để trồng trọt
 //   buildings: t = loại toà nhà:
 //      home · service · shop · library · cafe · house · station
-//      factory · hotel · airport
+//      factory · hotel · airport · farmshop
 //   Toà nhà KHÔNG được đè lên đường giữa (hàng 16–19, cột 22–25).
-//   Toà nhà phía trên đường có cửa ở dưới, phía dưới đường có cửa ở trên.
+//   Cửa luôn ở mặt trước (phía dưới); lối đi ra đường lớn được tạo tự động.
 // ============================================================
 window.REGIONS = [
   {
     id: 'village', name: 'Làng Ven Sông', en: 'Riverside Village', gx: 0, gy: 1, level: 1, ground: 'grass',
-    words: ['daily', 'home', 'food'], parts: ['resistor', 'led', 'fuse', 'ceramic', 'diode', 'buzzer', 'elcap'],
+    words: ['daily', 'home', 'food', 'farm'], parts: ['resistor', 'led', 'fuse', 'ceramic', 'diode', 'buzzer', 'elcap'],
     river: { x: 40, w: 3 }, ponds: 1, deco: { tree: 0.05, flower: 0.05, rock: 0.006, bush: 0.012 }, npcs: 3, dialog: 'street',
     spawn: { x: 30, y: 15 },
+    farms: [{ x: 16, y: 8, w: 6, h: 5 }],
     buildings: [
       { t: 'home', x: 27, y: 9, w: 6, h: 5, name: 'Nhà của bạn' },
       { t: 'house', x: 10, y: 8, w: 5, h: 4, name: 'Nhà bà Hoa' },
+      { t: 'farmshop', x: 34, y: 8, w: 5, h: 4, name: 'Tiệm Nông Sản' },
       { t: 'house', x: 28, y: 23, w: 5, h: 4, name: 'Nhà chú Tư' },
       { t: 'house', x: 10, y: 23, w: 5, h: 4, name: 'Nhà cô Mai' },
       { t: 'station', x: 33, y: 20, w: 3, h: 2, name: 'Trạm xe buýt' },
@@ -57,8 +60,9 @@ window.REGIONS = [
   },
   {
     id: 'park', name: 'Công Viên Hồ Sen', en: 'Lotus Lake Park', gx: 1, gy: 2, level: 2, ground: 'grass',
-    words: ['nature', 'daily', 'food'], parts: ['ntc', 'resistor', 'led', 'mov', 'inductor', 'tfuse', 'buzzer'],
+    words: ['nature', 'daily', 'farm'], parts: ['ntc', 'resistor', 'led', 'mov', 'inductor', 'tfuse', 'buzzer'],
     ponds: 4, deco: { tree: 0.06, flower: 0.09, rock: 0.01, bush: 0.015 }, npcs: 4, dialog: 'street',
+    farms: [{ x: 35, y: 23, w: 6, h: 4 }],
     buildings: [
       { t: 'cafe', x: 8, y: 7, w: 6, h: 4, name: 'Quán Kem' },
       { t: 'house', x: 32, y: 8, w: 5, h: 4, name: 'Nhà ông Sáu' },
@@ -134,4 +138,5 @@ window.BUILDING_TYPES = {
   factory: { icon: '🏭', roof: '#546e7a', wall: '#cfd8dc' },
   hotel: { icon: '🏨', roof: '#00838f', wall: '#e0f7fa' },
   airport: { icon: '✈️', roof: '#455a64', wall: '#eceff1' },
+  farmshop: { icon: '🌱', roof: '#7cb342', wall: '#f9fbe7' },
 };

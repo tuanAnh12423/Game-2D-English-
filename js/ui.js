@@ -1,26 +1,27 @@
-// Giao diện: hộp thoại, đố từ, cửa hàng, xưởng, từ điển, bản đồ...
+// Giao diện: hộp thoại, đố từ, kho đồ, cửa hàng, xưởng, hội thoại, từ điển, bản đồ...
 G.ui = {
-  stack: 0,
   el(id) { return document.getElementById(id); },
   isOpen() { return this.el('modal').classList.contains('on'); },
 
   open(html, opts = {}) {
     const m = this.el('modal'), p = this.el('panel');
+    const keep = opts.keepScroll && this.isOpen() ? p.scrollTop : 0;
     p.className = 'panel' + (opts.cls ? ' ' + opts.cls : '');
-    p.innerHTML = (opts.noClose ? '' : '<button class="x" data-close>✕</button>') + html;
+    p.innerHTML = (opts.noClose ? '' : '<button class="x" data-close aria-label="Đóng">✕</button>') + html;
     m.classList.add('on');
     G.input.reset();
     document.getElementById('joy').classList.remove('on');
-    p.scrollTop = 0;
+    p.scrollTop = keep;
     this.onClose = opts.onClose || null;
     p.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => { G.audio.sfx('click'); this.close(); }));
-    p.querySelectorAll('[data-say]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); G.tts.speak(b.dataset.say); }));
+    this.bindSay(p);
     return p;
   },
+  bindSay(root) { root.querySelectorAll('[data-say]').forEach((b) => { if (b.dataset.bound) return; b.dataset.bound = 1; b.addEventListener('click', (e) => { e.stopPropagation(); G.tts.speak(b.dataset.say); }); }); },
   close() {
     this.el('modal').classList.remove('on');
     const cb = this.onClose; this.onClose = null;
-    if (G.game.state) G.game.updateHud(true);
+    if (G.game.state) { G.game.updateHud(true); this.renderHotbar(); }
     if (cb) cb();
     if (!this.isOpen() && this.toastQ && this.toastQ.length) { const q = this.toastQ.splice(0); q.forEach(([m, t], i) => setTimeout(() => this.toast(m, t), i * 700)); }
     if (!this.isOpen() && this.pending) { const f = this.pending; this.pending = null; setTimeout(f, 60); }
@@ -28,15 +29,15 @@ G.ui = {
   on(p, sel, fn) { p.querySelectorAll(sel).forEach((b) => b.addEventListener('click', (e) => { G.audio.sfx('click'); fn(b, e); })); },
 
   toast(msg, type) {
-    if (this.isOpen()) { (this.toastQ = this.toastQ || []).push([msg, type]); return; }
+    if (this.isOpen()) { (this.toastQ = this.toastQ || []).push([msg, type]); if (this.toastQ.length > 4) this.toastQ.shift(); return; }
     const box = this.el('toasts');
     const d = document.createElement('div');
     d.className = 'toast' + (type ? ' ' + type : '');
     d.textContent = msg;
     box.appendChild(d);
     while (box.children.length > 3) box.removeChild(box.firstChild);
-    setTimeout(() => d.classList.add('out'), 3200);
-    setTimeout(() => d.remove(), 3700);
+    setTimeout(() => d.classList.add('out'), 3400);
+    setTimeout(() => d.remove(), 3900);
   },
   banner(name, en, isNew) {
     const b = this.el('banner');
@@ -49,31 +50,54 @@ G.ui = {
     const ok = need === undefined || have >= need;
     return `<span class="chip ${ok ? 'ok' : 'miss'}"><img src="${G.partImg(id, 28)}" alt="">${G.esc(it.vi)}${need !== undefined ? ` <b>${have}/${need}</b>` : ''}</span>`;
   },
+  stars(m, max = 5) { return '<span class="stars">' + '★'.repeat(Math.min(m, max)) + '<i>' + '★'.repeat(max - Math.min(m, max)) + '</i></span>'; },
 
-  // ---------- Màn hình giới thiệu ----------
+  // ---------- Thanh đồ nhanh (6 ô đầu của balo) ----------
+  renderHotbar() {
+    const hb = this.el('hotbar'), s = G.state;
+    if (!hb || !s || !s.inv) return;
+    let html = '';
+    for (let i = 0; i < 6; i++) {
+      const sl = s.inv[i];
+      html += `<button class="hslot${i === s.sel ? ' sel' : ''}" data-i="${i}">${sl ? `<img src="${G.partImg(sl.id, 36)}" alt=""><b>${sl.n > 1 ? sl.n : ''}</b>` : ''}</button>`;
+    }
+    if (hb.innerHTML !== html) hb.innerHTML = html;
+  },
+  hotbarTap(i) {
+    const s = G.state;
+    if (s.sel === i && s.inv[i]) { this.bag(false); return; }
+    s.sel = i;
+    this.renderHotbar();
+    const sl = s.inv[i], nm = this.el('hbname');
+    nm.textContent = sl ? G.items[sl.id].vi + ' · ' + G.items[sl.id].en : 'Ô trống';
+    nm.classList.remove('show'); void nm.offsetWidth; nm.classList.add('show');
+    G.audio.sfx('click');
+  },
+
+  // ---------- Giới thiệu ----------
   intro() {
-    const p = this.open(`
+    this.open(`
       <h2>👷 Chào mừng, Kỹ thuật viên!</h2>
-      <p>Bạn là <b>Minh</b>, một KTV trẻ vừa nhận việc ở <b>Trung Tâm Bảo Hành</b>. Thế giới rộng lớn đang chờ bạn khám phá:</p>
+      <p>Bạn là <b>Minh</b>, KTV trẻ vừa nhận việc ở <b>Trung Tâm Bảo Hành</b>. Game chạy theo <b>giờ thực</b> của điện thoại: sáng, chiều, tối, thời tiết đều thay đổi.</p>
       <ul class="howto">
-        <li><span class="orb">Aa</span> <b>Quả cầu chữ</b>: chạm vào để học từ tiếng Anh, trả lời đúng để thu thập.</li>
-        <li><img src="${G.partImg('resistor', 28)}"> <b>Linh kiện</b>: nhặt điện trở, tụ, IC, rơ-le... và đọc cách đo kiểm.</li>
-        <li>🛠️ <b>Đi làm</b>: nhận đơn ở Trung Tâm Bảo Hành, mang đủ linh kiện tới nhà khách để sửa.</li>
-        <li>🔌 <b>Chợ Linh Kiện</b>: mua bán và <b>lắp ráp mạch</b> ở Xưởng.</li>
-        <li>💬 <b>Nói chuyện</b> với người đi đường để luyện giao tiếp.</li>
-        <li>⭐ Lên cấp để mở khoá vùng đất mới: biển, rừng, khu công nghiệp, sân bay...</li>
+        <li><span class="orb">A</span> <span><b>Quả cầu chữ</b>: chạm vào để học từ tiếng Anh, trả lời đúng để thu thập.</span></li>
+        <li><img src="${G.partImg('resistor', 28)}"> <span><b>Linh kiện</b>: nhặt điện trở, tụ, IC, rơ-le... và đọc cách đo kiểm.</span></li>
+        <li><img src="${G.partImg('seed_tomato', 28)}"> <span><b>Trồng trọt</b>: ruộng cạnh nhà. Chọn hạt ở <b>thanh đồ nhanh</b>, đứng trên ruộng bấm 🌱, nhớ 💧 tưới. Cây lớn cả khi tắt game!</span></li>
+        <li>🛠️ <span><b>Đi làm</b>: nhận đơn ở Trung Tâm Bảo Hành, nói chuyện với khách và chẩn đoán lỗi bằng tiếng Anh.</span></li>
+        <li>💬📞 <span><b>Giao tiếp</b>: hội thoại nhiều lượt có chấm sao; khách hàng sẽ <b>gọi điện</b> bất chợt; bấm 🎤 để luyện nói.</span></li>
+        <li>🎒 <span><b>Kho đồ</b>: balo dạng ô, 📦 kho 48 ô ở nhà. Lên cấp để mở vùng đất mới.</span></li>
       </ul>
-      <p class="hint">🕹️ Kéo ngón tay ở <b>nửa trái</b> màn hình để đi. Bấm nút tròn bên phải để <b>Vào nhà / Nói chuyện</b>.</p>
-      <button class="btn big" data-close>Bắt đầu ngày làm việc! 🚀</button>`);
-    return p;
+      <p class="hint">🕹️ Kéo ngón tay ở <b>nửa trái</b> màn hình để đi. Nút tròn bên phải để <b>Vào nhà / Nói chuyện / Gieo / Tưới / Thu hoạch</b>.</p>
+      <button class="btn big" data-close>Bắt đầu thôi! 🚀</button>`);
   },
 
   levelUp(L, opened) {
-    if (this.isOpen()) { const prev = this.pending; this.pending = () => { if (prev) prev(); this.levelUp(L, opened); }; return; }
+    if (this.isOpen()) { this.pending = () => this.levelUp(L, opened); return; }
     const txt = opened.length ? `<p>🔓 Mở khoá vùng đất: <b>${opened.map((r) => G.esc(r.name)).join(', ')}</b></p>` : '';
-    const shopTier = [0, 1, 2, 2, 3, 3, 3, 4][Math.min(7, L)] || 4;
+    const newCrops = CROPS.filter((c) => c.level === L);
     this.open(`<div class="center"><div class="big-emoji">🎉</div><h2>LEVEL UP! Lv ${L}</h2>${txt}
-      <p class="hint">Chợ linh kiện bán linh kiện độ hiếm ≤ ${shopTier} ⭐ · Đơn sửa chữa mới đã mở.</p>
+      ${newCrops.length ? `<p>🌱 Hạt giống mới: <b>${newCrops.map((c) => G.esc(c.vi + ' (' + c.en + ')')).join(', ')}</b></p>` : ''}
+      <p class="hint">Chợ linh kiện có hàng mới · Đơn sửa chữa mới đã mở.</p>
       <button class="btn big" data-close>Tuyệt vời!</button></div>`);
     G.game.refreshBoard(true);
   },
@@ -83,7 +107,6 @@ G.ui = {
     const s = G.state;
     const rec = s.words[w.en];
     const m = rec ? rec.m : 0;
-    // chọn kiểu câu hỏi theo độ thuộc
     const types = m === 0 ? ['vi'] : m === 1 ? ['vi', 'en'] : m === 2 ? ['en', 'listen', 'blank'] : ['listen', 'blank', 'en'];
     const type = G.pick(types);
     const sameCat = G.allWords.filter((x) => x.cat === w.cat && x.en !== w.en);
@@ -106,59 +129,184 @@ G.ui = {
     this.on(p, '.opt', (b) => {
       if (answered) return;
       answered = true;
-      const pick = opts[+b.dataset.i];
-      const ok = pick === w;
+      const ok = opts[+b.dataset.i] === w;
       p.querySelectorAll('.opt').forEach((x, i) => { if (opts[i] === w) x.classList.add('right'); else if (x === b) x.classList.add('wrong'); x.disabled = true; });
-      if (ok) {
-        const nm = Math.min(5, m + 1);
-        s.words[w.en] = { m: nm, t: Date.now() };
-        s.stats.caught++;
-        G.audio.sfx('good');
-      } else {
-        if (rec) rec.m = Math.max(1, m - 1);
-        s.stats.wrong++;
-        G.audio.sfx('bad');
-      }
+      if (ok) { s.words[w.en] = { m: Math.min(5, m + 1), t: Date.now() }; s.stats.caught++; G.audio.sfx('good'); }
+      else { if (rec) rec.m = Math.max(1, m - 1); s.stats.wrong++; G.audio.sfx('bad'); }
       G.tts.speak(w.ex);
-      this.el('qres').innerHTML = `
+      const res = this.el('qres');
+      res.innerHTML = `
         <div class="res ${ok ? 'good' : 'bad'}">${ok ? (rec ? '✅ Chính xác! Độ thuộc tăng lên.' : '✅ Chính xác! Đã thêm vào Từ điển.') : '❌ Chưa đúng. Quả cầu đã bay đi, bạn sẽ gặp lại nó sau!'}</div>
         <div class="wcard">
           <div><b class="en">${G.esc(w.en)}</b> ${this.sayBtn(w.en)} <span class="ipa">${G.esc(w.ipa)}</span></div>
           <div class="vi">= ${G.esc(w.vi)}</div>
           <div class="ex">${G.esc(w.ex)} ${this.sayBtn(w.ex)}</div>
         </div>
+        ${G.stt.supported ? `<button class="btn ghost" id="qmic">🎤 Luyện đọc từ này</button><div id="qmicres"></div>` : ''}
         <button class="btn big" id="qok">Tiếp tục</button>`;
-      this.el('qres').querySelectorAll('[data-say]').forEach((x) => x.addEventListener('click', () => G.tts.speak(x.dataset.say)));
+      this.bindSay(res);
+      const mic = this.el('qmic');
+      if (mic) mic.addEventListener('click', () => this.speakPractice(w.en, this.el('qmicres')));
       this.el('qok').addEventListener('click', () => { G.audio.sfx('click'); this.close(); done && done(ok); });
     });
   },
-  stars(m) { return '<span class="stars">' + '★'.repeat(Math.min(m, 5)) + '<i>' + '★'.repeat(5 - Math.min(m, 5)) + '</i></span>'; },
 
-  // ---------- Thẻ thông tin linh kiện ----------
-  partCard(id, isNew) {
+  // ---------- Thẻ thông tin vật phẩm ----------
+  partCard(id, isNew) { this.itemCard(id, isNew); },
+  itemCard(id, isNew) {
     const it = G.itemInfo(id);
-    const isMod = !!G.recipeById[id];
-    const html = `
-      ${isNew ? '<div class="tag gold">✨ Linh kiện mới được thêm vào Sổ tay!</div>' : ''}
-      <div class="pcard">
-        <img src="${G.partImg(id, 96)}" alt="">
-        <div>
-          <h2>${G.esc(it.vi)}</h2>
-          <div class="en">${G.esc(it.en)} ${this.sayBtn(it.en)}</div>
-          <div class="rar">${isMod ? 'Mô-đun lắp ráp' : '⭐'.repeat(it.rarity) + ' · Giá ' + it.price + ' 🪙'}</div>
-        </div>
-      </div>
-      ${isMod ? `<div class="sec"><h4>📘 Kiến thức</h4><p>${G.esc(it.learn)}</p></div>` : `
+    if (!it) return;
+    let body = '';
+    if (it.kind === 'part') body = `
       <div class="sec"><h4>📘 Chức năng</h4><p>${G.esc(it.desc)}</p></div>
       <div class="sec"><h4>🔍 Cách kiểm tra</h4><p>${G.esc(it.test)}</p></div>
       <div class="sec"><h4>🏠 Thường gặp trong</h4><p>${G.esc(it.used)}</p></div>
-      <p class="hint">Giá trị đo chỉ mang tính tham khảo — luôn đối chiếu tài liệu kỹ thuật của model.</p>`}
-      <button class="btn big" data-close>OK</button>`;
-    this.open(html);
+      <p class="hint">Giá trị đo chỉ mang tính tham khảo — luôn đối chiếu tài liệu kỹ thuật của model.</p>`;
+    else if (it.kind === 'mod') body = `<div class="sec"><h4>📘 Kiến thức</h4><p>${G.esc(it.learn)}</p></div>`;
+    else body = `<div class="sec"><h4>📘 Mô tả</h4><p>${G.esc(it.desc || '')}</p></div>`;
+    const sub = it.kind === 'part' ? '⭐'.repeat(it.rarity) + ' · Giá ' + it.price + ' 🪙'
+      : it.kind === 'mod' ? 'Mô-đun lắp ráp · bán ' + it.price + ' 🪙'
+        : it.kind === 'crop' ? 'Nông sản · bán ' + it.price + ' 🪙' : it.kind === 'seed' ? 'Hạt giống · ' + it.price + ' 🪙' : 'Dụng cụ';
+    this.open(`
+      ${isNew ? '<div class="tag gold">✨ Linh kiện mới được thêm vào Sổ tay!</div>' : ''}
+      <div class="pcard">
+        <img src="${G.partImg(id, 96)}" alt="">
+        <div><h2>${G.esc(it.vi)}</h2><div class="en">${G.esc(it.en)} ${this.sayBtn(it.en)}</div><div class="rar">${sub}</div></div>
+      </div>${body}
+      <button class="btn big" data-close>OK</button>`);
     G.tts.speak(it.en);
   },
 
-  // ---------- Hội thoại với NPC ----------
+  // ---------- Luyện nói (nhận giọng nói) ----------
+  speakPractice(text, box, cb) {
+    if (!box) return;
+    if (!G.stt.supported) { box.innerHTML = '<p class="hint">Thiết bị/trình duyệt này chưa hỗ trợ nhận giọng nói. Trên iPhone/iPad hãy mở bằng Safari (iOS 14.5 trở lên).</p>'; return; }
+    box.innerHTML = '<div class="mic on">🎙️ Đang nghe... hãy đọc to: <b>' + G.esc(text) + '</b></div>';
+    G.stt.listen((alts) => {
+      const best = alts.map((a) => [a, G.similarity(a, text)]).sort((a, b) => b[1] - a[1])[0];
+      const pct = Math.round(best[1] * 100);
+      const msg = pct >= 85 ? '🌟 Tuyệt vời! Phát âm rất rõ.' : pct >= 70 ? '👍 Khá tốt!' : pct >= 45 ? '🙂 Gần đúng rồi, nghe mẫu 🔊 và thử lại nhé.' : '🔁 Máy chưa nghe rõ, hãy nói chậm và to hơn.';
+      box.innerHTML = `<div class="mic ${pct >= 70 ? 'good' : 'bad'}"><b>${pct}%</b> ${msg}<br><small>Máy nghe được: “${G.esc(best[0])}”</small></div>`;
+      if (pct >= 70) G.state.stats.spoke++;
+      cb && cb(best[1]);
+    }, (err) => {
+      const m = err === 'not-allowed' || err === 'service-not-allowed' ? 'Bạn cần cho phép dùng micro và nhận dạng giọng nói (Cài đặt → Safari → Micro).'
+        : err === 'nospeech' || err === 'no-speech' ? 'Không nghe thấy gì. Bấm 🎤 lại và nói to hơn nhé.' : 'Không nhận được giọng nói (' + err + ').';
+      box.innerHTML = `<div class="mic bad">${m}</div>`;
+    });
+  },
+
+  // ---------- Hội thoại ----------
+  fill(text, ctx = {}) {
+    const night = G.game.nightRaw() > 0.3, w = G.game.weather;
+    const wt = WEATHER_TALK[w === 'sunny' && night ? 'night' : w] || WEATHER_TALK.sunny;
+    return String(text).replace(/\{greet\}/g, G.clock.greet()).replace(/\{wrong\}/g, G.clock.wrongGreet())
+      .replace(/\{weather_q\}/g, wt.q).replace(/\{weather_a\}/g, wt.a)
+      .replace(/\{appliance\}/g, ctx.appliance || 'appliance').replace(/\{symptom\}/g, ctx.symptom || '')
+      .replace(/\{symptom_vi\}/g, ctx.symptomVi || '');
+  },
+  chatNpc(n) {
+    const s = G.state;
+    const theme = { street: 'street', service: 'street', shop: 'shop', travel: 'travel', factory: 'factory' }[n.r.dialog] || 'street';
+    const list = CONVOS.filter((c) => c.theme === theme);
+    const fresh = list.filter((c) => (s.convos[c.id] || 0) < 3);
+    if (list.length && (fresh.length || Math.random() < 0.5)) this.convo(G.pick(fresh.length ? fresh : list), { who: n.name, look: n.look });
+    else this.talk(n);
+  },
+  // Hội thoại nhiều lượt có chấm điểm
+  convo(c, opts = {}) {
+    const s = G.state, ctx = opts.ctx || {};
+    const who = opts.who || c.who + (opts.phone ? ' 📞' : '');
+    const look = opts.look || G.NPC_LOOKS[(c.look || 0) % G.NPC_LOOKS.length];
+    const st = { i: 0, pts: 0, max: c.steps.length * 2, log: [] };
+    const render = () => {
+      if (st.i >= c.steps.length) return finish();
+      const step = c.steps[st.i];
+      const npc = this.fill(step.npc, ctx), vi = this.fill(step.vi, ctx);
+      const options = G.shuffle(step.o.map((o) => ({ t: this.fill(o[0], ctx), sc: o[1], tip: o[2] })));
+      let missed = 0, locked = false;
+      const p = this.open(`
+        <div class="tag">${opts.phone ? '📞 Cuộc gọi' : '💬 Hội thoại'} · ${G.esc(c.title)} · Lượt ${st.i + 1}/${c.steps.length}</div>
+        ${st.log.length ? `<div class="chat">${st.log.map((l) => `<div class="msg ${l.me ? 'me' : 'them'}">${G.esc(l.t)}</div>`).join('')}</div>` : ''}
+        <div class="talk">
+          <canvas class="face${opts.phone ? ' phone' : ''}" width="128" height="128"></canvas>
+          <div class="bubble"><b>${G.esc(who)}</b><div class="say-en">${G.esc(npc)} ${this.sayBtn(npc)}</div>
+            <div class="say-vi ${s.settings.vi ? '' : 'hide'}">${G.esc(vi)}</div>
+            ${s.settings.vi ? '' : '<button class="mini" id="showvi">Xem nghĩa</button>'}</div>
+        </div>
+        <p class="qtxt">Chọn câu trả lời <b>tự nhiên & lịch sự</b> nhất:</p>
+        <div class="opts">${options.map((o, k) => `<button class="opt left" data-k="${k}">${G.esc(o.t)}</button>`).join('')}</div>
+        <div id="cres"></div>`, { onClose: opts.onCancel });
+      const fc = p.querySelector('.face').getContext('2d');
+      fc.scale(2, 2);
+      G.drawChar(fc, 32, 62, 0, 0, look, 1.55);
+      if (opts.phone) { fc.font = '16px system-ui'; fc.fillText('📞', 42, 20); }
+      const sv = this.el('showvi');
+      if (sv) sv.addEventListener('click', () => { p.querySelector('.say-vi').classList.remove('hide'); sv.remove(); });
+      setTimeout(() => G.tts.speak(npc), 200);
+      this.on(p, '.opt', (b) => {
+        if (locked) return;
+        const o = options[+b.dataset.k];
+        const res = this.el('cres');
+        if (o.sc === 0) {
+          missed++; b.classList.add('wrong'); b.disabled = true;
+          G.audio.sfx('bad'); G.tts.speak("Sorry? I don't quite understand.");
+          res.innerHTML = `<div class="res bad">❌ ${G.esc(o.tip)}<br><i>“Sorry? I don’t quite understand.”</i> — Hãy chọn lại.</div>`;
+          return;
+        }
+        locked = true;
+        const best = options.find((x) => x.sc === 2);
+        st.pts += Math.max(0, o.sc - missed * 0.5);
+        p.querySelectorAll('.opt').forEach((x, k) => { const oo = options[k]; if (oo === best) x.classList.add('right'); else if (x === b) x.classList.add('okish'); x.disabled = true; });
+        s.phrases[best.t] = { th: c.theme, tip: best.tip, t: Date.now() };
+        st.log.push({ t: npc }); st.log.push({ t: o.t, me: true });
+        G.audio.sfx(o.sc === 2 ? 'good' : 'ok');
+        G.tts.speak(best.t);
+        res.innerHTML = `
+          <div class="res ${o.sc === 2 ? 'good' : 'mid'}">${o.sc === 2 ? '✅ Rất tốt! ' : '🟡 Hiểu được, nhưng chưa hay. '}${G.esc(o.tip)}</div>
+          ${o.sc === 2 ? '' : `<div class="wcard"><small>Câu hay hơn:</small><div class="en">${G.esc(best.t)} ${this.sayBtn(best.t)}</div><div class="ex">${G.esc(best.tip)}</div></div>`}
+          ${G.stt.supported ? `<button class="btn ghost" id="cmic">🎤 Luyện nói câu mẫu</button><div id="cmicres"></div>` : ''}
+          <button class="btn big" id="cnext">${st.i + 1 < c.steps.length ? 'Tiếp ›' : 'Kết thúc'}</button>`;
+        this.bindSay(res);
+        let spoke = false;
+        const mic = this.el('cmic');
+        if (mic) mic.addEventListener('click', () => this.speakPractice(best.t, this.el('cmicres'), (sc) => {
+          if (sc >= 0.7 && !spoke) { spoke = true; G.game.addXp(5); }
+        }));
+        this.el('cnext').addEventListener('click', () => { G.audio.sfx('click'); st.i++; render(); });
+        p.scrollTop = p.scrollHeight;
+      });
+    };
+    const finish = () => {
+      const ratio = st.pts / st.max;
+      const stars = ratio >= 0.9 ? 3 : ratio >= 0.6 ? 2 : 1;
+      const prev = s.convos[c.id] || 0;
+      s.convos[c.id] = Math.max(prev, stars);
+      if (stars >= 2) s.stats.talks++;
+      const xp = Math.round(6 * c.steps.length * stars / 3) + (prev === 0 ? 10 : 0);
+      const coins = stars * 2 + (opts.phone ? 10 : 0);
+      if (opts.onEnd) {
+        this.onClose = null;
+        G.game.addXp(xp);
+        opts.onEnd(stars);
+        G.game.checkStory();
+        return;
+      }
+      G.audio.sfx(stars === 3 ? 'level' : 'good');
+      const p = this.open(`<div class="center"><div class="big-stars">${'⭐'.repeat(stars)}<i>${'⭐'.repeat(3 - stars)}</i></div>
+        <h2>${stars === 3 ? 'Xuất sắc!' : stars === 2 ? 'Khá tốt!' : 'Cần luyện thêm'}</h2>
+        <p>${G.esc(c.title)} · +${xp} XP · +${coins} 🪙</p></div>
+        <h3>📝 Toàn bộ hội thoại</h3>
+        <div class="chat full">${st.log.map((l) => `<div class="msg ${l.me ? 'me' : 'them'}">${G.esc(l.t)} ${this.sayBtn(l.t)}</div>`).join('')}</div>
+        <p class="hint">📒 Các câu mẫu hay đã được lưu vào <b>Sổ tay mẫu câu</b> (📖 → Mẫu câu).</p>
+        <div class="row2"><button class="btn ghost" id="again">🔁 Luyện lại</button><button class="btn" data-close>Xong</button></div>`);
+      this.on(p, '#again', () => this.convo(c, opts));
+      G.game.addXp(xp); G.game.addCoins(coins); G.game.checkStory();
+    };
+    render();
+  },
+
+  // Hội thoại nhanh 1 lượt (người đi đường đã nói chuyện nhiều lần)
   talk(n, themeOverride, after) {
     const theme = themeOverride || n.r.dialog || 'street';
     const list = DIALOGS[theme] || DIALOGS.street;
@@ -167,8 +315,9 @@ G.ui = {
     const opts = G.shuffle(d.o);
     const s = G.state;
     const p = this.open(`
+      <div class="tag">💬 Chào hỏi nhanh</div>
       <div class="talk">
-        <canvas class="face" width="64" height="64"></canvas>
+        <canvas class="face" width="128" height="128"></canvas>
         <div class="bubble"><b>${G.esc(n.name)}</b><div class="say-en">${G.esc(d.say)} ${this.sayBtn(d.say)}</div>
           <div class="say-vi ${s.settings.vi ? '' : 'hide'}">${G.esc(d.vi)}</div>
           ${s.settings.vi ? '' : '<button class="mini" id="showvi">Xem nghĩa</button>'}</div>
@@ -177,7 +326,8 @@ G.ui = {
       <div class="opts">${opts.map((o, i) => `<button class="opt left" data-i="${i}">${G.esc(o)}</button>`).join('')}</div>
       <div id="tres"></div>`, { onClose: after });
     const fc = p.querySelector('.face').getContext('2d');
-    G.drawChar(fc, 32, 62, 0, 0, n.look, 1.6);
+    fc.scale(2, 2);
+    G.drawChar(fc, 32, 62, 0, 0, n.look, 1.55);
     const sv = this.el('showvi');
     if (sv) sv.addEventListener('click', () => { p.querySelector('.say-vi').classList.remove('hide'); sv.remove(); });
     setTimeout(() => G.tts.speak(d.say), 200);
@@ -188,10 +338,15 @@ G.ui = {
       const ok = opts[+b.dataset.i] === right;
       p.querySelectorAll('.opt').forEach((x, i) => { if (opts[i] === right) x.classList.add('right'); else if (x === b) x.classList.add('wrong'); x.disabled = true; });
       G.tts.speak(right);
-      if (ok) { s.stats.talks++; G.audio.sfx('good'); G.game.addXp(15); G.game.addCoins(3); }
+      if (ok) { s.stats.talks++; G.audio.sfx('good'); G.game.addXp(15); G.game.addCoins(3); s.phrases[right] = { th: theme, tip: 'Đáp lại: “' + d.say + '”', t: Date.now() }; }
       else G.audio.sfx('bad');
-      this.el('tres').innerHTML = `<div class="res ${ok ? 'good' : 'bad'}">${ok ? '✅ Rất tự nhiên! +15 XP, +3 🪙' : '❌ Câu đó chưa phù hợp. Câu đúng là: <b>' + G.esc(right) + '</b>'}</div><button class="btn big" data-close2>Tạm biệt 👋</button>`;
-      this.el('tres').querySelector('[data-close2]').addEventListener('click', () => this.close());
+      const res = this.el('tres');
+      res.innerHTML = `<div class="res ${ok ? 'good' : 'bad'}">${ok ? '✅ Rất tự nhiên! +15 XP, +3 🪙' : '❌ Câu đó chưa phù hợp. Câu đúng là: <b>' + G.esc(right) + '</b>'}</div>
+        ${G.stt.supported ? `<button class="btn ghost" id="tmic">🎤 Luyện nói câu đúng</button><div id="tmicres"></div>` : ''}
+        <button class="btn big" data-close2>Tạm biệt 👋</button>`;
+      const mic = this.el('tmic');
+      if (mic) mic.addEventListener('click', () => this.speakPractice(right, this.el('tmicres')));
+      res.querySelector('[data-close2]').addEventListener('click', () => this.close());
       G.game.checkStory();
     });
   },
@@ -208,18 +363,29 @@ G.ui = {
 
   b_home(b) {
     const s = G.state, g = G.game;
-    const p = this.open(`${this.head(b, 'Home sweet home — Nhà là nơi để nghỉ ngơi.')}
+    const night = g.nightRaw() > 0.3;
+    const p = this.open(`${this.head(b, night ? 'Good evening! Về nhà nghỉ ngơi sau một ngày làm việc.' : 'Home sweet home — Nhà là nơi để nghỉ ngơi.')}
       <div class="stats">
         <div>📖 Từ vựng<b>${g.ownedWords().length}/${G.allWords.length}</b></div>
+        <div>📒 Mẫu câu<b>${Object.keys(s.phrases).length}</b></div>
         <div>🔩 Loại linh kiện<b>${Object.keys(s.seen).length}/${PARTS.length}</b></div>
         <div>🔧 Đơn đã sửa<b>${s.stats.jobs}</b></div>
-        <div>💬 Hội thoại<b>${s.stats.talks}</b></div>
-        <div>🧩 Mạch đã lắp<b>${s.stats.crafts}</b></div>
-        <div>🗺️ Vùng đã đến<b>${Object.keys(s.visited).length}/${G.world.regions.length}</b></div>
+        <div>🌾 Đã thu hoạch<b>${s.stats.harvested}</b></div>
+        <div>💬 Hội thoại tốt<b>${s.stats.talks}</b></div>
+        <div>📞 Cuộc gọi<b>${s.stats.calls}</b></div>
+        <div>📅 Số ngày chơi<b>${s.days}</b></div>
       </div>
-      <button class="btn big" id="sleep">😴 Đi ngủ (sang ngày mới, lưu game)</button>
-      <button class="btn ghost" data-close>Ra ngoài</button>`);
-    this.on(p, '#sleep', () => { this.close(); g.sleep(false); });
+      <button class="btn big" id="chest">📦 Mở kho đồ (48 ô)</button>
+      <button class="btn" id="save">💾 Lưu game</button>
+      <button class="btn ghost" id="rest">${night ? '😴 Chúc ngủ ngon' : '☕ Nghỉ một chút'}</button>`);
+    this.on(p, '#chest', () => this.bag(true));
+    this.on(p, '#save', () => { g.save(); this.toast('💾 Đã lưu!'); this.close(); });
+    this.on(p, '#rest', () => {
+      const line = night ? 'Good night! Sleep well.' : 'Time for a short break.';
+      G.tts.speak(line);
+      this.close();
+      this.toast((night ? '🌙 “Good night! Sleep well.” — Chúc ngủ ngon.' : '☕ “Time for a short break.” — Nghỉ ngơi một chút.') + ' Game theo giờ thực nên cây vẫn lớn khi bạn ngủ!');
+    });
   },
 
   b_service(b) {
@@ -227,7 +393,7 @@ G.ui = {
     g.refreshBoard();
     const job = s.job ? g.jobById(s.job.id) : null;
     const jb = g.jobBuilding();
-    let html = this.head(b, 'Quản lý <b>Ms. Lan</b>: “Good morning! Here are today’s repair orders.”');
+    let html = this.head(b, 'Quản lý <b>Ms. Lan</b>: “' + G.esc(G.clock.greet()) + '! Here are today’s repair orders.”');
     if (job) {
       html += `<div class="job active"><div class="jt">🔧 Đơn đang làm: ${G.esc(job.vi)}</div>
         <div class="jen">${G.esc(job.en)} ${this.sayBtn(job.en)}</div><div class="jvi">${G.esc(job.sv)}</div>
@@ -236,7 +402,7 @@ G.ui = {
         <button class="btn ghost small" id="drop">Huỷ đơn này</button></div>`;
     }
     html += '<h3>📋 Đơn sửa chữa hôm nay</h3>';
-    if (!s.board.length) html += '<p class="hint">Hết đơn hôm nay rồi! Về nhà ngủ để nhận đơn mới vào ngày mai.</p>';
+    if (!s.board.length) html += '<p class="hint">Hết đơn hôm nay rồi! Ngày mai (theo lịch thật) sẽ có đơn mới.</p>';
     s.board.forEach((id) => {
       const j = g.jobById(id);
       if (!j) return;
@@ -245,81 +411,102 @@ G.ui = {
         <div class="need">Cần: ${Object.keys(j.need).map((pid) => this.partChip(pid, j.need[pid])).join(' ')}</div>
         <button class="btn small" data-take="${id}" ${job ? 'disabled' : ''}>${job ? 'Làm xong đơn hiện tại trước' : 'Nhận đơn'}</button></div>`;
     });
-    html += `<button class="btn ghost" id="mgr">💬 Luyện nói chuyện với khách (Call Center)</button>`;
+    html += `<button class="btn ghost" id="cc">📞 Luyện nghe máy tổng đài (Call Center)</button>`;
     const p = this.open(html);
     this.on(p, '[data-take]', (x) => { g.acceptJob(x.dataset.take); this.close(); });
     this.on(p, '#drop', () => { s.job = null; this.toast('Đã huỷ đơn.'); this.close(); });
-    this.on(p, '#mgr', () => this.talk({ name: 'Khách hàng (điện thoại)', look: G.NPC_LOOKS[1], talked: Math.floor(Math.random() * 9), r: b.region }, 'service'));
+    this.on(p, '#cc', () => this.convoMenu('service'));
   },
 
   b_house(b) {
     const g = G.game, s = G.state;
     const job = s.job && s.job.bkey === b.key ? g.jobById(s.job.id) : null;
+    const look = G.NPC_LOOKS[G.strHash(b.key) % G.NPC_LOOKS.length];
     if (!job) {
-      const p = this.open(`${this.head(b, '“Hello! Everything is working fine here, thank you!”')}
+      const p = this.open(`${this.head(b, '“' + G.esc(G.clock.greet()) + '! Everything is working fine here, thank you!”')}
         <p>Nhà này hiện không có thiết bị cần sửa. Hãy nhận đơn ở <b>Trung Tâm Bảo Hành</b>.</p>
         <button class="btn" id="chat">💬 Trò chuyện với chủ nhà</button><button class="btn ghost" data-close>Ra ngoài</button>`);
-      this.on(p, '#chat', () => this.talk({ name: 'Chủ nhà', look: G.NPC_LOOKS[G.strHash(b.key) % G.NPC_LOOKS.length], talked: Math.floor(Math.random() * 9), r: b.region }, 'service'));
+      this.on(p, '#chat', () => this.talk({ name: 'Chủ nhà', look, talked: Math.floor(Math.random() * 9), r: b.region }, 'service'));
       return;
     }
-    const hasAll = g.hasAll(job.need);
     let html = `${this.head(b, 'Khách hàng: “' + G.esc(job.en) + '” ' + this.sayBtn(job.en))}
       <div class="job active"><div class="jt">🔧 ${G.esc(job.appliance)} — ${G.esc(job.vi)}</div><div class="jvi">${G.esc(job.sv)}</div>
       <div class="need">Linh kiện cần thay: ${Object.keys(job.need).map((id) => this.partChip(id, job.need[id])).join(' ')}</div></div>`;
-    if (!hasAll) {
-      html += `<div class="res bad">Bạn chưa đủ linh kiện! Hãy nhặt thêm trên đường hoặc mua/lắp ráp ở <b>Chợ Linh Kiện</b>.</div>
+    if (!g.hasAll(job.need)) {
+      html += `<div class="res bad">Bạn chưa đủ linh kiện trong balo! Hãy nhặt thêm, lấy trong 📦 Kho ở nhà, hoặc mua/lắp ráp ở <b>Chợ Linh Kiện</b>.</div>
         <button class="btn ghost" data-close>Đi chuẩn bị</button>`;
       this.open(html);
       setTimeout(() => G.tts.speak(job.en), 200);
       return;
     }
-    html += `<h3>🩺 Chẩn đoán</h3><div class="qsent">${G.esc(job.q.en)} ${this.sayBtn(job.q.en)}</div>
-      <p class="hint">${G.esc(job.q.vi)}</p>
-      <div class="opts">${job.q.o.map((o, i) => `<button class="opt left" data-i="${i}">${G.esc(o)}</button>`).join('')}</div><div id="jres"></div>`;
+    html += `<p>Quy trình: <b>1.</b> Chào hỏi khách → <b>2.</b> Chẩn đoán → <b>3.</b> Bàn giao. Tất cả bằng tiếng Anh!</p>
+      <button class="btn big" id="start">🔔 Bấm chuông & gặp khách</button>`;
     const p = this.open(html);
+    const ctx = { appliance: job.appliance.toLowerCase(), symptom: job.en, symptomVi: job.sv };
+    this.on(p, '#start', () => {
+      const visit = CONVOS.find((c) => c.id === 'visit');
+      this.convo(visit, { who: 'Khách hàng', look, ctx, onEnd: (st1) => this.diagnose(b, job, look, ctx, st1) });
+    });
+  },
+  diagnose(b, job, look, ctx, st1) {
+    const g = G.game, s = G.state;
+    const p = this.open(`<div class="tag">🩺 Bước 2/3 · Chẩn đoán</div>
+      <h3>${G.esc(job.appliance)} — ${G.esc(job.vi)}</h3>
+      <div class="qsent">${G.esc(job.q.en)} ${this.sayBtn(job.q.en)}</div>
+      <p class="hint">${G.esc(job.q.vi)}</p>
+      <div class="opts">${job.q.o.map((o, i) => `<button class="opt left" data-i="${i}">${G.esc(o)}</button>`).join('')}</div><div id="jres"></div>`, { noClose: true });
     setTimeout(() => G.tts.speak(job.q.en), 200);
     let tries = 0, done = false;
     this.on(p, '.opt', (bt) => {
       if (done) return;
       const i = +bt.dataset.i;
-      if (i === job.q.a) {
-        done = true;
-        bt.classList.add('right');
-        Object.keys(job.need).forEach((id) => g.addItem(id, -job.need[id]));
-        const coins = Math.round(job.coins * (tries ? 0.7 : 1));
-        s.job = null; s.stats.jobs++;
-        G.audio.sfx('good');
-        this.el('jres').innerHTML = `<div class="res good">✅ Sửa thành công! ${G.esc(job.q.ex)}</div>
-          <div class="wcard"><div class="en">“Thank you so much! It works perfectly now.” ${this.sayBtn('Thank you so much! It works perfectly now.')}</div><div class="vi">Cảm ơn rất nhiều! Giờ máy chạy hoàn hảo rồi.</div></div>
-          <p class="center"><b>+${coins} 🪙 · +${job.xp} XP</b></p><button class="btn big" data-close3>Hoàn thành 🎉</button>`;
-        this.el('jres').querySelectorAll('[data-say]').forEach((x) => x.addEventListener('click', () => G.tts.speak(x.dataset.say)));
-        this.el('jres').querySelector('[data-close3]').addEventListener('click', () => this.close());
-        G.tts.speak('Thank you so much! It works perfectly now.');
-        g.addCoins(coins); g.addXp(job.xp); g.checkStory();
-      } else {
-        tries++;
-        bt.classList.add('wrong'); bt.disabled = true;
-        G.audio.sfx('bad');
-        this.el('jres').innerHTML = `<div class="res bad">❌ Chưa đúng, hãy suy nghĩ lại! (thưởng giảm 30%)</div>`;
+      const res = this.el('jres');
+      if (i !== job.q.a) {
+        tries++; bt.classList.add('wrong'); bt.disabled = true; G.audio.sfx('bad');
+        res.innerHTML = `<div class="res bad">❌ Chưa đúng, hãy suy nghĩ lại! (thưởng giảm 30%)</div>`;
+        return;
       }
+      done = true;
+      bt.classList.add('right');
+      G.audio.sfx('good');
+      res.innerHTML = `<div class="res good">✅ Chẩn đoán đúng! ${G.esc(job.q.ex)}</div><button class="btn big" id="handover">Thay linh kiện & bàn giao ›</button>`;
+      this.el('handover').addEventListener('click', () => {
+        Object.keys(job.need).forEach((id) => g.addItem(id, -job.need[id]));
+        const end = CONVOS.find((c) => c.id === 'visit_end');
+        this.convo(end, { who: 'Khách hàng', look, ctx, onEnd: (st2) => {
+          const bonus = (st1 + st2 - 2) * 4;
+          const coins = Math.round(job.coins * (tries ? 0.7 : 1)) + bonus;
+          s.job = null; s.stats.jobs++;
+          G.audio.sfx('level');
+          const thanks = 'Thank you so much! It works perfectly now.';
+          this.open(`<div class="center"><div class="big-emoji">🎉</div><h2>Hoàn thành đơn sửa chữa!</h2></div>
+            <div class="wcard"><div class="en">“${thanks}” ${this.sayBtn(thanks)}</div><div class="vi">Cảm ơn rất nhiều! Giờ máy chạy hoàn hảo rồi.</div></div>
+            <div class="stats"><div>💬 Chào hỏi<b>${'⭐'.repeat(st1)}</b></div><div>🤝 Bàn giao<b>${'⭐'.repeat(st2)}</b></div><div>🪙 Tiền công<b>+${coins}</b></div><div>✨ Kinh nghiệm<b>+${job.xp}</b></div></div>
+            <button class="btn big" data-close>Tuyệt vời!</button>`);
+          G.tts.speak(thanks);
+          g.addCoins(coins); g.addXp(job.xp); g.checkStory();
+        } });
+      });
     });
   },
 
   b_shop(b) { this.shop(b, 'buy'); },
-  shop(b, tab) {
+  shop(b, tab, keep) {
     const g = G.game, s = G.state, L = g.level;
     const tier = L >= 7 ? 4 : L >= 4 ? 3 : L >= 2 ? 2 : 1;
     let body = '';
     if (tab === 'buy') {
-      body = PARTS.filter((x) => x.rarity <= tier).map((x) => `
+      if (s.bagSize < 48) {
+        const price = 80 * ((s.bagSize - 24) / 6 + 1);
+        body += `<div class="row hl"><div class="big-emoji">🎒</div><div class="rn"><b>Nâng cấp balo +6 ô</b><small>Backpack upgrade · ${s.bagSize} → ${s.bagSize + 6} ô</small></div>
+          <button class="btn small" id="bagup" ${s.coins < price ? 'disabled' : ''}>${price} 🪙</button></div>`;
+      }
+      body += PARTS.filter((x) => x.rarity <= tier).map((x) => `
         <div class="row"><img src="${G.partImg(x.id, 40)}" data-info="${x.id}"><div class="rn" data-info="${x.id}"><b>${G.esc(x.vi)}</b><small>${G.esc(x.en)} · có ${g.count(x.id)}</small></div>
         <button class="btn small" data-buy="${x.id}" ${s.coins < x.price ? 'disabled' : ''}>${x.price} 🪙</button></div>`).join('');
       if (tier < 4) body += `<p class="hint">Lên cấp để mở bán linh kiện hiếm hơn.</p>`;
     } else if (tab === 'sell') {
-      const ids = Object.keys(s.parts).concat(Object.keys(s.mods));
-      body = ids.length ? ids.map((id) => { const x = G.itemInfo(id); const pr = Math.max(1, Math.floor(x.price * (G.recipeById[id] ? 1 : 0.5))); return `
-        <div class="row"><img src="${G.partImg(id, 40)}" data-info="${id}"><div class="rn" data-info="${id}"><b>${G.esc(x.vi)}</b><small>${G.esc(x.en)} · có ${g.count(id)}</small></div>
-        <button class="btn small" data-sell="${id}">+${pr} 🪙</button></div>`; }).join('') : '<p class="hint">Balo trống.</p>';
+      body = this.sellRows((it) => it.kind === 'part' || it.kind === 'mod');
     } else {
       body = RECIPES.map((r) => {
         const lock = r.level > L, can = !lock && g.hasAll(r.need);
@@ -328,27 +515,27 @@ G.ui = {
           ${lock ? `<div class="hint">🔒 Cần Level ${r.level}</div>` : `<button class="btn small" data-craft="${r.id}" ${can ? '' : 'disabled'}>🧩 Lắp ráp (+${r.xp} XP)</button>`}</div>`;
       }).join('');
     }
-    const p = this.open(`${this.head(b, 'Chủ tiệm: “Welcome! What are you looking for today?”')}
+    const p = this.open(`${this.head(b, 'Chủ tiệm: “' + G.esc(G.clock.greet()) + '! What are you looking for today?”')}
       <div class="coins">🪙 ${s.coins}</div>
       <div class="tabs"><button data-tab="buy" class="${tab === 'buy' ? 'on' : ''}">Mua</button><button data-tab="sell" class="${tab === 'sell' ? 'on' : ''}">Bán</button><button data-tab="craft" class="${tab === 'craft' ? 'on' : ''}">🧩 Xưởng lắp ráp</button></div>
       <div class="list">${body}</div>
-      <button class="btn ghost" id="sh-talk">💬 Hỏi mua bằng tiếng Anh</button>`);
+      <button class="btn ghost" id="sh-talk">💬 Hỏi mua bằng tiếng Anh</button>`, { keepScroll: keep });
     this.on(p, '[data-tab]', (x) => this.shop(b, x.dataset.tab));
-    this.on(p, '[data-info]', (x) => { const id = x.dataset.info; this.partCard(id); this.onClose = () => this.shop(b, tab); });
+    this.on(p, '[data-info]', (x) => { this.itemCard(x.dataset.info); this.onClose = () => this.shop(b, tab); });
+    this.on(p, '#bagup', () => {
+      const price = 80 * ((s.bagSize - 24) / 6 + 1);
+      if (s.coins < price) return;
+      g.addCoins(-price); s.bagSize += 6; while (s.inv.length < s.bagSize) s.inv.push(null);
+      G.audio.sfx('level'); G.tts.speak('Your backpack is bigger now!');
+      this.shop(b, 'buy', true);
+    });
     this.on(p, '[data-buy]', (x) => {
       const it = G.partById[x.dataset.buy];
       if (s.coins < it.price) return;
-      g.addCoins(-it.price); g.addItem(it.id, 1); G.audio.sfx('coin');
-      this.toast('🛒 Đã mua ' + it.vi + ' — ' + it.en);
-      this.shop(b, 'buy'); g.checkStory();
+      g.addCoins(-it.price); g.addItem(it.id, 1);
+      this.shop(b, 'buy', true); g.checkStory();
     });
-    this.on(p, '[data-sell]', (x) => {
-      const id = x.dataset.sell, it = G.itemInfo(id);
-      const pr = Math.max(1, Math.floor(it.price * (G.recipeById[id] ? 1 : 0.5)));
-      if (g.count(id) <= 0) return;
-      g.addItem(id, -1); g.addCoins(pr);
-      this.shop(b, 'sell');
-    });
+    this.bindSell(p, () => this.shop(b, 'sell', true));
     this.on(p, '[data-craft]', (x) => {
       const r = G.recipeById[x.dataset.craft];
       if (!g.hasAll(r.need)) return;
@@ -363,21 +550,92 @@ G.ui = {
       this.el('cok').addEventListener('click', () => this.shop(b, 'craft'));
       g.addXp(r.xp); g.checkStory();
     });
-    this.on(p, '#sh-talk', () => this.talk({ name: 'Chủ tiệm', look: G.NPC_LOOKS[4], talked: Math.floor(Math.random() * 9), r: b.region }, 'shop'));
+    this.on(p, '#sh-talk', () => this.convo(CONVOS.find((c) => c.id === 'shop_parts'), { who: 'Chủ tiệm', look: G.NPC_LOOKS[4], onCancel: () => {} }));
+  },
+  // các dòng bán đồ trong balo (gộp theo loại)
+  sellRows(filter) {
+    const g = G.game, s = G.state;
+    const ids = [...new Set(s.inv.filter(Boolean).map((sl) => sl.id))].filter((id) => G.items[id] && filter(G.items[id]) && G.sellPrice(id) > 0);
+    if (!ids.length) return '<p class="hint">Không có gì để bán trong balo.</p>';
+    return ids.map((id) => {
+      const x = G.items[id], pr = G.sellPrice(id), n = g.count(id);
+      return `<div class="row"><img src="${G.partImg(id, 40)}" data-info="${id}"><div class="rn" data-info="${id}"><b>${G.esc(x.vi)}</b><small>${G.esc(x.en)} · có ${n} · ${pr} 🪙/cái</small></div>
+        <button class="btn small" data-sell="${id}">+${pr}</button>${n > 1 ? `<button class="btn small ghost" data-sellall="${id}">Bán hết</button>` : ''}</div>`;
+    }).join('');
+  },
+  bindSell(p, rerender) {
+    const g = G.game;
+    this.on(p, '[data-sell]', (x) => { const id = x.dataset.sell; if (g.count(id) <= 0) return; g.addItem(id, -1); g.addCoins(G.sellPrice(id)); rerender(); });
+    this.on(p, '[data-sellall]', (x) => { const id = x.dataset.sellall, n = g.count(id); if (n <= 0) return; g.addItem(id, -n); g.addCoins(G.sellPrice(id) * n); rerender(); });
+  },
+
+  // ---------- Tiệm Nông Sản ----------
+  b_farmshop(b) { this.farmshop(b, 'buy'); },
+  farmshop(b, tab, keep) {
+    const g = G.game, s = G.state, L = g.level;
+    let body = '';
+    if (tab === 'buy') {
+      body = CROPS.map((c) => {
+        const id = 'seed_' + c.id, lock = c.level > L;
+        return `<div class="row ${lock ? 'locked' : ''}"><img src="${G.partImg(id, 40)}" data-info="${id}"><div class="rn" data-info="${id}"><b>Hạt ${G.esc(c.vi)}</b>
+          <small>${G.esc(c.en)} seeds · ⏱ ${G.clock.fmtDur(c.min * 60000)} · bán ${c.sell} 🪙 · có ${g.count(id)}</small></div>
+          ${lock ? `<span class="lockt">🔒 Lv ${c.level}</span>` : `<button class="btn small" data-seed="${c.id}" data-n="1" ${s.coins < c.seed ? 'disabled' : ''}>${c.seed} 🪙</button>
+          <button class="btn small ghost" data-seed="${c.id}" data-n="5" ${s.coins < c.seed * 5 ? 'disabled' : ''}>×5</button>`}</div>`;
+      }).join('');
+      const can = g.slotsCount(s.inv, 'tool_can') + g.slotsCount(s.chest, 'tool_can');
+      body += `<div class="row"><img src="${G.partImg('fert', 40)}" data-info="fert"><div class="rn" data-info="fert"><b>Phân bón</b><small>Fertilizer · cây lớn nhanh thêm 25% · có ${g.count('fert')}</small></div>
+        <button class="btn small" data-fert ${s.coins < 15 ? 'disabled' : ''}>15 🪙</button></div>`;
+      if (!can) body += `<div class="row"><img src="${G.partImg('tool_can', 40)}"><div class="rn"><b>Bình tưới</b><small>Watering can</small></div><button class="btn small" data-can ${s.coins < 20 ? 'disabled' : ''}>20 🪙</button></div>`;
+    } else {
+      body = this.sellRows((it) => it.kind === 'crop' || it.kind === 'seed');
+      body += '<p class="hint">💡 Quán cà phê đặt mua nông sản mỗi ngày với giá cao hơn ~70%.</p>';
+    }
+    const p = this.open(`${this.head(b, 'Bác Ba: “' + G.esc(G.clock.greet()) + '! Fresh seeds, good harvest!”')}
+      <div class="coins">🪙 ${s.coins}</div>
+      <div class="tabs"><button data-tab="buy" class="${tab === 'buy' ? 'on' : ''}">🌱 Mua hạt giống</button><button data-tab="sell" class="${tab === 'sell' ? 'on' : ''}">🧺 Bán nông sản</button></div>
+      <div class="list">${body}</div>
+      <p class="hint">Cây lớn theo <b>thời gian thực</b> khi đất còn ẩm. Mỗi lần tưới giữ ẩm 4 giờ; trời mưa sẽ tự tưới.</p>
+      <button class="btn ghost" id="fchat">💬 Trò chuyện với bác nông dân</button>`, { keepScroll: keep });
+    this.on(p, '[data-tab]', (x) => this.farmshop(b, x.dataset.tab));
+    this.on(p, '[data-info]', (x) => { this.itemCard(x.dataset.info); this.onClose = () => this.farmshop(b, tab); });
+    this.on(p, '[data-seed]', (x) => {
+      const c = G.cropById[x.dataset.seed], n = +x.dataset.n;
+      if (s.coins < c.seed * n) return;
+      g.addCoins(-c.seed * n); g.addItem('seed_' + c.id, n);
+      this.farmshop(b, 'buy', true); g.checkStory();
+    });
+    this.on(p, '[data-fert]', () => { if (s.coins < 15) return; g.addCoins(-15); g.addItem('fert', 1); this.farmshop(b, 'buy', true); });
+    this.on(p, '[data-can]', () => { if (s.coins < 20) return; g.addCoins(-20); g.addItem('tool_can', 1); this.farmshop(b, 'buy', true); });
+    this.bindSell(p, () => this.farmshop(b, 'sell', true));
+    this.on(p, '#fchat', () => this.convo(CONVOS.find((c) => c.id === 'farm_chat'), { who: 'Bác Ba (nông dân)', look: G.NPC_LOOKS[4], onEnd: (st) => {
+      if (st >= 2 && s.gifts['fert:' + b.key] !== G.clock.dateKey()) { s.gifts['fert:' + b.key] = G.clock.dateKey(); g.addItem('fert', 2); this.toast('🎁 Bác Ba tặng bạn 2 túi phân bón! “That’s very kind of you!”'); }
+      this.farmshop(b, 'buy');
+    } }));
   },
 
   b_library(b) {
-    const g = G.game, s = G.state;
+    const g = G.game;
     const own = g.ownedWords();
-    const p = this.open(`${this.head(b, 'Yên tĩnh nào... Đây là nơi ôn tập từ vựng.')}
-      <p>Bạn đang có <b>${own.length}</b> từ. Mỗi lượt ôn gồm 8 câu, ưu tiên những từ bạn chưa thuộc.</p>
-      <p>Thưởng: <b>+3 🪙 và +6 XP</b> cho mỗi câu đúng.</p>
-      <button class="btn big" id="rev" ${own.length < 4 ? 'disabled' : ''}>${own.length < 4 ? 'Cần ít nhất 4 từ để ôn tập' : '📝 Bắt đầu ôn tập'}</button>
-      <button class="btn" id="dict">📖 Mở Từ điển</button>
+    const p = this.open(`${this.head(b, 'Yên tĩnh nào... Đây là nơi ôn tập.')}
+      <p>Bạn đang có <b>${own.length}</b> từ. Mỗi lượt ôn gồm 8 câu, ưu tiên những từ bạn chưa thuộc. Thưởng <b>+3 🪙 và +6 XP</b> mỗi câu đúng.</p>
+      <button class="btn big" id="rev" ${own.length < 4 ? 'disabled' : ''}>${own.length < 4 ? 'Cần ít nhất 4 từ để ôn tập' : '📝 Ôn tập từ vựng'}</button>
+      <button class="btn" id="conv">🗣️ Luyện hội thoại (${CONVOS.filter((c) => !c.theme.startsWith('visit')).length} tình huống)</button>
+      <button class="btn ghost" id="dict">📖 Từ điển & Sổ tay mẫu câu</button>
       <button class="btn ghost" id="parts">🔩 Sổ tay linh kiện</button>`);
     this.on(p, '#rev', () => this.review());
+    this.on(p, '#conv', () => this.convoMenu());
     this.on(p, '#dict', () => this.dictionary());
     this.on(p, '#parts', () => this.handbook());
+  },
+  // danh sách tình huống hội thoại để luyện
+  convoMenu(theme) {
+    const s = G.state;
+    const names = { service: '📞 Call Center', street: '🚶 Đường phố', shop: '🔌 Mua hàng', cafe: '☕ Quán cà phê', travel: '✈️ Du lịch', factory: '🏭 Nhà máy', farm: '🌱 Nông trại' };
+    const list = CONVOS.filter((c) => !c.theme.startsWith('visit') && (!theme || c.theme === theme));
+    const p = this.open(`<h2>🗣️ Luyện hội thoại</h2><p class="sub">Chọn tình huống. Đạt ⭐⭐⭐ khi chọn câu chuẩn ngay lần đầu ở mọi lượt. Lời chào đổi theo giờ thực: bây giờ nói <b>“${G.clock.greet()}”</b> (${G.clock.greetVi()}).</p>
+      <div class="list">${list.map((c) => `<div class="row"><div class="big-emoji">${(names[c.theme] || '💬').split(' ')[0]}</div><div class="rn"><b>${G.esc(c.title)}</b><small>${names[c.theme] || ''} · ${c.steps.length} lượt · ${'⭐'.repeat(s.convos[c.id] || 0) || 'chưa luyện'}</small></div>
+        <button class="btn small" data-cv="${c.id}">Luyện</button></div>`).join('')}</div>`);
+    this.on(p, '[data-cv]', (x) => this.convo(CONVOS.find((c) => c.id === x.dataset.cv), { phone: CONVOS.find((c) => c.id === x.dataset.cv).theme === 'service' }));
   },
   review() {
     const s = G.state, g = G.game;
@@ -425,18 +683,43 @@ G.ui = {
   },
 
   b_cafe(b) {
-    const g = G.game, s = G.state;
-    const p = this.open(`${this.head(b, 'Barista: “Hi! What would you like to drink?”')}
+    const g = G.game, s = G.state, L = g.level, today = G.clock.dateKey();
+    let rq = s.reqs[b.key];
+    if (!rq || rq.d !== today) {
+      const pool = CROPS.filter((c) => c.level <= L);
+      const rnd = G.mulberry(G.strHash(b.key + today));
+      const c = G.pick(pool, rnd);
+      rq = s.reqs[b.key] = { d: today, c: c.id, n: c.sell >= 60 ? 1 + Math.floor(rnd() * 2) : 2 + Math.floor(rnd() * 3), tpl: Math.floor(rnd() * CAFE_REQ.length), done: false };
+    }
+    const crop = G.cropById[rq.c], tpl = CAFE_REQ[rq.tpl];
+    const word = rq.n > 1 ? crop.plural : crop.en;
+    const en = tpl.en.replace('{n}', rq.n).replace('{crops}', word), vi = tpl.vi.replace('{n}', rq.n).replace('{vi}', crop.vi);
+    const reward = Math.round(crop.sell * rq.n * 1.7), have = g.count('crop_' + crop.id);
+    const p = this.open(`${this.head(b, 'Barista: “' + G.esc(G.clock.greet()) + '! What would you like to drink?”')}
       <div class="row"><div class="big-emoji">☕</div><div class="rn"><b>Cà phê sữa đá</b><small>Iced milk coffee · Đi nhanh hơn trong 3 phút</small></div><button class="btn small" id="cof" ${s.coins < 10 ? 'disabled' : ''}>10 🪙</button></div>
-      <button class="btn" id="chat">💬 Trò chuyện với Barista</button>
+      <div class="job ${rq.done ? '' : 'active'}"><div class="jt">📋 Đơn đặt nông sản hôm nay ${rq.done ? '✅ Đã giao' : ''}</div>
+        <div class="jen">“${G.esc(en)}” ${this.sayBtn(en)}</div><div class="jvi">${G.esc(vi)}</div>
+        <div class="need">${this.partChip('crop_' + crop.id, rq.n)} <span class="rew">Thưởng +${reward} 🪙 +25 XP</span></div>
+        ${rq.done ? '' : `<button class="btn small" id="deliver" ${have < rq.n ? 'disabled' : ''}>${have < rq.n ? 'Chưa đủ — hãy trồng thêm' : '🧺 Giao hàng'}</button>`}</div>
+      <button class="btn" id="chat">💬 Gọi đồ bằng tiếng Anh</button>
       <button class="btn ghost" data-close>Ra ngoài</button>`);
+    setTimeout(() => { if (!rq.done) G.tts.speak(en); }, 250);
     this.on(p, '#cof', () => {
       g.addCoins(-10); s.boost = Date.now() + 180000;
       G.tts.speak('One iced milk coffee, please.');
-      this.toast('☕ “One iced milk coffee, please.” — Bạn đi nhanh hơn trong 3 phút!');
       this.close();
+      this.toast('☕ “One iced milk coffee, please.” — Bạn đi nhanh hơn trong 3 phút!');
     });
-    this.on(p, '#chat', () => this.talk({ name: 'Barista', look: G.NPC_LOOKS[3], talked: Math.floor(Math.random() * 9), r: b.region }, b.region.dialog === 'travel' ? 'travel' : 'street'));
+    this.on(p, '#deliver', () => {
+      if (g.count('crop_' + crop.id) < rq.n) return;
+      g.addItem('crop_' + crop.id, -rq.n); rq.done = true;
+      const thanks = 'Thank you! These ' + word + ' look so fresh!';
+      G.tts.speak(thanks);
+      g.addCoins(reward); g.addXp(25);
+      this.close();
+      this.toast('🧺 “' + thanks + '” +' + reward + ' 🪙');
+    });
+    this.on(p, '#chat', () => this.convo(CONVOS.find((c) => c.id === 'cafe_order'), { who: 'Barista', look: G.NPC_LOOKS[3] }));
   },
 
   b_station(b) {
@@ -452,46 +735,106 @@ G.ui = {
       const t = G.world.buildings[+x.dataset.go];
       g.addCoins(-5);
       g.player.x = (t.dx + 0.5) * G.TS;
-      g.player.y = (t.dy + (t.doorTop ? -0.6 : 1.7)) * G.TS;
+      g.player.y = (t.dy + 1.7) * G.TS;
       G.tts.speak('Next stop, ' + t.region.en + '.');
       this.close();
     });
   },
 
   b_factory(b) { this.giftPlace(b, 'factory', 'Kỹ sư: “Welcome to our factory. Safety first!”', 'Nhận linh kiện mẫu (1 lần/ngày)'); },
-  b_hotel(b) { this.giftPlace(b, 'travel', 'Lễ tân: “Welcome! How can I help you?”', 'Sửa giúp khách sạn, nhận quà (1 lần/ngày)'); },
+  b_hotel(b) { this.giftPlace(b, 'travel', 'Lễ tân: “' + G.esc(G.clock.greet()) + '! How can I help you?”', 'Sửa giúp khách sạn, nhận quà (1 lần/ngày)'); },
   b_airport(b) { this.giftPlace(b, 'travel', 'Nhân viên: “Welcome to the International Airport!”', 'Nhận quà từ khách quốc tế (1 lần/ngày)'); },
   giftPlace(b, theme, sub, giftLabel) {
-    const g = G.game, s = G.state;
-    const got = s.gifts[b.key] === s.day;
+    const g = G.game, s = G.state, today = G.clock.dateKey();
+    const got = s.gifts[b.key] === today;
     const p = this.open(`${this.head(b, sub)}
       <button class="btn big" id="gift" ${got ? 'disabled' : ''}>${got ? 'Hôm nay đã nhận rồi' : '🎁 ' + giftLabel}</button>
       <button class="btn" id="chat">💬 Trò chuyện</button>
       <button class="btn ghost" data-close>Ra ngoài</button>`);
     this.on(p, '#gift', () => {
-      s.gifts[b.key] = s.day;
+      s.gifts[b.key] = today;
       const pool = b.region.parts.map((id) => G.partById[id]).filter((x) => x && x.rarity >= 2);
       const it = G.pick(pool.length ? pool : PARTS);
       const first = !s.seen[it.id];
       g.addItem(it.id, 1); g.addCoins(10); G.audio.sfx('good');
       this.close();
-      if (first) this.partCard(it.id, true); else this.toast('🎁 Nhận ' + it.vi + ' (' + it.en + ') và 10 🪙');
+      if (first) this.itemCard(it.id, true); else this.toast('🎁 Nhận ' + it.vi + ' (' + it.en + ') và 10 🪙');
       g.checkStory();
     });
-    this.on(p, '#chat', () => this.talk({ name: b.name, look: G.NPC_LOOKS[G.strHash(b.key) % G.NPC_LOOKS.length], talked: Math.floor(Math.random() * 9), r: b.region }, theme));
+    const look = G.NPC_LOOKS[G.strHash(b.key) % G.NPC_LOOKS.length];
+    this.on(p, '#chat', () => {
+      const list = CONVOS.filter((c) => c.theme === theme);
+      this.convo(G.pick(list), { who: b.name, look });
+    });
   },
 
-  // ---------- Menu chính ----------
-  bag() {
+  // ---------- Balo & Kho đồ ----------
+  bag(atHome, keep) {
     const s = G.state, g = G.game;
-    const parts = Object.keys(s.parts), mods = Object.keys(s.mods);
-    const cell = (id) => `<button class="cell" data-info="${id}"><img src="${G.partImg(id, 44)}"><span>${G.esc(G.itemInfo(id).vi)}</span><b>×${g.count(id)}</b></button>`;
-    const p = this.open(`<h2>🎒 Balo</h2><div class="coins">🪙 ${s.coins}</div>
-      <h3>Linh kiện</h3><div class="grid">${parts.length ? parts.map(cell).join('') : '<p class="hint">Chưa có linh kiện. Nhặt các vật phát sáng trên đường nhé!</p>'}</div>
-      ${mods.length ? `<h3>Mô-đun đã lắp</h3><div class="grid">${mods.map(cell).join('')}</div>` : ''}
-      <button class="btn ghost" id="hb">🔩 Sổ tay linh kiện (${Object.keys(s.seen).length}/${PARTS.length})</button>`);
-    this.on(p, '[data-info]', (x) => { this.partCard(x.dataset.info); this.onClose = () => this.bag(); });
+    const sel = this.invSel;
+    const mv = this.moveFrom;
+    const slotHtml = (arr, w) => arr.map((sl, i) => {
+      const it = sl && G.items[sl.id];
+      const cls = ['slot', w === 'inv' && i < 6 ? 'hb' : '', sel && sel.w === w && sel.i === i ? 'sel' : '', mv && mv.w === w && mv.i === i ? 'moving' : '', w === 'inv' && i === s.sel ? 'cur' : ''].join(' ');
+      return `<button class="${cls}" data-w="${w}" data-i="${i}">${w === 'inv' && i < 6 ? `<span class="hk">${i + 1}</span>` : ''}${it ? `<img src="${G.partImg(sl.id, 40)}" alt=""><b>${sl.n > 1 ? sl.n : ''}</b>` : ''}</button>`;
+    }).join('');
+    let info = '';
+    const selSlot = sel ? (sel.w === 'inv' ? s.inv : s.chest)[sel.i] : null;
+    if (mv) info = `<div class="sinfo moving">↔️ Chạm vào ô muốn chuyển tới (đổi chỗ / gộp chồng). <button class="btn small ghost" id="mvcancel">Huỷ</button></div>`;
+    else if (selSlot) {
+      const it = G.items[selSlot.id];
+      info = `<div class="sinfo"><img src="${G.partImg(selSlot.id, 44)}"><div class="rn"><b>${G.esc(it.vi)}</b> ×${selSlot.n}<small>${G.esc(it.en)} ${this.sayBtn(it.en)}</small></div>
+        <div class="sbtns"><button class="btn small ghost" id="sinfo">ℹ️ Chi tiết</button><button class="btn small ghost" id="smove">↔️ Di chuyển</button>
+        ${atHome ? `<button class="btn small" id="sxfer">${sel.w === 'inv' ? '⇩ Cất vào kho' : '⇧ Lấy về balo'}</button>` : ''}</div></div>`;
+    }
+    const p = this.open(`<h2>🎒 Balo <small>${g.bagUsed()}/${s.bagSize} ô</small></h2><div class="coins">🪙 ${s.coins}</div>
+      <p class="hint">Hàng đầu (1–6) là <b>thanh đồ nhanh</b> dưới màn hình — đặt hạt giống, bình tưới, phân bón ở đây để làm nông nhanh.</p>
+      <div class="slots">${slotHtml(s.inv, 'inv')}</div>
+      ${info}
+      ${atHome ? `<h3>📦 Kho đồ ở nhà <small>${s.chest.filter(Boolean).length}/48</small></h3><div class="slots">${slotHtml(s.chest, 'chest')}</div>`
+        : '<p class="hint">📦 Kho đồ 48 ô nằm trong 🏠 Nhà của bạn (Làng Ven Sông). Mua thêm ô balo ở Chợ Linh Kiện.</p>'}
+      <div class="row2"><button class="btn ghost" id="sort">↕️ Sắp xếp</button><button class="btn ghost" id="hb">🔩 Sổ tay linh kiện</button></div>`, { cls: 'wide', keepScroll: keep, onClose: () => { this.invSel = null; this.moveFrom = null; } });
+    const rerender = () => this.bag(atHome, true);
+    p.querySelectorAll('.slot').forEach((el) => el.addEventListener('click', () => {
+      G.audio.sfx('click');
+      const w = el.dataset.w, i = +el.dataset.i;
+      if (this.moveFrom) { this.swapSlots(this.moveFrom, { w, i }); this.moveFrom = null; this.invSel = { w, i }; return rerender(); }
+      this.invSel = { w, i };
+      if (w === 'inv' && i < 6) { s.sel = i; this.renderHotbar(); }
+      rerender();
+    }));
+    this.on(p, '#mvcancel', () => { this.moveFrom = null; rerender(); });
+    this.on(p, '#sinfo', () => { const id = selSlot.id; this.itemCard(id); this.onClose = () => this.bag(atHome); });
+    this.on(p, '#smove', () => { this.moveFrom = this.invSel; rerender(); });
+    this.on(p, '#sxfer', () => {
+      const from = sel.w === 'inv' ? s.inv : s.chest, to = sel.w === 'inv' ? s.chest : s.inv;
+      const sl = from[sel.i];
+      const left = g.slotsAdd(to, sl.id, sl.n);
+      if (left) { sl.n = left; this.toast('Không đủ chỗ, còn lại ' + left); } else from[sel.i] = null;
+      this.invSel = null; this.renderHotbar(); rerender();
+    });
+    this.on(p, '#sort', () => { this.sortSlots(s.inv); if (atHome) this.sortSlots(s.chest); this.invSel = null; this.renderHotbar(); rerender(); });
     this.on(p, '#hb', () => this.handbook());
+  },
+  swapSlots(a, b) {
+    const s = G.state;
+    const A = a.w === 'inv' ? s.inv : s.chest, B = b.w === 'inv' ? s.inv : s.chest;
+    if (A === B && a.i === b.i) return;
+    const x = A[a.i], y = B[b.i];
+    if (x && y && x.id === y.id) {
+      const total = x.n + y.n;
+      B[b.i] = { id: x.id, n: Math.min(G.game.STACK, total) };
+      A[a.i] = total > G.game.STACK ? { id: x.id, n: total - G.game.STACK } : null;
+    } else { A[a.i] = y; B[b.i] = x; }
+    this.renderHotbar();
+  },
+  sortSlots(arr) {
+    const order = { tool: 0, seed: 1, fert: 2, crop: 3, part: 4, mod: 5 };
+    const tot = {};
+    arr.forEach((sl) => { if (sl) tot[sl.id] = (tot[sl.id] || 0) + sl.n; });
+    arr.fill(null);
+    Object.keys(tot).sort((a, b) => ((order[G.items[a].kind] ?? 9) - (order[G.items[b].kind] ?? 9)) || (G.items[a].price || 0) - (G.items[b].price || 0) || a.localeCompare(b))
+      .forEach((id) => G.game.slotsAdd(arr, id, tot[id]));
   },
   handbook() {
     const s = G.state;
@@ -499,15 +842,30 @@ G.ui = {
       <div class="grid">${PARTS.map((x) => s.seen[x.id]
         ? `<button class="cell" data-info="${x.id}"><img src="${G.partImg(x.id, 44)}"><span>${G.esc(x.vi)}</span><small>${G.esc(x.en)}</small></button>`
         : `<div class="cell unk"><div class="q">?</div><span>???</span><small>${'⭐'.repeat(x.rarity)}</small></div>`).join('')}</div>`);
-    this.on(p, '[data-info]', (x) => { this.partCard(x.dataset.info); this.onClose = () => this.handbook(); });
+    this.on(p, '[data-info]', (x) => { this.itemCard(x.dataset.info); this.onClose = () => this.handbook(); });
   },
-  dictionary(cat) {
+
+  // ---------- Từ điển / Mẫu câu / Hội thoại ----------
+  dictionary(cat, tab = 'words') {
     const s = G.state;
+    const tabs = `<div class="tabs"><button data-dt="words" class="${tab === 'words' ? 'on' : ''}">📖 Từ vựng</button><button data-dt="phrases" class="${tab === 'phrases' ? 'on' : ''}">📒 Mẫu câu</button><button data-dt="convos" class="${tab === 'convos' ? 'on' : ''}">🗣️ Hội thoại</button></div>`;
+    if (tab === 'convos') { this.convoMenu(); return; }
+    if (tab === 'phrases') {
+      const names = { service: '📞 Call Center', street: '🚶 Đường phố', shop: '🔌 Mua hàng', cafe: '☕ Quán cà phê', travel: '✈️ Du lịch', factory: '🏭 Nhà máy', farm: '🌱 Nông trại', visit: '🔧 Tại nhà khách', visit_end: '🔧 Tại nhà khách' };
+      const ph = Object.keys(s.phrases).sort((a, b) => (s.phrases[a].th || '').localeCompare(s.phrases[b].th || ''));
+      const p = this.open(`<h2>📒 Sổ tay mẫu câu</h2>${tabs}<p class="sub">${ph.length} câu đã học từ các cuộc hội thoại. Chạm 🔊 để nghe, 🎤 để luyện nói.</p>
+        <div class="dict">${ph.length ? ph.map((t, i) => `<div class="drow"><div class="tagline">${names[s.phrases[t].th] || '💬'}</div>
+          <div><b class="ph">${G.esc(t)}</b> ${this.sayBtn(t)} ${G.stt.supported ? `<button class="say" data-mic="${i}">🎤</button>` : ''}</div>
+          <div class="ex">${G.esc(s.phrases[t].tip || '')}</div><div id="pm${i}"></div></div>`).join('')
+        : '<p class="hint">Chưa có mẫu câu nào. Hãy trò chuyện với mọi người, nghe điện thoại khách hàng, hoặc vào 🗣️ Hội thoại để luyện!</p>'}</div>`);
+      this.on(p, '[data-dt]', (x) => this.dictionary(null, x.dataset.dt));
+      p.querySelectorAll('[data-mic]').forEach((b) => b.addEventListener('click', () => { const i = +b.dataset.mic; this.speakPractice(ph[i], this.el('pm' + i)); }));
+      return;
+    }
     const cats = Object.keys(WORD_CATS);
     cat = cat || 'all';
-    const list = G.allWords.filter((w) => s.words[w.en] && (cat === 'all' || w.cat === cat))
-      .sort((a, b) => a.en.localeCompare(b.en));
-    const p = this.open(`<h2>📖 Từ điển của bạn</h2><p class="sub">Đã thu thập ${Object.keys(s.words).length}/${G.allWords.length} từ</p>
+    const list = G.allWords.filter((w) => s.words[w.en] && (cat === 'all' || w.cat === cat)).sort((a, b) => a.en.localeCompare(b.en));
+    const p = this.open(`<h2>📖 Từ điển của bạn</h2>${tabs}<p class="sub">Đã thu thập ${Object.keys(s.words).length}/${G.allWords.length} từ · chạm vào từ để nghe</p>
       <div class="cats"><button data-cat="all" class="${cat === 'all' ? 'on' : ''}">Tất cả</button>${cats.map((c) => {
         const tot = WORD_CATS[c].words.length, own = WORD_CATS[c].words.filter((w) => s.words[w[0]]).length;
         return `<button data-cat="${c}" class="${cat === c ? 'on' : ''}">${WORD_CATS[c].icon} ${G.esc(WORD_CATS[c].name)} <small>${own}/${tot}</small></button>`;
@@ -516,21 +874,22 @@ G.ui = {
         <div><b>${G.esc(w.en)}</b> <span class="ipa">${G.esc(w.ipa)}</span> ${this.stars(s.words[w.en].m)}</div>
         <div class="vi">${G.esc(w.vi)}</div><div class="ex">${G.esc(w.ex)}</div></div>`).join('') : '<p class="hint">Chưa có từ nào trong nhóm này. Hãy đi tìm các quả cầu chữ phát sáng!</p>'}</div>`);
     this.on(p, '[data-cat]', (x) => this.dictionary(x.dataset.cat));
+    this.on(p, '[data-dt]', (x) => this.dictionary(null, x.dataset.dt));
   },
   quests() {
     const s = G.state, g = G.game;
     const job = s.job ? g.jobById(s.job.id) : null, jb = g.jobBuilding();
-    const p = this.open(`<h2>📜 Nhiệm vụ</h2>
+    const cur = g.curQuest();
+    this.open(`<h2>📜 Nhiệm vụ</h2>
       ${job ? `<div class="job active"><div class="jt">🔧 ${G.esc(job.vi)}: ${G.esc(job.sv)}</div><div>📍 ${G.esc(jb ? jb.name + ' — ' + jb.region.name : '')}</div>
         <div class="need">${Object.keys(job.need).map((id) => this.partChip(id, job.need[id])).join(' ')}</div></div>` : ''}
-      <div class="qlist">${STORY.map((q, i) => {
-        const st = i < s.story ? 'done' : i === s.story ? 'cur' : 'lock';
+      <div class="qlist">${STORY.map((q) => {
+        const st = s.storyDone[q.id] ? 'done' : q === cur ? 'cur' : 'lock';
         const pr = g.storyProgress(q);
         return `<div class="q ${st}"><div class="qt">${st === 'done' ? '✅' : st === 'cur' ? '▶️' : '🔒'} ${G.esc(q.title)}</div>
           ${st !== 'lock' ? `<div class="qd">${G.esc(q.desc)}</div>` : ''}
           ${st === 'cur' ? `<div class="bar"><i style="width:${Math.min(100, (pr.cur / pr.max) * 100)}%"></i></div><small>${Math.min(pr.cur, pr.max)}/${pr.max} · Thưởng ${q.coins} 🪙 ${q.xp ? '+ ' + q.xp + ' XP' : ''}</small>` : ''}</div>`;
       }).join('')}</div>`);
-    return p;
   },
   map() {
     const g = G.game, L = g.level;
@@ -560,7 +919,7 @@ G.ui = {
       x.font = '10px system-ui'; x.fillText(BUILDING_TYPES[b.t].icon, (b.x + b.w / 2) * k, (b.y + b.h / 2) * k + 4);
     });
     const gt = g.guideTarget();
-    if (gt) { x.fillStyle = '#ffd600'; x.beginPath(); x.arc(gt.b.dx * k, gt.b.dy * k, 4, 0, Math.PI * 2); x.fill(); x.strokeStyle = '#000'; x.lineWidth = 1; x.stroke(); }
+    if (gt) { x.fillStyle = '#ffd600'; x.beginPath(); x.arc(gt.x * k, gt.y * k, 4, 0, Math.PI * 2); x.fill(); x.strokeStyle = '#000'; x.lineWidth = 1; x.stroke(); }
     x.fillStyle = '#fff'; x.strokeStyle = '#e53935'; x.lineWidth = 2;
     x.beginPath(); x.arc(g.player.x / G.TS * k, g.player.y / G.TS * k, 4, 0, Math.PI * 2); x.fill(); x.stroke();
   },
@@ -571,15 +930,22 @@ G.ui = {
       <label class="set">🐢 Tốc độ đọc <input type="range" id="s-rate" min="0.5" max="1.2" step="0.1" value="${s.rate}"> <span id="s-rv">${s.rate}</span></label>
       <label class="set"><input type="checkbox" id="s-sfx" ${s.sfx ? 'checked' : ''}> 🎵 Hiệu ứng âm thanh</label>
       <label class="set"><input type="checkbox" id="s-vi" ${s.vi ? 'checked' : ''}> 🇻🇳 Hiện nghĩa tiếng Việt khi nói chuyện</label>
+      <label class="set"><input type="checkbox" id="s-calls" ${s.calls ? 'checked' : ''}> 📞 Khách hàng gọi điện bất chợt</label>
+      <label class="set">🌙 Độ tối ban đêm <input type="range" id="s-night" min="0" max="1" step="0.1" value="${s.night}"> <span id="s-nv">${Math.round(s.night * 100)}%</span></label>
+      <p class="hint">⏰ Game chạy theo giờ thực của máy: bây giờ là ${G.esc(G.clock.label())} — lời chào đúng là “${G.clock.greet()}”.</p>
       <button class="btn" id="s-test">🔊 Thử giọng đọc</button>
+      <button class="btn" id="s-mic">🎤 Thử luyện nói</button><div id="s-micres"></div>
       <button class="btn" id="s-save">💾 Lưu game ngay</button>
       <button class="btn danger" id="s-reset">🗑️ Chơi lại từ đầu</button>
-      <p class="hint">Mẹo: Trên iPhone/iPad mở bằng Safari → nút Chia sẻ → “Thêm vào MH chính” để chơi toàn màn hình như ứng dụng. Nếu không nghe tiếng, hãy tắt chế độ im lặng.</p>`);
-    this.on(p, '#s-test', () => G.tts.speak('Hello technician! Let us learn English and electronics together.'));
+      <p class="hint">Mẹo: Trên iPhone/iPad mở bằng Safari → nút Chia sẻ → “Thêm vào MH chính” để chơi toàn màn hình. Nếu không nghe tiếng, hãy tắt chế độ im lặng. Luyện nói cần cho phép Micro và Nhận dạng giọng nói.</p>`);
+    this.on(p, '#s-test', () => G.tts.speak(G.clock.greet() + ', technician! Let us learn English and electronics together.'));
+    this.on(p, '#s-mic', () => this.speakPractice('Hello, how can I help you?', this.el('s-micres')));
     p.querySelector('#s-tts').addEventListener('change', (e) => { s.tts = e.target.checked; });
     p.querySelector('#s-sfx').addEventListener('change', (e) => { s.sfx = e.target.checked; });
     p.querySelector('#s-vi').addEventListener('change', (e) => { s.vi = e.target.checked; });
+    p.querySelector('#s-calls').addEventListener('change', (e) => { s.calls = e.target.checked; });
     p.querySelector('#s-rate').addEventListener('input', (e) => { s.rate = +e.target.value; this.el('s-rv').textContent = s.rate; });
+    p.querySelector('#s-night').addEventListener('input', (e) => { s.night = +e.target.value; this.el('s-nv').textContent = Math.round(s.night * 100) + '%'; });
     this.on(p, '#s-save', () => { G.game.save(); this.toast('💾 Đã lưu!'); });
     this.on(p, '#s-reset', () => {
       if (!confirm('Xoá toàn bộ tiến trình và chơi lại từ đầu?')) return;

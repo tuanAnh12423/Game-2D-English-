@@ -1,5 +1,7 @@
 // Khởi động game
 (function () {
+  G.clock.init();
+  G.weather.init();
   G.indexData();
   G.tts.init();
   G.world.build();
@@ -16,6 +18,13 @@
   menu('mSet', () => G.ui.settings());
   document.getElementById('mini').addEventListener('click', () => { G.audio.unlock(); G.ui.map(); });
   document.getElementById('hQuest').addEventListener('click', () => { G.audio.unlock(); G.ui.quests(); });
+  document.getElementById('hotbar').addEventListener('pointerdown', (e) => {
+    const b = e.target.closest('[data-i]');
+    if (!b) return;
+    e.preventDefault(); G.audio.unlock();
+    G.ui.hotbarTap(+b.dataset.i);
+  });
+  document.getElementById('phone').addEventListener('click', () => { G.audio.unlock(); if (!G.ui.isOpen()) G.game.answerPhone(); });
 
   // màn hình tiêu đề
   const title = document.getElementById('title');
