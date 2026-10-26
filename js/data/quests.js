@@ -174,7 +174,8 @@ window.DIALOGS = {
 // đã có, để file lưu cũ vẫn đúng). Thêm nhiệm vụ mới: chèn vào vị trí bất kỳ.
 //   type: enter (vào toà nhà loại `target`), words, parts (số loại), jobs,
 //         craft, talk, level, regions, plant, harvest, calls, convo3,
-//         hvac (số cấp đã đậu ở Học Viện HVAC)
+//         hvac (số cấp đã đậu ở Học Viện HVAC), drinks (số ly trà sữa order được),
+//         decline (số lần từ chối khéo cuộc gọi ngoài giờ)
 // ============================================================
 window.STORY = [
   { id: 'q_work', title: 'Ngày đầu đi làm', desc: 'Đi đến Trung Tâm Bảo Hành ở Phố Trung Tâm (phía đông nhà bạn) để nhận việc.', type: 'enter', target: 'service', n: 1, coins: 20, xp: 20 },
@@ -184,7 +185,9 @@ window.STORY = [
   { id: 'q_job1', title: 'Đơn sửa chữa đầu tiên', desc: 'Nhận 1 đơn ở Trung Tâm Bảo Hành và đến nhà khách hàng sửa xong.', type: 'jobs', n: 1, coins: 40, xp: 50 },
   { id: 'q_talk3', title: 'Trò chuyện', desc: 'Trò chuyện tốt (2 sao trở lên) với 3 người — bấm 💬 khi đứng gần.', type: 'talk', n: 3, coins: 30, xp: 40 },
   { id: 'q_call1', title: 'Nghe máy tổng đài', desc: 'Khi điện thoại 📞 đổ chuông, bấm vào để nghe và hỗ trợ khách hàng bằng tiếng Anh.', type: 'calls', n: 1, coins: 30, xp: 40 },
+  { id: 'q_tea1', title: 'Một ly trà sữa', desc: 'Vào 🧋 KOI Thé (Phố Trung Tâm) và order thành công một ly bằng giọng nói tiếng Anh. Nhân viên rất khó tính!', type: 'drinks', n: 1, coins: 30, xp: 40 },
   { id: 'q_harvest5', title: 'Mùa thu hoạch', desc: 'Thu hoạch 5 nông sản. Cây lớn theo thời gian thực, kể cả khi bạn tắt game!', type: 'harvest', n: 5, coins: 40, xp: 50 },
+  { id: 'q_decline', title: 'Biết nói “không”', desc: 'Khi khách gọi NGOÀI GIỜ LÀM bắt bạn phải đến, hãy từ chối lịch sự (đạt ⭐⭐ trở lên) 1 lần.', type: 'decline', n: 1, coins: 40, xp: 50 },
   { id: 'q_shop', title: 'Ghé Chợ Linh Kiện', desc: 'Đến Chợ Linh Kiện (cần Level 2) để mua bán linh kiện.', type: 'enter', target: 'shop', n: 1, coins: 30, xp: 30 },
   { id: 'q_craft', title: 'Kỹ sư tập sự', desc: 'Lắp ráp 1 mạch ở Xưởng Lắp Ráp (Chợ Linh Kiện).', type: 'craft', n: 1, coins: 40, xp: 60 },
   { id: 'q_words30', title: 'Vốn từ 30', desc: 'Sở hữu 30 từ vựng trong Từ điển.', type: 'words', n: 30, coins: 60, xp: 80 },

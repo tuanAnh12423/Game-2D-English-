@@ -13,7 +13,7 @@
 //   farms   : các thửa ruộng [{x, y, w, h}] để trồng trọt
 //   buildings: t = loại toà nhà:
 //      home · service · shop · library · cafe · house · station
-//      factory · hotel · airport · farmshop · hvac
+//      factory · hotel · airport · farmshop · hvac · koi · phela (quán trà sữa)
 //   Toà nhà KHÔNG được đè lên đường giữa (hàng 16–19, cột 22–25).
 //   Cửa luôn ở mặt trước (phía dưới); lối đi ra đường lớn được tạo tự động.
 // ============================================================
@@ -42,6 +42,7 @@ window.REGIONS = [
       { t: 'library', x: 29, y: 6, w: 7, h: 5, name: 'Thư Viện' },
       { t: 'house', x: 39, y: 7, w: 5, h: 4, name: 'Chung cư A' },
       { t: 'cafe', x: 8, y: 23, w: 6, h: 4, name: 'Cà Phê Sáng' },
+      { t: 'koi', x: 16, y: 22, w: 5, h: 4, name: 'KOI Thé' },
       { t: 'house', x: 29, y: 23, w: 5, h: 4, name: 'Nhà anh Bình' },
       { t: 'station', x: 38, y: 21, w: 3, h: 2, name: 'Trạm xe buýt' },
     ],
@@ -55,6 +56,7 @@ window.REGIONS = [
       { t: 'house', x: 30, y: 7, w: 5, h: 4, name: 'Tiệm sửa điện' },
       { t: 'cafe', x: 37, y: 7, w: 6, h: 4, name: 'Trà Đá Vỉa Hè' },
       { t: 'house', x: 9, y: 23, w: 5, h: 4, name: 'Nhà chị Lan' },
+      { t: 'phela', x: 36, y: 23, w: 6, h: 4, name: 'Phê La' },
       { t: 'station', x: 30, y: 22, w: 3, h: 2, name: 'Trạm xe buýt' },
     ],
   },
@@ -141,4 +143,6 @@ window.BUILDING_TYPES = {
   airport: { icon: '✈️', roof: '#455a64', wall: '#eceff1' },
   farmshop: { icon: '🌱', roof: '#7cb342', wall: '#f9fbe7' },
   hvac: { icon: '❄️', roof: '#0277bd', wall: '#e1f5fe' },
+  koi: { icon: '🧋', roof: '#4e342e', wall: '#fff8e1' },
+  phela: { icon: '🍵', roof: '#33691e', wall: '#f1f8e9' },
 };

@@ -501,3 +501,16 @@ G.NPC_LOOKS = [
   { skin: '#e0ac69', hair: '#4e342e', shirt: '#f4511e', pants: '#212121', long: true },
   { skin: '#f6cba4', hair: '#c0832f', shirt: '#5c6bc0', pants: '#37474f', long: true, glasses: true },
 ];
+
+// Ngoại hình người chơi theo hồ sơ (tên, giới tính, màu da, tóc, áo)
+G.LOOK_OPTS = {
+  skin: ['#f6cba4', '#e8b48a', '#c68642', '#8d5524'],
+  hair: ['#2b1d14', '#6d4c41', '#c0832f', '#111111', '#9e9e9e'],
+  shirt: ['#1565c0', '#00897b', '#6a1b9a', '#e65100'],
+};
+G.playerLook = function (pf) {
+  const p = pf || (G.state && G.state.profile) || {};
+  const o = G.LOOK_OPTS;
+  const shirt = o.shirt[p.shirt || 0];
+  return Object.assign({}, G.PLAYER_LOOK, { skin: o.skin[p.skin || 0], hair: o.hair[p.hair || 0], shirt, belt: G.shade(shirt, -0.3), long: p.gender === 'f' });
+};

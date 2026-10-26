@@ -78,17 +78,55 @@ G.ui = {
   intro() {
     this.open(`
       <h2>👷 Chào mừng, Kỹ thuật viên!</h2>
-      <p>Bạn là <b>Minh</b>, KTV trẻ vừa nhận việc ở <b>Trung Tâm Bảo Hành</b>. Game chạy theo <b>giờ thực</b> của điện thoại: sáng, chiều, tối, thời tiết đều thay đổi.</p>
+      <p>Bạn là <b>${G.esc(G.state.profile.name)}</b>, KTV trẻ vừa nhận việc ở <b>Trung Tâm Bảo Hành</b>. Game chạy theo <b>giờ thực</b> của điện thoại: sáng, chiều, tối, thời tiết đều thay đổi.</p>
       <ul class="howto">
         <li><span class="orb">A</span> <span><b>Quả cầu chữ</b>: chạm vào để học từ tiếng Anh, trả lời đúng để thu thập.</span></li>
         <li><img src="${G.partImg('resistor', 28)}"> <span><b>Linh kiện</b>: nhặt điện trở, tụ, IC, rơ-le... và đọc cách đo kiểm.</span></li>
         <li><img src="${G.partImg('seed_tomato', 28)}"> <span><b>Trồng trọt</b>: ruộng cạnh nhà. Chọn hạt ở <b>thanh đồ nhanh</b>, đứng trên ruộng bấm 🌱, nhớ 💧 tưới. Cây lớn cả khi tắt game!</span></li>
         <li>🛠️ <span><b>Đi làm</b>: nhận đơn ở Trung Tâm Bảo Hành, nói chuyện với khách và chẩn đoán lỗi bằng tiếng Anh.</span></li>
         <li>💬📞 <span><b>Giao tiếp</b>: hội thoại nhiều lượt có chấm sao; khách hàng sẽ <b>gọi điện</b> bất chợt; bấm 🎤 để luyện nói.</span></li>
+        <li>📅 <span><b>Lịch làm việc</b>: ${G.esc(G.work.scheduleText())}. Ngoài giờ khách có thể gọi bắt bạn đến — hãy từ chối khéo! Đổi lịch trong ⚙️.</span></li>
+        <li>🧋 <span><b>Trà sữa KOI Thé & Phê La</b>: phải NÓI order bằng tiếng Anh, nhân viên rất khó tính.</span></li>
         <li>🎒 <span><b>Kho đồ</b>: balo dạng ô, 📦 kho 48 ô ở nhà. Lên cấp để mở vùng đất mới.</span></li>
       </ul>
       <p class="hint">🕹️ Kéo ngón tay ở <b>nửa trái</b> màn hình để đi. Nút tròn bên phải để <b>Vào nhà / Nói chuyện / Gieo / Tưới / Thu hoạch</b>.</p>
       <button class="btn big" data-close>Bắt đầu thôi! 🚀</button>`);
+  },
+
+  // ---------- Tạo / đổi nhân vật ----------
+  createChar(onDone, isNew) {
+    const s = G.state;
+    const pf = Object.assign({}, s.profile);
+    const render = () => {
+      const sw = (key, i, col) => `<button class="sw ${pf[key] === i ? 'on' : ''}" data-k="${key}" data-i="${i}" style="background:${col}"></button>`;
+      const p = this.open(`<h2>${isNew ? '👋 Tạo nhân vật của bạn' : '🧑‍🔧 Đổi nhân vật'}</h2>
+        <div class="cc"><canvas id="ccprev" width="300" height="180"></canvas>
+        <div class="ccf">
+          <label class="set">📝 Tên <input id="ccname" class="tin" maxlength="16" value="${G.esc(pf.name)}" autocomplete="off"></label>
+          <div class="set">🚻 Giới tính <button class="tchip ${pf.gender === 'm' ? 'on' : ''}" data-g="m">👨 Nam</button><button class="tchip ${pf.gender === 'f' ? 'on' : ''}" data-g="f">👩 Nữ</button></div>
+          <div class="set">🎨 Màu da ${G.LOOK_OPTS.skin.map((c, i) => sw('skin', i, c)).join('')}</div>
+          <div class="set">💇 Tóc ${G.LOOK_OPTS.hair.map((c, i) => sw('hair', i, c)).join('')}</div>
+          <div class="set">👕 Áo ${G.LOOK_OPTS.shirt.map((c, i) => sw('shirt', i, c)).join('')}</div>
+        </div></div>
+        <p class="hint">Tên sẽ được dùng trong các cuộc hội thoại tiếng Anh (“Nice to meet you, I’m …”), khi nhân viên trà sữa gọi tên, và khi khách hàng xưng hô (anh/chị).</p>
+        <button class="btn big" id="ccok">${isNew ? 'Bắt đầu với nhân vật này ›' : 'Lưu'}</button>`, { noClose: isNew });
+      const c = p.querySelector('#ccprev'), x = c.getContext('2d');
+      x.scale(2, 2);
+      const look = G.playerLook(pf);
+      [0, 2, 3].forEach((d, k) => G.drawChar(x, 30 + k * 45, 80, d, 0, look, 1.5));
+      p.querySelector('#ccname').addEventListener('input', (e) => { pf.name = e.target.value; });
+      p.querySelectorAll('[data-g]').forEach((b) => b.addEventListener('click', () => { pf.gender = b.dataset.g; G.audio.sfx('click'); render(); }));
+      p.querySelectorAll('[data-k]').forEach((b) => b.addEventListener('click', () => { pf[b.dataset.k] = +b.dataset.i; G.audio.sfx('click'); render(); }));
+      this.on(p, '#ccok', () => {
+        pf.name = (pf.name || '').trim().replace(/[<>{}]/g, '').slice(0, 16) || (pf.gender === 'f' ? 'Lan' : 'Minh');
+        s.profile = pf;
+        G.tts.speak('Nice to meet you, ' + pf.name + '!');
+        G.game.save();
+        this.close();
+        if (onDone) onDone();
+      });
+    };
+    render();
   },
 
   levelUp(L, opened) {
@@ -204,7 +242,10 @@ G.ui = {
     return String(text).replace(/\{greet\}/g, G.clock.greet()).replace(/\{wrong\}/g, G.clock.wrongGreet())
       .replace(/\{weather_q\}/g, wt.q).replace(/\{weather_a\}/g, wt.a)
       .replace(/\{appliance\}/g, ctx.appliance || 'appliance').replace(/\{symptom\}/g, ctx.symptom || '')
-      .replace(/\{symptom_vi\}/g, ctx.symptomVi || '');
+      .replace(/\{symptom_vi\}/g, ctx.symptomVi || '')
+      .replace(/\{name\}/g, G.state.profile.name).replace(/\{anh\}/g, G.state.profile.gender === 'f' ? 'chị' : 'anh')
+      .replace(/\{Anh\}/g, G.state.profile.gender === 'f' ? 'Chị' : 'Anh')
+      .replace(/\{hours\}/g, G.work.hoursEn()).replace(/\{days\}/g, G.work.daysEn()).replace(/\{next\}/g, G.work.nextWorkDayEn());
   },
   chatNpc(n) {
     const s = G.state;
@@ -284,6 +325,7 @@ G.ui = {
       const prev = s.convos[c.id] || 0;
       s.convos[c.id] = Math.max(prev, stars);
       if (stars >= 2) s.stats.talks++;
+      if (stars >= 2 && c.theme === 'afterhours') s.stats.declined = (s.stats.declined || 0) + 1;
       const xp = Math.round(6 * c.steps.length * stars / 3) + (prev === 0 ? 10 : 0);
       const coins = stars * 2 + (opts.phone ? 10 : 0);
       if (opts.onEnd) {
@@ -375,6 +417,8 @@ G.ui = {
         <div>💬 Hội thoại tốt<b>${s.stats.talks}</b></div>
         <div>📞 Cuộc gọi<b>${s.stats.calls}</b></div>
         <div>📅 Số ngày chơi<b>${s.days}</b></div>
+        <div>🏢 Ngày đi làm<b>${s.stats.workdays || 0}</b></div>
+        <div>🧋 Ly trà sữa<b>${s.stats.drinks || 0}</b></div>
       </div>
       <button class="btn big" id="chest">📦 Mở kho đồ (48 ô)</button>
       <button class="btn" id="save">💾 Lưu game</button>
@@ -394,7 +438,14 @@ G.ui = {
     g.refreshBoard();
     const job = s.job ? g.jobById(s.job.id) : null;
     const jb = g.jobBuilding();
-    let html = this.head(b, 'Quản lý <b>Ms. Lan</b>: “' + G.esc(G.clock.greet()) + '! Here are today’s repair orders.”');
+    const ws = G.work.status(), open = ws.type === 'work';
+    const ci = G.work.checkIn();
+    const nm = G.esc(s.profile.name);
+    const sub = !open ? (ws.type === 'off' ? 'Bảo vệ: “Today is your day off, ' + nm + '. Go and relax!”' : ws.type === 'lunch' ? 'Bảo vệ: “Everyone is on lunch break. Come back at ' + G.work.hhmm(G.work.times().back) + '.”' : 'Bảo vệ: “The service center is closed now. Working hours are ' + G.esc(G.work.hoursEn()) + '.”')
+      : ci && ci.late ? 'Quản lý <b>Ms. Lan</b>: “You’re late, ' + nm + '! Please be on time tomorrow.”' : 'Quản lý <b>Ms. Lan</b>: “' + G.esc(G.clock.greet()) + ', ' + nm + '! Here are today’s repair orders.”';
+    let html = this.head(b, sub);
+    html += `<div class="job ${open ? 'active' : ''}"><div class="jt">📅 Lịch làm việc: ${G.esc(G.work.scheduleText())}</div><div>${G.work.label()}${ci ? ` · ✅ Đã chấm công${ci.late ? ' (đi muộn)' : ''} +${ci.pay} 🪙` : ''}</div></div>`;
+    if (ci) { g.addCoins(ci.pay); if (ci.late) G.tts.speak('You are late, ' + s.profile.name + '!'); }
     if (job) {
       html += `<div class="job active"><div class="jt">🔧 Đơn đang làm: ${G.esc(job.vi)}</div>
         <div class="jen">${G.esc(job.en)} ${this.sayBtn(job.en)}</div><div class="jvi">${G.esc(job.sv)}</div>
@@ -410,7 +461,7 @@ G.ui = {
       html += `<div class="job"><div class="jt">${G.esc(j.vi)} · <span class="rew">+${j.coins} 🪙 +${j.xp} XP</span></div>
         <div class="jen">${G.esc(j.en)} ${this.sayBtn(j.en)}</div><div class="jvi">${G.esc(j.sv)}</div>
         <div class="need">Cần: ${Object.keys(j.need).map((pid) => this.partChip(pid, j.need[pid])).join(' ')}</div>
-        <button class="btn small" data-take="${id}" ${job ? 'disabled' : ''}>${job ? 'Làm xong đơn hiện tại trước' : 'Nhận đơn'}</button></div>`;
+        <button class="btn small" data-take="${id}" ${job || !open ? 'disabled' : ''}>${!open ? 'Chỉ nhận đơn trong giờ làm' : job ? 'Làm xong đơn hiện tại trước' : 'Nhận đơn'}</button></div>`;
     });
     html += `<button class="btn ghost" id="cc">📞 Luyện nghe máy tổng đài (Call Center)</button>`;
     const p = this.open(html);
@@ -492,6 +543,8 @@ G.ui = {
   },
 
   b_hvac(b) { G.hvac.open(b); },
+  b_koi(b) { G.tea.open(b); },
+  b_phela(b) { G.tea.open(b); },
   b_shop(b) { this.shop(b, 'buy'); },
   shop(b, tab, keep) {
     const g = G.game, s = G.state, L = g.level;
@@ -935,6 +988,11 @@ G.ui = {
       <label class="set"><input type="checkbox" id="s-vi" ${s.vi ? 'checked' : ''}> 🇻🇳 Hiện nghĩa tiếng Việt khi nói chuyện</label>
       <label class="set"><input type="checkbox" id="s-calls" ${s.calls ? 'checked' : ''}> 📞 Khách hàng gọi điện bất chợt</label>
       <label class="set">🌙 Độ tối ban đêm <input type="range" id="s-night" min="0" max="1" step="0.1" value="${s.night}"> <span id="s-nv">${Math.round(s.night * 100)}%</span></label>
+      <h3>📅 Lịch làm việc</h3>
+      <div class="set">Ngày đi làm ${[1, 2, 3, 4, 5, 6, 0].map((d) => `<button class="tchip ${G.work.cfg().days.includes(d) ? 'on' : ''}" data-wd="${d}">${G.work.DAYS_VI[d]}</button>`).join('')}</div>
+      <label class="set">Giờ vào ca <select id="s-start">${[6, 7, 8, 9, 10, 11, 12, 13, 14].map((h) => `<option value="${h}" ${G.work.cfg().start === h ? 'selected' : ''}>${G.work.hhmm(h)}</option>`).join('')}</select></label>
+      <p class="hint" id="s-sched">${G.esc(G.work.scheduleText())}. Ngày không đi làm là ngày nghỉ. Ngoài giờ làm, Trung Tâm Bảo Hành đóng cửa và khách có thể gọi bắt bạn đến.</p>
+      <button class="btn ghost" id="s-char">🧑‍🔧 Đổi tên / nhân vật</button>
       <p class="hint">⏰ Game chạy theo giờ thực của máy: bây giờ là ${G.esc(G.clock.label())} — lời chào đúng là “${G.clock.greet()}”.</p>
       <button class="btn" id="s-test">🔊 Thử giọng đọc</button>
       <button class="btn" id="s-mic">🎤 Thử luyện nói</button><div id="s-micres"></div>
@@ -950,6 +1008,14 @@ G.ui = {
     p.querySelector('#s-rate').addEventListener('input', (e) => { s.rate = +e.target.value; this.el('s-rv').textContent = s.rate; });
     p.querySelector('#s-night').addEventListener('input', (e) => { s.night = +e.target.value; this.el('s-nv').textContent = Math.round(s.night * 100) + '%'; });
     this.on(p, '#s-save', () => { G.game.save(); this.toast('💾 Đã lưu!'); });
+    this.on(p, '#s-char', () => this.createChar(() => this.settings(), false));
+    p.querySelectorAll('[data-wd]').forEach((b) => b.addEventListener('click', () => {
+      const w = G.work.cfg(), d = +b.dataset.wd;
+      w.days = w.days.includes(d) ? w.days.filter((x) => x !== d) : w.days.concat(d);
+      b.classList.toggle('on'); G.audio.sfx('click');
+      this.el('s-sched').textContent = G.work.scheduleText() + '.';
+    }));
+    p.querySelector('#s-start').addEventListener('change', (e) => { G.work.cfg().start = +e.target.value; this.el('s-sched').textContent = G.work.scheduleText() + '.'; });
     this.on(p, '#s-reset', () => {
       if (!confirm('Xoá toàn bộ tiến trình và chơi lại từ đầu?')) return;
       G.store.clear(); this.close(); G.game.start(true);

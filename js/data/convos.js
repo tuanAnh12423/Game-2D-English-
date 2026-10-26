@@ -9,6 +9,10 @@
 //   {wrong}  = lời chào SAI giờ (để luyện phân biệt)
 //   {weather_q} {weather_a} = câu hỏi / câu đáp về thời tiết hiện tại
 //   {appliance} {symptom} {symptom_vi} = thiết bị & hiện tượng của đơn sửa chữa
+//   {name} = tên người chơi · {anh}/{Anh} = anh/chị theo giới tính nhân vật
+//   {hours} {days} {next} = giờ làm, ngày làm, ngày làm việc kế tiếp (theo lịch của bạn)
+// theme 'afterhours' = khách gọi NGOÀI GIỜ LÀM, bắt phải đến — học cách TỪ CHỐI lịch sự
+//   when: 'off' (chỉ ngày nghỉ) · 'evening' (chỉ ngày đi làm, ngoài giờ) · bỏ trống = lúc nào cũng được
 // theme: service (gọi điện / tổng đài) · street · shop · cafe · travel · factory · farm
 //        visit / visit_end (dùng khi đến nhà khách sửa chữa)
 // ============================================================
@@ -140,10 +144,10 @@ window.CONVOS = [
   { id: 'st_intro', theme: 'street', title: 'Làm quen người mới', who: 'Anna', look: 6,
     steps: [
       { npc: "Hi! I don't think we've met. I'm Anna.", vi: 'Chào! Hình như chúng ta chưa gặp nhau. Tôi là Anna.',
-        o: [["Nice to meet you, Anna. I'm Minh.", 2, 'Lặp lại tên người kia giúp bạn nhớ tên và tạo thiện cảm.'],
-          ["I'm Minh.", 1, 'Nên thêm “Nice to meet you”.'],
+        o: [["Nice to meet you, Anna. I'm {name}.", 2, 'Lặp lại tên người kia giúp bạn nhớ tên và tạo thiện cảm.'],
+          ["I'm {name}.", 1, 'Nên thêm “Nice to meet you”.'],
           ['Goodbye, Anna.', 0, 'Vừa làm quen đã chào tạm biệt.']] },
-      { npc: 'What do you do, Minh?', vi: 'Bạn làm nghề gì vậy, Minh?',
+      { npc: 'What do you do, {name}?', vi: 'Bạn làm nghề gì vậy, {name}?',
         o: [["I'm a technician. I repair home appliances like fridges and washing machines.", 2, '“What do you do?” hỏi về NGHỀ NGHIỆP, không phải việc đang làm.'],
           ['Technician.', 1, 'Đúng nhưng nên nói thành câu.'],
           ['I do it every day.', 0, 'Hiểu sai câu hỏi.']] },
@@ -197,8 +201,8 @@ window.CONVOS = [
   { id: 'tr_hotel', theme: 'travel', title: 'Nhận phòng khách sạn', who: 'Receptionist', look: 1,
     steps: [
       { npc: '{greet}. Welcome to our hotel. Do you have a reservation?', vi: 'Chào. Chào mừng đến khách sạn. Bạn đã đặt phòng chưa?',
-        o: [['{greet}. Yes, I booked a double room for two nights under the name Minh.', 2, '“under the name…” = đặt dưới tên…'],
-          ['Yes. Minh.', 1, 'Thiếu thông tin.'],
+        o: [['{greet}. Yes, I booked a double room for two nights under the name {name}.', 2, '“under the name…” = đặt dưới tên…'],
+          ['Yes. {name}.', 1, 'Thiếu thông tin.'],
           ['{wrong}. No, I am the hotel.', 0, 'Chào sai giờ và câu vô nghĩa.']] },
       { npc: 'Could I see your ID card or passport, please?', vi: 'Cho tôi xem CMND hoặc hộ chiếu được không?',
         o: [['Sure. Here you are.', 2, 'Đáp nhanh, lịch sự.'],
@@ -270,11 +274,11 @@ window.CONVOS = [
   // ---------------- ĐẾN NHÀ KHÁCH SỬA CHỮA ----------------
   { id: 'visit', theme: 'visit', title: 'Gặp khách hàng tại nhà', who: 'Customer', look: 0,
     steps: [
-      { npc: '{greet}! Are you the technician from the service center?', vi: 'Chào! Anh là kỹ thuật viên của trung tâm bảo hành phải không?',
-        o: [["{greet}! Yes, I'm Minh. I'm here to check your {appliance}.", 2, 'Chào đúng buổi, giới thiệu tên và mục đích đến.'],
+      { npc: '{greet}! Are you the technician from the service center?', vi: 'Chào! {Anh} là kỹ thuật viên của trung tâm bảo hành phải không?',
+        o: [["{greet}! Yes, I'm {name}. I'm here to check your {appliance}.", 2, 'Chào đúng buổi, giới thiệu tên và mục đích đến.'],
           ['Yes.', 1, 'Nên giới thiệu bản thân.'],
           ["{wrong}! No, I'm a tourist.", 0, 'Chào sai giờ, trả lời sai.']] },
-      { npc: 'Please come in. {symptom}', vi: 'Mời anh vào. {symptom_vi}',
+      { npc: 'Please come in. {symptom}', vi: 'Mời {anh} vào. {symptom_vi}',
         o: [["I see. Let me inspect it for you. It won't take long.", 2, '“inspect” = kiểm tra kỹ. “It won’t take long” giúp khách yên tâm.'],
           ['OK, I check.', 1, 'Sai ngữ pháp: nên nói “I’ll check it”.'],
           ["That's your problem.", 0, 'Thiếu tôn trọng khách.']] },
@@ -289,6 +293,48 @@ window.CONVOS = [
         o: [['Yes, please sign the service report here. Thank you for choosing our service!', 2, '“service report” = biên bản sửa chữa. Cảm ơn khách đã chọn dịch vụ.'],
           ['Sign here.', 1, 'Nghe như ra lệnh.'],
           ['No, just give me money.', 0, 'Không chuyên nghiệp.']] },
+    ] },
+  // ---------------- KHÁCH GỌI NGOÀI GIỜ LÀM: TỪ CHỐI LỊCH SỰ ----------------
+  { id: 'ah_tonight', theme: 'afterhours', when: 'evening', title: 'Khách đòi đến sửa ngay trong đêm', who: 'Mr. Hùng (gọi ngoài giờ)', look: 0,
+    steps: [
+      { npc: 'Hello? My refrigerator just stopped working! I need a technician right now!', vi: 'Alo? Tủ lạnh nhà tôi vừa hỏng! Tôi cần kỹ thuật viên ngay bây giờ!',
+        o: [["I'm sorry to hear that. Our working hours are {hours}, {days}. I can book the first appointment {next} morning for you.", 2, 'Từ chối KHÉO: đồng cảm → nêu giờ làm việc → đưa giải pháp thay thế (hẹn sớm nhất).'],
+          ["Sorry, I can't come now.", 1, 'Từ chối đúng nhưng chưa đưa phương án thay thế, khách sẽ thấy bị bỏ rơi.'],
+          ["OK, I'll come right now.", 0, 'Bạn KHÔNG bắt buộc làm ngoài giờ. Tự ý nhận lời làm bạn mất giờ nghỉ và sai quy trình (đơn ngoài giờ phải qua quản lý).']] },
+      { npc: 'But all my food will go bad! Can’t you make an exception, just this once?', vi: 'Nhưng đồ ăn sẽ hỏng hết! Anh/chị không thể ngoại lệ một lần sao?',
+        o: [['I understand your concern. If you keep the door closed, the food can stay cold for several hours. I’ll put you first on the schedule {next}.', 2, 'Giữ vững lời từ chối nhưng vẫn giúp khách: hướng dẫn giữ lạnh + ưu tiên lịch hẹn.'],
+          ['No exceptions.', 1, 'Cứng nhắc, dễ khiến khách khó chịu.'],
+          ['Fine, I’ll come at midnight.', 0, 'Lại nhận lời làm ngoài giờ — đây chính là điều cần học cách từ chối.']] },
+      { npc: 'Alright... What time will the technician come?', vi: 'Thôi được... Mấy giờ kỹ thuật viên đến?',
+        o: [['A technician will be there at 8:30 a.m. I’ll send you a confirmation message now. Thank you for your understanding.', 2, '“Thank you for your understanding” = cảm ơn vì đã thông cảm — câu kết khi phải từ chối.'],
+          ['Morning.', 1, 'Chưa cụ thể giờ.'],
+          ['Whenever I wake up.', 0, 'Thiếu chuyên nghiệp.']] },
+    ] },
+  { id: 'ah_weekend', theme: 'afterhours', when: 'off', title: 'Khách gọi vào ngày nghỉ', who: 'Mrs. Lan (gọi ngày nghỉ)', look: 1,
+    steps: [
+      { npc: 'Hi, I know it’s your day off, but can you come and fix my washing machine today?', vi: 'Chào, tôi biết hôm nay bạn nghỉ, nhưng bạn đến sửa máy giặt hôm nay được không?',
+        o: [['Thank you for calling. I’m sorry, but I’m off today. I can schedule a visit for you {next} morning.', 2, 'Cảm ơn → xin lỗi → nói rõ hôm nay nghỉ → hẹn ngày làm việc kế tiếp.'],
+          ['I am off today.', 1, 'Đúng nhưng thiếu lời xin lỗi và giải pháp.'],
+          ['Sure, no problem, I’ll come now!', 0, 'Ngày nghỉ là quyền của bạn. Hãy học cách nói “không” lịch sự.']] },
+      { npc: 'I’ll pay you extra money. Please, just come today!', vi: 'Tôi sẽ trả thêm tiền. Làm ơn đến hôm nay đi!',
+        o: [['I appreciate the offer, but I can’t accept private jobs. If it’s urgent, please call our hotline — they will help you.', 2, '“I appreciate the offer, but…” = cảm ơn lời đề nghị, nhưng… KTV không nhận việc riêng, hướng khách về kênh chính thức.'],
+          ['No money, no.', 1, 'Sai ngữ pháp và thiếu lịch sự.'],
+          ['How much? OK, I’ll come.', 0, 'Nhận việc riêng ngoài công ty là vi phạm quy định.']] },
+      { npc: 'Okay, I understand. Please book the next working day for me then.', vi: 'Được rồi, tôi hiểu. Vậy đặt lịch ngày làm việc kế tiếp giúp tôi.',
+        o: [['Certainly. Your appointment is booked for {next}. Have a nice day!', 2, 'Xác nhận lịch hẹn + lời chúc thân thiện.'],
+          ['OK.', 1, 'Hơi cụt.'],
+          ['Maybe I’ll forget.', 0, 'Thiếu trách nhiệm.']] },
+    ] },
+  { id: 'ah_late', theme: 'afterhours', title: 'Khách gọi số cá nhân lúc khuya', who: 'Anh Tuấn (gọi lúc khuya)', look: 5,
+    steps: [
+      { npc: 'Sorry to call so late. The air conditioner is making a loud noise. Can you check it tonight?', vi: 'Xin lỗi gọi khuya. Máy lạnh kêu rất to. Bạn kiểm tra tối nay được không?',
+        o: [['That’s okay. I’m off duty now, so I can’t come tonight. For safety, please turn the unit off until it is checked.', 2, '“I’m off duty now” = giờ tôi đã hết ca. Từ chối + lời khuyên an toàn.'],
+          ['It’s late. Call tomorrow.', 1, 'Đúng ý nhưng nghe khó chịu.'],
+          ['Yes, I’ll be there in ten minutes.', 0, 'Không nên nhận lời làm ngoài giờ.']] },
+      { npc: 'Can you give me your personal number so I can call you directly next time?', vi: 'Bạn cho tôi số riêng để lần sau gọi thẳng nhé?',
+        o: [['I’m sorry, I can’t. Please call our hotline during working hours, {hours}. They will arrange a technician for you.', 2, 'Từ chối chia sẻ số cá nhân, hướng về hotline và giờ làm việc.'],
+          ['No.', 1, 'Quá cụt.'],
+          ['Sure, call me anytime, even at night.', 0, 'Bạn cần ranh giới giữa công việc và đời sống riêng.']] },
     ] },
 ];
 

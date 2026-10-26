@@ -332,6 +332,26 @@ mark { background: #fff59d; padding: 0 2px; border-radius: 3px; }
 .wcard .model { font-style: normal; line-height: 1.5; }
 .drow a { color: var(--blue2); word-break: break-word; }
 
+/* ---------- Quán trà sữa ---------- */
+.tchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.tchip { border: 2px solid var(--line); background: #fff; border-radius: 20px; padding: 7px 11px; font-size: 13px; font-weight: 600; color: var(--ink); }
+.tchip i { color: var(--blue2); font-style: normal; }
+.tchip.on { border-color: var(--blue); background: #e3f2fd; }
+.row.trow { width: 100%; text-align: left; font-family: inherit; cursor: pointer; }
+.row.trow.sel { border-color: var(--blue); background: #e3f2fd; }
+ul.check { list-style: none; padding: 0; margin: 6px 0; font-size: 13.5px; }
+ul.check li { padding: 3px 0; } ul.check li.no { color: var(--bad); } ul.check li.ok { color: var(--good); }
+input.tin { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--line); font-size: 16px; font-family: inherit; }
+#ttbox { display: flex; gap: 6px; margin-top: 6px; } #ttbox.hide { display: none; }
+/* ---------- Tạo nhân vật ---------- */
+.cc { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+#ccprev { width: 150px; height: 90px; background: linear-gradient(#bbdefb, #c8e6c9); border-radius: 14px; }
+.ccf { flex: 1; min-width: 240px; }
+.ccf .set { flex-wrap: wrap; gap: 6px; }
+.sw { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1px #ccd; padding: 0; }
+.sw.on { box-shadow: 0 0 0 3px var(--blue); }
+.set select { padding: 6px; border-radius: 8px; font-size: 15px; }
+
 /* ---------- Màn hình tiêu đề ---------- */
 #title {
   position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; padding: 16px;

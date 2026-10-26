@@ -21,6 +21,8 @@ G.game = {
       storyDone: {}, entered: {}, visited: {}, board: [], boardDay: '', job: null, gifts: {}, boost: 0,
       farm: {}, cropsMet: {}, convos: {}, phrases: {}, reqs: {},
       settings: { tts: true, sfx: true, rate: 0.9, vi: true, night: 0.8, calls: true },
+      profile: { name: 'Minh', gender: 'm', skin: 0, hair: 0, shirt: 0 },
+      work: { days: [1, 2, 3, 4, 5], start: 8, log: {} },
     };
   },
   levelFromXp(xp) { let L = 1; while (xp >= 40 * (L + 1) * L) L++; return L; },
@@ -37,6 +39,8 @@ G.game = {
     G.state = this.state;
     this.migrate(this.state);
     const s = this.state;
+    s.profile = Object.assign({ name: 'Minh', gender: 'm', skin: 0, hair: 0, shirt: 0 }, s.profile || {});
+    G.work.cfg();
     if (!saved) { this.addItem('tool_can', 1, true); this.addItem('seed_radish', 4, true); this.addItem('seed_lettuce', 2, true); }
     if (!this.slotsCount(s.inv, 'tool_can') && !this.slotsCount(s.chest, 'tool_can')) this.addItem('tool_can', 1, true);
     this.player = { x: s.x, y: s.y, dir: 0, frame: 0, moving: false };
@@ -59,7 +63,7 @@ G.game = {
       const ready = Object.values(s.farm).filter((pl) => this.plotInfo(pl).ready).length;
       setTimeout(() => G.ui.toast('⏰ Bạn vắng mặt ' + G.clock.fmtDur(away) + '. ' + (ready ? '🌾 Có ' + ready + ' ô ruộng đã chín!' : 'Thời gian trong game vẫn trôi theo giờ thực.')), 900);
     }
-    if (!saved) setTimeout(() => G.ui.intro(), 300);
+    if (!saved) setTimeout(() => G.ui.createChar(() => G.ui.intro(), true), 300);
   },
   // chuyển file lưu bản cũ sang bản mới
   migrate(s) {
@@ -540,8 +544,9 @@ G.game = {
     if (!ph.ring) {
       if (now >= ph.at && !G.ui.isOpen()) {
         ph.ring = true; ph.until = now + 45000; ph.cd = 0;
+        ph.kind = G.work.onShift() ? 'service' : 'afterhours';
         btn.classList.add('on');
-        G.ui.toast('📞 Có khách hàng gọi đến! Bấm nút điện thoại để nghe máy.');
+        G.ui.toast(ph.kind === 'service' ? '📞 Có khách hàng gọi đến! Bấm nút điện thoại để nghe máy.' : '📞 Khách gọi NGOÀI GIỜ LÀM! Nghe máy và từ chối khéo nhé.');
       }
       return;
     }
@@ -557,9 +562,10 @@ G.game = {
     const ph = this.phone;
     if (!ph.ring) return;
     ph.ring = false; document.getElementById('phone').classList.remove('on');
-    ph.at = Date.now() + (360 + Math.random() * 360) * 1000;
+    ph.at = Date.now() + (ph.kind === 'service' ? 360 + Math.random() * 360 : 600 + Math.random() * 600) * 1000;
     this.state.stats.calls++;
-    const list = CONVOS.filter((c) => c.theme === 'service');
+    const offDay = !G.work.isWorkDay();
+    const list = CONVOS.filter((c) => c.theme === (ph.kind || 'service') && (!c.when || c.when === (offDay ? 'off' : 'evening')));
     const fresh = list.filter((c) => (this.state.convos[c.id] || 0) < 3);
     const c = G.pick(fresh.length ? fresh : list);
     G.ui.convo(c, { phone: true });
@@ -623,6 +629,8 @@ G.game = {
       case 'calls': return { cur: s.stats.calls, max: q.n };
       case 'convo3': return { cur: Object.values(s.convos).filter((v) => v >= 3).length, max: q.n };
       case 'hvac': return { cur: G.hvac.passedCount(), max: q.n };
+      case 'drinks': return { cur: s.stats.drinks || 0, max: q.n };
+      case 'decline': return { cur: s.stats.declined || 0, max: q.n };
     }
     return { cur: 0, max: 1 };
   },
@@ -655,6 +663,7 @@ G.game = {
     else if (q.type === 'jobs') type = 'service';
     else if (q.type === 'craft') type = 'shop';
     else if (q.type === 'hvac') type = 'hvac';
+    else if (q.type === 'drinks') type = 'koi';
     else if (q.type === 'plant' || q.type === 'harvest') {
       if (q.type === 'plant' && !this.firstOfKind('seed')) type = 'farmshop';
       else {
@@ -683,7 +692,7 @@ G.game = {
     set('hCoins', s.coins);
     set('hClock', G.weather.icon(this.weather, this.nightRaw() > 0.3) + ' ' + G.clock.label());
     document.getElementById('hXp').style.width = Math.min(100, ((s.xp - a) / (b - a)) * 100) + '%';
-    set('hRegion', this.curRegion ? this.curRegion.name : '');
+    set('hRegion', (this.curRegion ? this.curRegion.name + ' · ' : '') + G.work.label());
     const q = this.curQuest();
     let txt = '';
     if (s.job) { const j = this.jobById(s.job.id), bb = this.jobBuilding(); txt = '🔧 ' + j.vi + ': ' + j.sv + (bb ? ' → ' + bb.name : ''); }
@@ -760,7 +769,8 @@ G.game = {
     // nhân vật + đèn đường (sắp xếp theo chiều sâu)
     const vis = (x, y) => x > cam.x - 40 && x < cam.x + cam.w + 40 && y > cam.y - 20 && y < cam.y + cam.h + 60;
     const ents = this.npcs.filter((n) => vis(n.x, n.y)).map((n) => ({ y: n.y, d: () => G.drawChar(ctx, n.x, n.y, n.dir, n.frame, n.look) }));
-    ents.push({ y: p.y, d: () => G.drawChar(ctx, p.x, p.y, p.dir, p.frame, G.PLAYER_LOOK) });
+    const look = G.playerLook();
+    ents.push({ y: p.y, d: () => G.drawChar(ctx, p.x, p.y, p.dir, p.frame, look) });
     G.world.lamps.forEach((l) => {
       const lx = (l.x + 0.5) * S, ly = (l.y + 1) * S - 4;
       if (vis(lx, ly)) ents.push({ y: ly, d: () => G.drawLamp(ctx, lx, ly, nl > 0.12, this.t) });

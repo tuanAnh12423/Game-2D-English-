@@ -4,7 +4,7 @@ Game nhập vai 2D (nhìn từ trên xuống) để **học tiếng Anh** và **
 
 ## Cách chơi
 
-Bạn là **Minh**, một kỹ thuật viên trẻ vừa nhận việc ở Trung Tâm Bảo Hành. Game chạy theo **giờ thực** của điện thoại: sáng/chiều/tối, ngày mới, thời tiết (nắng, mây, mưa đổi mỗi 2 giờ) đều theo đời thật.
+Bạn **tự đặt tên và chọn nhân vật nam/nữ** (màu da, tóc, áo) — một kỹ thuật viên trẻ vừa nhận việc ở Trung Tâm Bảo Hành. Game chạy theo **giờ thực** của điện thoại: sáng/chiều/tối, ngày mới, thời tiết (nắng, mây, mưa đổi mỗi 2 giờ) đều theo đời thật.
 
 | Hoạt động | Mô tả |
 |---|---|
@@ -20,6 +20,9 @@ Bạn là **Minh**, một kỹ thuật viên trẻ vừa nhận việc ở Trung
 | 📒 **Sổ tay mẫu câu** | Mọi câu chuẩn bạn gặp được lưu lại để nghe và luyện nói (📖 → Mẫu câu). |
 | 🔌 **Chợ Linh Kiện** | Mua/bán linh kiện, nâng cấp balo, **lắp ráp mạch** ở Xưởng. |
 | ☕ **Quán cà phê** | Mua cà phê (đi nhanh hơn), nhận **đơn đặt nông sản bằng tiếng Anh** mỗi ngày. |
+| 📅 **Ngày đi làm / ngày nghỉ** | Mặc định Thứ 2–Thứ 6, 8:00–17:00 (nghỉ trưa 12:00–13:00) = **8 tiếng**; chỉnh ngày và giờ vào ca trong ⚙️ Cài đặt. Chỉ nhận đơn sửa chữa trong giờ làm; vào Trung Tâm Bảo Hành trong ca để **chấm công** (đi muộn quá 15 phút bị nhắc và nhận ít lương hơn). Ngày nghỉ: trồng trọt, uống trà sữa, khám phá. |
+| 📵 **Khách gọi ngoài giờ** | Buổi tối hoặc ngày nghỉ, khách có thể gọi bắt bạn đến sửa ngay, đòi trả thêm tiền, xin số riêng... Bạn phải **từ chối lịch sự bằng tiếng Anh** và đưa phương án thay thế (hẹn ngày làm việc kế tiếp, gọi hotline). Chọn “OK, I’ll come right now” sẽ bị tính sai. |
+| 🧋 **KOI Thé & Phê La** | KOI Thé ở Phố Trung Tâm, Phê La ở Chợ Linh Kiện. Chọn món theo thực đơn thật (Trà sữa trân châu hoàng kim, Macchiato · Ô Long Sữa Phê La, Ô Long Nhài Sữa, Khói B’Lao, Lang Biang, Ô Long Sữa Gạo Rang, size Phê/La...), rồi **tự nói order bằng tiếng Anh** (không có câu mẫu): tên món + size + độ ngọt + đá + topping + “please”. Nhân viên rất khó tính: sai 2 lần là **bị từ chối phục vụ** cho tới khi học xong Lớp học order và đậu bài thi. Order xong: hỏi “For here or to go?”, hỏi tên, gọi tên khi đồ uống xong. Thiết bị không có micro thì gõ câu tiếng Anh (vẫn chấm như khi nói). |
 | ❄️ **Học Viện HVAC** *(nội dung khó, có khoá)* | Ở Khu Công Nghiệp. **Chỉ mở khi đạt Level 5 và hoàn thành 5 đơn sửa chữa.** Bên trong: 69 câu hỏi Daikin chia 5 cấp (đúng ≥ 80% mới mở cấp sau), câu tự luận có gợi ý, 7 bài nghe tiếng Anh (mức Trung bình mở sau Cấp 2, mức Khó sau Cấp 4), 20 câu luyện phỏng vấn có đếm giờ 90 giây (mở sau Cấp 4), nhãn độ tin cậy và nguồn cho từng câu. Đậu cả 5 cấp → 🎓 Chứng chỉ Kỹ sư HVAC. |
 | 📚 **Thư viện** | Ôn tập từ vựng, luyện hội thoại. 🚌 **Xe buýt** để đi nhanh giữa các vùng. |
 
@@ -41,7 +44,7 @@ Bạn là **Minh**, một kỹ thuật viên trẻ vừa nhận việc ở Trung
 | Khu Công Nghệ Cao | 6 | Điện tử, sản xuất |
 | Sân Bay Quốc Tế | 7 | Du lịch, thành phố |
 
-Hiện có **241 từ vựng / 13 nhóm**, **33 linh kiện**, **10 mạch lắp ráp**, **17 đơn sửa chữa**, **10 loại cây trồng**, **16 hội thoại nhiều lượt** (14 tình huống luyện tập + 2 khi sửa tại nhà khách) + 21 câu chào hỏi nhanh, **20 nhiệm vụ cốt truyện**, cùng Học Viện HVAC (69 câu hỏi, 7 bài nghe, 20 câu phỏng vấn).
+Hiện có **241 từ vựng / 13 nhóm**, **33 linh kiện**, **10 mạch lắp ráp**, **17 đơn sửa chữa**, **10 loại cây trồng**, **16 hội thoại nhiều lượt** (14 tình huống luyện tập + 2 khi sửa tại nhà khách) + 21 câu chào hỏi nhanh, **22 nhiệm vụ cốt truyện**, 3 tình huống từ chối khách gọi ngoài giờ, 2 quán trà sữa (10 món), cùng Học Viện HVAC (69 câu hỏi, 7 bài nghe, 20 câu phỏng vấn).
 
 ## Chơi trên điện thoại / iPad
 
@@ -68,6 +71,7 @@ Mọi nội dung nằm trong thư mục `js/data/`, mỗi mục chỉ là một 
 | Mạch lắp ráp | `js/data/components.js` → `RECIPES` | `need: { id_linh_kiện: số_lượng }` và đoạn `learn` giải thích. |
 | Đơn sửa chữa / mã lỗi mới | `js/data/quests.js` → `JOBS` | Hiện tượng (EN + VN), linh kiện cần, câu hỏi chẩn đoán 4 đáp án + giải thích. |
 | Hội thoại nhiều lượt | `js/data/convos.js` → `CONVOS` | Mỗi lượt: câu NPC nói + các câu trả lời `[câu, điểm 0/1/2, giải thích]`. Dùng `{greet}` để tự chào đúng giờ thực. |
+| Thực đơn trà sữa | `js/data/teashops.js` | Thêm món: tên Anh/Việt, giá theo size, các nhóm từ khoá máy cần nghe thấy (`keys`), từ cấm (`not`). Thêm quán mới: thêm 1 khoá vào `TEA_SHOPS` và 1 toà nhà cùng tên trong regions.js. |
 | Câu chào hỏi nhanh | `js/data/quests.js` → `DIALOGS` | Câu NPC nói, nghĩa, các câu trả lời, `ok` = vị trí câu đúng. |
 | Cây trồng | `js/data/farm.js` → `CROPS` | Tên Anh/Việt, số phút thực để chín, giá hạt, giá bán, cấp mở khoá. Thêm từ vào nhóm `farm` trong words.js. |
 | Nhiệm vụ cốt truyện | `js/data/quests.js` → `STORY` | Mỗi nhiệm vụ có `id` riêng (đừng đổi id cũ). Loại: `enter, words, parts, jobs, craft, talk, level, regions, plant, harvest, calls, convo3`. |
@@ -86,6 +90,8 @@ Sau khi sửa, tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `tech-eng
 - Điều kiện mở khoá chỉnh ở đầu `js/hvac.js`: `REQ_LEVEL`, `REQ_JOBS`, `PASS` (tỉ lệ đậu), `LISTEN_NEED`, `INTERVIEW_NEED`.
 - Lưu ý từ gói dữ liệu: giọng đọc do máy tạo; nội dung chưa đối chiếu giáo trình; không so CSPF với SEER như cùng thang đo.
 
+> Thực đơn và giá trà sữa lấy từ các trang công khai (blog, trang trung tâm thương mại, trang thương hiệu) tháng 10/2026, chỉ mang tính tham khảo. Mức đường/đá trong game (0–100%, không/ít/bình thường) là cách gọi phổ biến, chưa xác nhận đầy đủ với từng quán.
+
 ## Cấu trúc mã nguồn
 
 ```
@@ -96,6 +102,8 @@ js/icons.js         vẽ linh kiện, nông sản, cây trồng, đèn đường
 js/world.js         tạo bản đồ từ dữ liệu vùng đất, vẽ ô đất, toà nhà, bản đồ nhỏ
 js/input.js         cần điều khiển ảo, nút hành động, bàn phím
 js/game.js          vòng lặp game, kho đồ, trồng trọt, ánh sáng đêm, cuộc gọi, nhiệm vụ
+js/work.js          lịch làm việc, giờ làm, chấm công
+js/tea.js           quán trà sữa: chấm câu order nói bằng tiếng Anh, lớp học order
 js/hvac.js          Học Viện HVAC: khoá/mở, thi 5 cấp, bài nghe, phỏng vấn
 js/ui.js            hộp thoại: đố từ, balo/kho, cửa hàng, hội thoại nhiều lượt, luyện nói, từ điển, bản đồ...
 js/data/*.js        TOÀN BỘ nội dung có thể mở rộng
