@@ -88,26 +88,66 @@ G.audio = {
 
 // ---------- Đọc phát âm tiếng Anh (Text-to-Speech có sẵn trên iOS/Android) ----------
 G.tts = {
-  voice: null,
+  voice: null, voices: [],
+  // Giọng "vui nhộn"/robot có sẵn trên iPhone, iPad, Mac — nghe ồm, méo, rất khó chịu → loại bỏ
+  BAD: /albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|ralph|grandma|grandpa|rocko|eddy|flo\b|reed|sandy|shelley|kathy|princess|bruce|agnes|vicki|victoria|pipe organ|novelty/i,
+  FEMALE: /samantha|ava|allison|susan|zoe|joelle|nicky|karen|serena|moira|tessa|kate|stephanie|aria|jenny|michelle|emma|libby|sonia|natasha|catherine|fiona|veena|google us english|google uk english female|female|woman/i,
+  MALE: /alex|daniel|aaron|evan|nathan|tom\b|oliver|arthur|guy|ryan|christopher|eric|davis|tony|rishi|google uk english male|\bmale|man\b/i,
+  // chấm điểm giọng: càng cao càng tự nhiên
+  score(v, pref) {
+    if (!/^en([-_]|$)/i.test(v.lang)) return -999;
+    const n = v.name;
+    let s = 0;
+    if (this.BAD.test(n)) s -= 500;
+    if (/premium|enhanced|neural|natural|siri|online/i.test(n)) s += 40;
+    if (/en[-_]US/i.test(v.lang)) s += 12; else if (/en[-_](GB|AU|CA|IE|NZ)/i.test(v.lang)) s += 8;
+    const f = this.FEMALE.test(n), m = this.MALE.test(n) && !f;
+    if ((pref || 'f') === 'f' ? f : m) s += 25;
+    if (/^(samantha|ava|allison|google us english)/i.test(n)) s += 6;
+    if (v.localService) s += 2;
+    return s;
+  },
+  ranked(pref) {
+    if (!('speechSynthesis' in window)) return [];
+    return speechSynthesis.getVoices().filter((v) => /^en/i.test(v.lang)).map((v) => ({ v, s: this.score(v, pref) })).sort((a, b) => b.s - a.s);
+  },
+  choose() {
+    const st = G.state ? G.state.settings : {};
+    const r = this.ranked(st.vpref);
+    this.voices = r;
+    const want = st.voice && r.find((x) => x.v.name === st.voice);
+    this.voice = want ? want.v : r.length && r[0].s > -100 ? r[0].v : null;
+  },
+  // giọng thứ 2 (khác giới) cho bài hội thoại 2 người
+  second() {
+    const st = G.state ? G.state.settings : {};
+    const other = (st.vpref || 'f') === 'f' ? 'm' : 'f';
+    const r = this.ranked(other).filter((x) => x.v !== this.voice && x.s > -100);
+    return r.length ? r[0].v : this.voice;
+  },
   init() {
     if (!('speechSynthesis' in window)) return;
-    const choose = () => {
-      const vs = speechSynthesis.getVoices();
-      this.voice = vs.find((v) => /en[-_]US/i.test(v.lang) && /Samantha|Google|Premium|Enhanced/i.test(v.name)) ||
-        vs.find((v) => /en[-_]US/i.test(v.lang)) || vs.find((v) => /^en/i.test(v.lang)) || null;
-    };
-    choose();
-    speechSynthesis.onvoiceschanged = choose;
+    this.choose();
+    speechSynthesis.onvoiceschanged = () => this.choose();
+    // iOS đôi khi trả danh sách giọng trễ
+    [300, 1000, 2500].forEach((t) => setTimeout(() => { if (!this.voice) this.choose(); }, t));
+  },
+  utter(text, opts = {}) {
+    const st = G.state ? G.state.settings : {};
+    const u = new SpeechSynthesisUtterance(text);
+    const v = opts.voice || this.voice;
+    u.lang = v ? v.lang : 'en-US';
+    if (v) u.voice = v;
+    u.rate = opts.rate || st.rate || 0.9;
+    u.pitch = opts.pitch || st.pitch || 1.05;
+    return u;
   },
   speak(text, rate) {
     if (!('speechSynthesis' in window) || !G.state || !G.state.settings.tts) return;
     try {
+      if (!this.voice) this.choose();
       speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'en-US';
-      if (this.voice) u.voice = this.voice;
-      u.rate = rate || G.state.settings.rate || 0.9;
-      speechSynthesis.speak(u);
+      speechSynthesis.speak(this.utter(text, { rate }));
     } catch (e) { /* bỏ qua */ }
   },
   stop() { try { speechSynthesis.cancel(); } catch (e) { /* bỏ qua */ } },

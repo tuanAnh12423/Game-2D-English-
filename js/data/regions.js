@@ -13,7 +13,7 @@
 //   farms   : các thửa ruộng [{x, y, w, h}] để trồng trọt
 //   buildings: t = loại toà nhà:
 //      home · service · shop · library · cafe · house · station
-//      factory · hotel · airport · farmshop · hvac · koi · phela (quán trà sữa)
+//      factory · hotel · airport · farmshop · hvac · koi · phela (quán trà sữa) · mall (trung tâm thương mại)
 //   Toà nhà KHÔNG được đè lên đường giữa (hàng 16–19, cột 22–25).
 //   Cửa luôn ở mặt trước (phía dưới); lối đi ra đường lớn được tạo tự động.
 // ============================================================
@@ -127,6 +127,18 @@ window.REGIONS = [
       { t: 'station', x: 30, y: 22, w: 3, h: 2, name: 'Trạm xe buýt' },
     ],
   },
+  {
+    id: 'shopping', name: 'Khu Mua Sắm', en: 'Shopping District', gx: 3, gy: 1, level: 2, ground: 'city',
+    words: ['clothes', 'city', 'daily'], parts: ['resistor', 'led', 'buzzer', 'fuse', 'elcap', 'ceramic', 'diode'],
+    ponds: 0, deco: { tree: 0.015, flower: 0.015, rock: 0, bush: 0.01 }, npcs: 6, dialog: 'shop',
+    buildings: [
+      { t: 'mall', x: 5, y: 3, w: 16, h: 9, name: 'TTTM Sao Mai' },
+      { t: 'house', x: 30, y: 7, w: 5, h: 4, name: 'Căn hộ Sky' },
+      { t: 'cafe', x: 37, y: 7, w: 6, h: 4, name: 'Bánh Mì & Cà Phê' },
+      { t: 'house', x: 9, y: 23, w: 5, h: 4, name: 'Nhà cô Hạnh' },
+      { t: 'station', x: 30, y: 22, w: 3, h: 2, name: 'Trạm xe buýt' },
+    ],
+  },
 ];
 
 // Thông tin hiển thị cho từng loại toà nhà
@@ -145,4 +157,5 @@ window.BUILDING_TYPES = {
   hvac: { icon: '❄️', roof: '#0277bd', wall: '#e1f5fe' },
   koi: { icon: '🧋', roof: '#4e342e', wall: '#fff8e1' },
   phela: { icon: '🍵', roof: '#33691e', wall: '#f1f8e9' },
+  mall: { icon: '🛍️', roof: '#ad1457', wall: '#fce4ec' },
 };

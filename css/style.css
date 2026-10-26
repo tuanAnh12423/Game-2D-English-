@@ -365,6 +365,22 @@ input.tin { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; bord
 .tchips.quick { margin: 6px 0; } .tchips.quick .tchip { font-size: 12px; padding: 5px 9px; }
 #nbox { display: flex; gap: 6px; margin: 6px 0 4px; }
 
+/* ---------- Trung tâm thương mại ---------- */
+.cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; margin: 8px 0; }
+.ccard { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 4px; border-radius: 12px; border: 2px solid var(--line); background: #fff; font-family: inherit; color: var(--ink); }
+.ccard img { width: 56px; height: 70px; object-fit: contain; }
+.ccard b { font-size: 12.5px; } .ccard small { font-size: 11px; color: var(--blue2); }
+.ccard .cprice { font-size: 11.5px; font-weight: 800; color: #9a6a00; }
+.ccard.sel { border-color: var(--blue); background: #e3f2fd; }
+.cdetail { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.cdetail img { width: 192px; height: 80px; object-fit: contain; background: linear-gradient(#fce4ec, #f3e5f5); border-radius: 12px; }
+.cdetail .rn { flex: 1; min-width: 200px; } .cdetail .set { flex-wrap: wrap; gap: 5px; border: 0; padding: 4px 0; }
+.tryon { display: flex; gap: 10px; align-items: center; background: #fff8e1; border-radius: 12px; padding: 8px; margin: 8px 0; font-size: 13.5px; }
+.tryon img { width: 216px; height: 90px; object-fit: contain; background: linear-gradient(#fce4ec, #e1f5fe); border-radius: 10px; flex: none; }
+img.bigprev { width: 100%; max-width: 320px; height: 100px; object-fit: contain; background: linear-gradient(#fce4ec, #e1f5fe); border-radius: 14px; margin: 6px auto; display: block; }
+.tchip .dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; box-shadow: 0 0 0 1px #ccd; }
+@media (max-width: 520px) { .tryon { flex-direction: column; } .tryon img { width: 100%; } }
+
 /* ---------- Màn hình tiêu đề ---------- */
 #title {
   position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; padding: 16px;

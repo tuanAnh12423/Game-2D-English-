@@ -24,7 +24,7 @@ G.ui = {
     if (G.game.state) { G.game.updateHud(true); this.renderHotbar(); }
     if (cb) cb();
     if (!this.isOpen() && this.toastQ && this.toastQ.length) { const q = this.toastQ.splice(0); q.forEach(([m, t], i) => setTimeout(() => this.toast(m, t), i * 700)); }
-    if (!this.isOpen() && this.pending) { const f = this.pending; this.pending = null; setTimeout(f, 60); }
+    if (!this.isOpen() && this.queue && this.queue.length) { const f = this.queue.shift(); setTimeout(() => { if (this.isOpen()) this.queue.unshift(f); else f(); }, 60); }
   },
   on(p, sel, fn) { p.querySelectorAll(sel).forEach((b) => b.addEventListener('click', (e) => { G.audio.sfx('click'); fn(b, e); })); },
 
@@ -56,6 +56,7 @@ G.ui = {
   renderHotbar() {
     const hb = this.el('hotbar'), s = G.state;
     if (!hb || !s || !s.inv) return;
+    hb.style.display = G.feat.has('farm') ? '' : 'none';
     let html = '';
     for (let i = 0; i < 6; i++) {
       const sl = s.inv[i];
@@ -76,21 +77,28 @@ G.ui = {
 
   // ---------- Giới thiệu ----------
   intro() {
+    const nm = G.esc(G.state.profile.name);
     this.open(`
-      <h2>👷 Chào mừng, Kỹ thuật viên!</h2>
-      <p>Bạn là <b>${G.esc(G.state.profile.name)}</b>, KTV trẻ vừa nhận việc ở <b>Trung Tâm Bảo Hành</b>. Game chạy theo <b>giờ thực</b> của điện thoại: sáng, chiều, tối, thời tiết đều thay đổi.</p>
+      <h2>👷 Chào mừng, ${nm}!</h2>
+      <p>Bạn là kỹ thuật viên mới của <b>Trung Tâm Bảo Hành</b>. Hôm nay là ngày đầu tiên — cứ từ từ khám phá nhé!</p>
       <ul class="howto">
-        <li><span class="orb">A</span> <span><b>Quả cầu chữ</b>: chạm vào để học từ tiếng Anh, trả lời đúng để thu thập.</span></li>
-        <li><img src="${G.partImg('resistor', 28)}"> <span><b>Linh kiện</b>: nhặt điện trở, tụ, IC, rơ-le... và đọc cách đo kiểm.</span></li>
-        <li><img src="${G.partImg('seed_tomato', 28)}"> <span><b>Trồng trọt</b>: ruộng cạnh nhà. Chọn hạt ở <b>thanh đồ nhanh</b>, đứng trên ruộng bấm 🌱, nhớ 💧 tưới. Cây lớn cả khi tắt game!</span></li>
-        <li>🛠️ <span><b>Đi làm</b>: nhận đơn ở Trung Tâm Bảo Hành, nói chuyện với khách và chẩn đoán lỗi bằng tiếng Anh.</span></li>
-        <li>💬📞 <span><b>Giao tiếp</b>: hội thoại nhiều lượt có chấm sao; khách hàng sẽ <b>gọi điện</b> bất chợt; bấm 🎤 để luyện nói.</span></li>
-        <li>📅 <span><b>Lịch làm việc</b>: ${G.esc(G.work.scheduleText())}. Ngoài giờ khách có thể gọi bắt bạn đến — hãy từ chối khéo! Đổi lịch trong ⚙️.</span></li>
-        <li>🧋 <span><b>Trà sữa KOI Thé & Phê La</b>: phải NÓI order bằng tiếng Anh, nhân viên rất khó tính.</span></li>
-        <li>🎒 <span><b>Kho đồ</b>: balo dạng ô, 📦 kho 48 ô ở nhà. Lên cấp để mở vùng đất mới.</span></li>
+        <li>🕹️ <span>Kéo ngón tay ở <b>nửa trái</b> màn hình để đi lại.</span></li>
+        <li>🟡 <span>Mũi tên vàng chỉ đường tới <b>nhiệm vụ hiện tại</b> (📜 ở góc trên).</span></li>
+        <li><span class="orb">A</span> <span>Đi vào <b>quả cầu chữ</b> phát sáng để học từ tiếng Anh.</span></li>
+        <li>🔓 <span>Mỗi nhiệm vụ hoàn thành sẽ <b>mở thêm tính năng mới</b>: trò chuyện, sửa chữa, trồng trọt, trà sữa, mua sắm...</span></li>
       </ul>
-      <p class="hint">🕹️ Kéo ngón tay ở <b>nửa trái</b> màn hình để đi. Nút tròn bên phải để <b>Vào nhà / Nói chuyện / Gieo / Tưới / Thu hoạch</b>.</p>
       <button class="btn big" data-close>Bắt đầu thôi! 🚀</button>`);
+  },
+
+  // hộp thoại chờ: mở ngay nếu đang rảnh, hoặc sau khi đóng hộp hiện tại
+  later(fn) { if (this.isOpen()) (this.queue = this.queue || []).push(fn); else fn(); },
+  unlocked(keys) {
+    this.later(() => {
+      G.audio.sfx('level');
+      this.open(`<div class="center"><div class="big-emoji">🔓</div><h2>Mở khoá tính năng mới!</h2></div>
+        ${keys.map((k) => FEATURES[k]).filter(Boolean).map((f) => `<div class="sec"><h4>${f.icon} ${G.esc(f.name)}</h4><p>${G.esc(f.how)}</p></div>`).join('')}
+        <button class="btn big" data-close>Đã hiểu! 👍</button>`);
+    });
   },
 
   // ---------- Tạo / đổi nhân vật ----------
@@ -130,7 +138,7 @@ G.ui = {
   },
 
   levelUp(L, opened) {
-    if (this.isOpen()) { this.pending = () => this.levelUp(L, opened); return; }
+    if (this.isOpen()) { this.later(() => this.levelUp(L, opened)); return; }
     const txt = opened.length ? `<p>🔓 Mở khoá vùng đất: <b>${opened.map((r) => G.esc(r.name)).join(', ')}</b></p>` : '';
     const newCrops = CROPS.filter((c) => c.level === L);
     this.open(`<div class="center"><div class="big-emoji">🎉</div><h2>LEVEL UP! Lv ${L}</h2>${txt}
@@ -276,9 +284,23 @@ G.ui = {
             <div class="say-vi ${s.settings.vi ? '' : 'hide'}">${G.esc(vi)}</div>
             ${s.settings.vi ? '' : '<button class="mini" id="showvi">Xem nghĩa</button>'}</div>
         </div>
-        <p class="qtxt">Chọn câu trả lời <b>tự nhiên & lịch sự</b> nhất:</p>
+        ${step.html || ''}
+        <p class="qtxt">Chọn câu trả lời <b>tự nhiên & lịch sự</b> nhất${G.stt.supported ? ' — hoặc bấm 🎤 và nói' : ''}:</p>
         <div class="opts">${options.map((o, k) => `<button class="opt left" data-k="${k}">${G.esc(o.t)}</button>`).join('')}</div>
+        ${G.stt.supported ? '<button class="btn small ghost" id="csay">🎤 Nói câu trả lời</button><div id="csayres"></div>' : ''}
         <div id="cres"></div>`, { onClose: opts.onCancel });
+      const csay = this.el('csay');
+      if (csay) csay.addEventListener('click', () => {
+        const box = this.el('csayres');
+        box.innerHTML = '<div class="mic on">🎙️ Đang nghe... đọc to câu trả lời bạn chọn</div>';
+        G.stt.listen((alts) => {
+          let best = -1, bs = 0, heard = alts[0] || '';
+          options.forEach((o, k) => alts.forEach((a) => { const v = G.similarity(a, o.t); if (v > bs) { bs = v; best = k; heard = a; } }));
+          const btn = p.querySelector('.opt[data-k="' + best + '"]');
+          if (best >= 0 && bs >= 0.55 && btn && !btn.disabled) { box.innerHTML = `<div class="mic good">🎤 ${Math.round(bs * 100)}% — “${G.esc(heard)}”</div>`; btn.click(); }
+          else box.innerHTML = `<div class="mic bad">Máy nghe được: “${G.esc(heard)}” — chưa khớp câu nào (${Math.round(bs * 100)}%). Nói lại rõ hơn nhé.</div>`;
+        }, () => { box.innerHTML = '<div class="mic bad">Không nghe thấy gì. Kiểm tra quyền Micro rồi thử lại.</div>'; });
+      });
       const fc = p.querySelector('.face').getContext('2d');
       fc.scale(2, 2);
       G.drawChar(fc, 32, 62, 0, 0, look, 1.55);
@@ -325,6 +347,7 @@ G.ui = {
       const prev = s.convos[c.id] || 0;
       s.convos[c.id] = Math.max(prev, stars);
       if (stars >= 2) s.stats.talks++;
+      if (c.theme === 'service') s.stats.calls = (s.stats.calls || 0) + 1;
       if (stars >= 2 && c.theme === 'afterhours') s.stats.declined = (s.stats.declined || 0) + 1;
       const xp = Math.round(6 * c.steps.length * stars / 3) + (prev === 0 ? 10 : 0);
       const coins = stars * 2 + (opts.phone ? 10 : 0);
@@ -396,6 +419,14 @@ G.ui = {
 
   // ---------- Toà nhà ----------
   building(b) {
+    const need = G.feat.BUILD[b.t];
+    if (need && !G.feat.has(need)) {
+      const bt = BUILDING_TYPES[b.t];
+      this.open(`<h2>${bt.icon} ${G.esc(b.name)} <small>🔒 Chưa mở</small></h2>
+        <p>${G.esc(G.feat.lockedMsg(need))}</p><p class="hint">Cứ làm lần lượt các nhiệm vụ (📜) — mỗi nhiệm vụ xong sẽ mở thêm tính năng mới.</p>
+        <button class="btn ghost" data-close>Quay lại sau</button>`);
+      return;
+    }
     const f = this['b_' + b.t];
     if (f) f.call(this, b); else this.b_house(b);
   },
@@ -421,9 +452,11 @@ G.ui = {
         <div>🧋 Ly trà sữa<b>${s.stats.drinks || 0}</b></div>
       </div>
       <button class="btn big" id="chest">📦 Mở kho đồ (48 ô)</button>
+      ${G.feat.has('mall') ? '<button class="btn" id="wardrobe">🪞 Tủ quần áo</button>' : ''}
       <button class="btn" id="save">💾 Lưu game</button>
       <button class="btn ghost" id="rest">${night ? '😴 Chúc ngủ ngon' : '☕ Nghỉ một chút'}</button>`);
     this.on(p, '#chest', () => this.bag(true));
+    this.on(p, '#wardrobe', () => G.mall.wardrobe(true));
     this.on(p, '#save', () => { g.save(); this.toast('💾 Đã lưu!'); this.close(); });
     this.on(p, '#rest', () => {
       const line = night ? 'Good night! Sleep well.' : 'Time for a short break.';
@@ -438,14 +471,17 @@ G.ui = {
     g.refreshBoard();
     const job = s.job ? g.jobById(s.job.id) : null;
     const jb = g.jobBuilding();
-    const ws = G.work.status(), open = ws.type === 'work';
-    const ci = G.work.checkIn();
+    const hasWork = G.feat.has('work'), hasJobs = G.feat.has('jobs');
+    const ws = G.work.status(), open = !hasWork || ws.type === 'work';
+    const ci = hasWork ? G.work.checkIn() : null;
     const nm = G.esc(s.profile.name);
     const sub = !open ? (ws.type === 'off' ? 'Bảo vệ: “Today is your day off, ' + nm + '. Go and relax!”' : ws.type === 'lunch' ? 'Bảo vệ: “Everyone is on lunch break. Come back at ' + G.work.hhmm(G.work.times().back) + '.”' : 'Bảo vệ: “The service center is closed now. Working hours are ' + G.esc(G.work.hoursEn()) + '.”')
-      : ci && ci.late ? 'Quản lý <b>Ms. Lan</b>: “You’re late, ' + nm + '! Please be on time tomorrow.”' : 'Quản lý <b>Ms. Lan</b>: “' + G.esc(G.clock.greet()) + ', ' + nm + '! Here are today’s repair orders.”';
+      : ci && ci.late ? 'Quản lý <b>Ms. Lan</b>: “You’re late, ' + nm + '! Please be on time tomorrow.”' : 'Quản lý <b>Ms. Lan</b>: “' + G.esc(G.clock.greet()) + ', ' + nm + '!' + (hasJobs ? ' Here are today’s repair orders.”' : ' Welcome to the service center!”');
     let html = this.head(b, sub);
-    html += `<div class="job ${open ? 'active' : ''}"><div class="jt">📅 Lịch làm việc: ${G.esc(G.work.scheduleText())}</div><div>${G.work.label()}${ci ? ` · ✅ Đã chấm công${ci.late ? ' (đi muộn)' : ''} +${ci.pay} 🪙` : ''}</div></div>`;
+    if (!hasJobs) html += `<div class="res mid">Ms. Lan: “Welcome to the team, ${nm}! Before your first job, please collect some English words and electronic parts around town.” — Hãy hoàn thành nhiệm vụ hiện tại (📜) để được giao đơn.</div>`;
+    if (hasWork) html += `<div class="job ${open ? 'active' : ''}"><div class="jt">📅 Lịch làm việc: ${G.esc(G.work.scheduleText())}</div><div>${G.work.label()}${ci ? ` · ✅ Đã chấm công${ci.late ? ' (đi muộn)' : ''} +${ci.pay} 🪙` : ''}</div></div>`;
     if (ci) { g.addCoins(ci.pay); if (ci.late) G.tts.speak('You are late, ' + s.profile.name + '!'); }
+    if (hasWork && ws.type === 'work' && s.wardrobe && s.wardrobe.wear && s.wardrobe.wear.top) html += `<div class="res mid">👔 Ms. Lan: “Where is your uniform, ${nm}? Please wear it at work.” — Vào 🏠 Nhà → 🪞 Tủ quần áo để mặc đồng phục.</div>`;
     if (job) {
       html += `<div class="job active"><div class="jt">🔧 Đơn đang làm: ${G.esc(job.vi)}</div>
         <div class="jen">${G.esc(job.en)} ${this.sayBtn(job.en)}</div><div class="jvi">${G.esc(job.sv)}</div>
@@ -453,17 +489,18 @@ G.ui = {
         <div class="need">Cần mang: ${Object.keys(job.need).map((id) => this.partChip(id, job.need[id])).join(' ')}</div>
         <button class="btn ghost small" id="drop">Huỷ đơn này</button></div>`;
     }
-    html += '<h3>📋 Đơn sửa chữa hôm nay</h3>';
-    if (!s.board.length) html += '<p class="hint">Hết đơn hôm nay rồi! Ngày mai (theo lịch thật) sẽ có đơn mới.</p>';
-    s.board.forEach((id) => {
+    if (hasJobs) html += '<h3>📋 Đơn sửa chữa hôm nay</h3>';
+    if (hasJobs && !s.board.length) html += '<p class="hint">Hết đơn hôm nay rồi! Ngày mai (theo lịch thật) sẽ có đơn mới.</p>';
+    (hasJobs ? s.board : []).forEach((id) => {
       const j = g.jobById(id);
       if (!j) return;
       html += `<div class="job"><div class="jt">${G.esc(j.vi)} · <span class="rew">+${j.coins} 🪙 +${j.xp} XP</span></div>
         <div class="jen">${G.esc(j.en)} ${this.sayBtn(j.en)}</div><div class="jvi">${G.esc(j.sv)}</div>
         <div class="need">Cần: ${Object.keys(j.need).map((pid) => this.partChip(pid, j.need[pid])).join(' ')}</div>
-        <button class="btn small" data-take="${id}" ${job || !open ? 'disabled' : ''}>${!open ? 'Chỉ nhận đơn trong giờ làm' : job ? 'Làm xong đơn hiện tại trước' : 'Nhận đơn'}</button></div>`;
+        <button class="btn small" data-take="${id}" ${job || !open || !hasJobs ? 'disabled' : ''}>${!hasJobs ? '🔒 Chưa được giao việc' : !open ? 'Chỉ nhận đơn trong giờ làm' : job ? 'Làm xong đơn hiện tại trước' : 'Nhận đơn'}</button></div>`;
     });
-    html += `<button class="btn ghost" id="cc">📞 Luyện nghe máy tổng đài (Call Center)</button>`;
+    if (G.feat.has('phone')) html += `<button class="btn ghost" id="cc">📞 Luyện nghe máy tổng đài (Call Center)</button>`;
+    else html += '<button class="btn ghost" data-close>Ra ngoài</button>';
     const p = this.open(html);
     this.on(p, '[data-take]', (x) => { g.acceptJob(x.dataset.take); this.close(); });
     this.on(p, '#drop', () => { s.job = null; this.toast('Đã huỷ đơn.'); this.close(); });
@@ -544,6 +581,7 @@ G.ui = {
 
   b_hvac(b) { G.hvac.open(b); },
   b_koi(b) { G.tea.open(b); },
+  b_mall(b) { G.mall.open(b); },
   b_phela(b) { G.tea.open(b); },
   b_shop(b) { this.shop(b, 'buy'); },
   shop(b, tab, keep) {
@@ -935,17 +973,25 @@ G.ui = {
   quests() {
     const s = G.state, g = G.game;
     const job = s.job ? g.jobById(s.job.id) : null, jb = g.jobBuilding();
-    const cur = g.curQuest();
+    const cur = g.curQuest(), ci = STORY.indexOf(cur);
+    const done = STORY.filter((q) => s.storyDone[q.id]);
+    const next = ci >= 0 ? STORY.slice(ci + 1).find((q) => !s.storyDone[q.id]) : null;
+    const rest = STORY.filter((q) => !s.storyDone[q.id]).length - (cur ? 1 : 0) - (next ? 1 : 0);
+    const feats = Object.keys(FEATURES).filter((k) => G.feat.has(k));
+    const card = (q, st) => {
+      const pr = g.storyProgress(q);
+      return `<div class="q ${st}"><div class="qt">${st === 'done' ? '✅' : '▶️'} ${G.esc(q.title)}</div>
+        ${st === 'cur' ? `<div class="qd">${G.esc(q.desc)}</div><div class="bar"><i style="width:${Math.min(100, (pr.cur / pr.max) * 100)}%"></i></div>
+        <small>${Math.min(pr.cur, pr.max)}/${pr.max} · Thưởng ${q.coins} 🪙 ${q.xp ? '+ ' + q.xp + ' XP' : ''}${q.unlock && q.unlock.length ? ' · 🔓 mở: ' + q.unlock.map((k) => FEATURES[k].icon + ' ' + FEATURES[k].name).join(', ') : ''}</small>` : ''}</div>`;
+    };
     this.open(`<h2>📜 Nhiệm vụ</h2>
       ${job ? `<div class="job active"><div class="jt">🔧 ${G.esc(job.vi)}: ${G.esc(job.sv)}</div><div>📍 ${G.esc(jb ? jb.name + ' — ' + jb.region.name : '')}</div>
         <div class="need">${Object.keys(job.need).map((id) => this.partChip(id, job.need[id])).join(' ')}</div></div>` : ''}
-      <div class="qlist">${STORY.map((q) => {
-        const st = s.storyDone[q.id] ? 'done' : q === cur ? 'cur' : 'lock';
-        const pr = g.storyProgress(q);
-        return `<div class="q ${st}"><div class="qt">${st === 'done' ? '✅' : st === 'cur' ? '▶️' : '🔒'} ${G.esc(q.title)}</div>
-          ${st !== 'lock' ? `<div class="qd">${G.esc(q.desc)}</div>` : ''}
-          ${st === 'cur' ? `<div class="bar"><i style="width:${Math.min(100, (pr.cur / pr.max) * 100)}%"></i></div><small>${Math.min(pr.cur, pr.max)}/${pr.max} · Thưởng ${q.coins} 🪙 ${q.xp ? '+ ' + q.xp + ' XP' : ''}</small>` : ''}</div>`;
-      }).join('')}</div>`);
+      <div class="qlist">${cur ? card(cur, 'cur') : '<div class="res good">🌟 Bạn đã hoàn thành toàn bộ cốt truyện!</div>'}
+        ${next ? `<div class="q lock"><div class="qt">🔒 Nhiệm vụ tiếp theo: ???</div></div>` : ''}
+        ${rest > 0 ? `<p class="hint">…và còn ${rest} nhiệm vụ nữa sẽ hiện ra dần dần.</p>` : ''}
+        ${done.length ? `<h3>Đã hoàn thành (${done.length})</h3>` + done.slice().reverse().map((q) => card(q, 'done')).join('') : ''}</div>
+      ${feats.length ? `<h3>🔓 Tính năng đã mở</h3><div class="need">${feats.map((k) => `<span class="chip ok">${FEATURES[k].icon} ${G.esc(FEATURES[k].name)}</span>`).join('')}</div>` : ''}`);
   },
   map() {
     const g = G.game, L = g.level;
@@ -984,6 +1030,10 @@ G.ui = {
     const p = this.open(`<h2>⚙️ Cài đặt</h2>
       <label class="set"><input type="checkbox" id="s-tts" ${s.tts ? 'checked' : ''}> 🔊 Đọc phát âm tiếng Anh</label>
       <label class="set">🐢 Tốc độ đọc <input type="range" id="s-rate" min="0.5" max="1.2" step="0.1" value="${s.rate}"> <span id="s-rv">${s.rate}</span></label>
+      <div class="set">🗣️ Giọng <button class="tchip ${(s.vpref || 'f') === 'f' ? 'on' : ''}" data-vp="f">👩 Nữ</button><button class="tchip ${s.vpref === 'm' ? 'on' : ''}" data-vp="m">👨 Nam</button></div>
+      <label class="set">🎙️ Chọn giọng <select id="s-voice">${G.tts.ranked(s.vpref).filter((x) => x.s > -100).map((x) => `<option value="${G.esc(x.v.name)}" ${G.tts.voice && G.tts.voice.name === x.v.name ? 'selected' : ''}>${G.esc(x.v.name)} (${G.esc(x.v.lang)})${x.s >= 50 ? ' ⭐' : ''}</option>`).join('') || '<option>Máy chưa có giọng tiếng Anh</option>'}</select></label>
+      <label class="set">🎵 Độ cao giọng <input type="range" id="s-pitch" min="0.8" max="1.3" step="0.05" value="${s.pitch || 1.05}"> <span id="s-pv">${s.pitch || 1.05}</span></label>
+      <p class="hint">💡 Giọng hay nhất trên iPhone/iPad: vào <b>Cài đặt → Trợ năng → Nội dung được đọc → Giọng nói → Tiếng Anh</b>, tải giọng <b>Ava (Cao cấp/Premium)</b> hoặc <b>Samantha (Nâng cao)</b>, rồi mở lại game và chọn ở đây. Các giọng có ⭐ là giọng chất lượng cao.</p>
       <label class="set"><input type="checkbox" id="s-sfx" ${s.sfx ? 'checked' : ''}> 🎵 Hiệu ứng âm thanh</label>
       <label class="set"><input type="checkbox" id="s-vi" ${s.vi ? 'checked' : ''}> 🇻🇳 Hiện nghĩa tiếng Việt khi nói chuyện</label>
       <label class="set"><input type="checkbox" id="s-calls" ${s.calls ? 'checked' : ''}> 📞 Khách hàng gọi điện bất chợt</label>
@@ -1006,6 +1056,11 @@ G.ui = {
     p.querySelector('#s-vi').addEventListener('change', (e) => { s.vi = e.target.checked; });
     p.querySelector('#s-calls').addEventListener('change', (e) => { s.calls = e.target.checked; });
     p.querySelector('#s-rate').addEventListener('input', (e) => { s.rate = +e.target.value; this.el('s-rv').textContent = s.rate; });
+    p.querySelectorAll('[data-vp]').forEach((b) => b.addEventListener('click', () => { s.vpref = b.dataset.vp; s.voice = ''; G.tts.choose(); G.tts.speak('Hello! This is my new voice.'); this.settings(); }));
+    const vsel = p.querySelector('#s-voice');
+    vsel.addEventListener('change', () => { s.voice = vsel.value; G.tts.choose(); G.tts.speak('Hello! How do I sound?'); });
+    p.querySelector('#s-pitch').addEventListener('input', (e) => { s.pitch = +e.target.value; this.el('s-pv').textContent = s.pitch; });
+    p.querySelector('#s-pitch').addEventListener('change', () => G.tts.speak('Nice to meet you!'));
     p.querySelector('#s-night').addEventListener('input', (e) => { s.night = +e.target.value; this.el('s-nv').textContent = Math.round(s.night * 100) + '%'; });
     this.on(p, '#s-save', () => { G.game.save(); this.toast('💾 Đã lưu!'); });
     this.on(p, '#s-char', () => this.createChar(() => this.settings(), false));

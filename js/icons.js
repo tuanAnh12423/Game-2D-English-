@@ -389,7 +389,9 @@ G.drawLamp = function (ctx, x, y, on, t) {
 };
 
 // ---------- Nhân vật (có viền, đổ bóng, 4 hướng) ----------
-// look: {skin, hair, shirt, pants, shoes, cap, long, glasses, logo, belt, tool}
+// look: {skin, hair, shirt, pants, shoes, cap, long, glasses, logo, belt, tool,
+//        top: tee|polo|shirt|hoodie|jacket|dress, bottom: pants|shorts|skirt,
+//        shoeType: shoe|boot|sandal, hat: cap|sun|beanie, glasses: true|'sun', bag: màu ba lô}
 G.drawChar = function (ctx, x, y, dir, frame, look, scale = 1) {
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y));
@@ -399,55 +401,95 @@ G.drawChar = function (ctx, x, y, dir, frame, look, scale = 1) {
   const OL = 'rgba(28,22,38,.8)';
   ctx.lineJoin = 'round'; ctx.lineWidth = 1.2; ctx.strokeStyle = OL;
   const box = (x0, y0, w, h, col, r = 1.5) => { ctx.fillStyle = col; rr(ctx, x0, y0, w, h, r); ctx.fill(); ctx.stroke(); };
-  const shoes = look.shoes || '#3e2723';
+  const top = look.top || 'tee', bottom = top === 'dress' ? 'none' : (look.bottom || 'pants');
+  const shoeT = look.shoeType || 'shoe', shoes = look.shoes || '#3e2723';
+  const legCol = bottom === 'pants' ? look.pants : look.skin;
   // bóng
   ctx.fillStyle = 'rgba(0,0,0,.24)';
   ctx.beginPath(); ctx.ellipse(0, 1, 10, 3.6, 0, 0, Math.PI * 2); ctx.fill();
 
   if (dir === 1) ctx.scale(-1, 1); // vẽ hướng phải rồi lật
   const side = dir === 1 || dir === 2;
-
+  const shoe = (x0, y0) => {
+    if (shoeT === 'boot') box(x0, y0 - 3, side ? 6.5 : 5.5, 6.5, shoes, 1.5);
+    else if (shoeT === 'sandal') { box(x0, y0 + 1, side ? 6.5 : 5.5, 2.2, shoes, 1); ctx.fillStyle = look.skin; ctx.fillRect(x0 + 1, y0, side ? 4.5 : 3.5, 1.2); }
+    else box(x0, y0, side ? 6.5 : 5.5, 3.5, shoes, 1.5);
+  };
+  const leg = (x0, y0, w, h) => {
+    box(x0, y0, w, h, legCol);
+    if (bottom === 'shorts') box(x0, y0, w, 4.5, look.pants, 1.2);
+  };
   // chân
   if (side) {
     const a = step * 3.5;
-    box(-3 - a, -10, 4.5, 9, look.pants); box(-3.5 - a, -2.5, 6.5, 3.5, shoes, 1.5);
-    box(-1.5 + a, -10, 4.5, 9, look.pants); box(-1.5 + a, -2.5, 6.5, 3.5, shoes, 1.5);
+    leg(-3 - a, -10, 4.5, 9); shoe(-3.5 - a, -2.5);
+    leg(-1.5 + a, -10, 4.5, 9); shoe(-1.5 + a, -2.5);
   } else {
     const l = step > 0 ? 1.5 : 0, r = step < 0 ? 1.5 : 0;
-    box(-5.5, -10, 4.5, 9 - l, look.pants); box(1, -10, 4.5, 9 - r, look.pants);
-    box(-6, -2.5 - l, 5.5, 3.5, shoes); box(0.5, -2.5 - r, 5.5, 3.5, shoes);
+    leg(-5.5, -10, 4.5, 9 - l); leg(1, -10, 4.5, 9 - r);
+    shoe(-6, -2.5 - l); shoe(0.5, -2.5 - r);
   }
   ctx.translate(0, -bob);
+  const bw = side ? 11 : 15;
 
-  // túi đồ nghề sau lưng
-  if (look.tool && (dir === 3 || side)) {
-    ctx.fillStyle = '#ef6c00';
-    if (dir === 3) { box(-6, -20, 12, 10, '#ef6c00', 2); ctx.fillStyle = '#ffb74d'; ctx.fillRect(-4, -17, 8, 2); }
-    else box(-10, -19, 5, 9, '#ef6c00', 1.5);
-  }
+  // chân váy / váy liền
+  const flare = (col, y0, y1) => {
+    ctx.fillStyle = col; ctx.beginPath();
+    ctx.moveTo(-bw / 2 + 0.5, y0); ctx.lineTo(bw / 2 - 0.5, y0); ctx.lineTo(bw / 2 + 2.5, y1); ctx.lineTo(-bw / 2 - 2.5, y1); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+  };
+  if (bottom === 'skirt') flare(look.pants, -12, -4.5);
+  if (top === 'dress') flare(look.shirt, -13, -4);
+
+  // ba lô / túi đồ nghề nhìn từ bên cạnh (nằm sau thân)
+  const bagCol = look.bag || (look.tool ? '#ef6c00' : null);
+  if (bagCol && side) box(-10, -19, 5, 9, bagCol, 1.5);
+  // mũ trùm hoodie phía sau đầu (nhìn từ trước)
+  if (top === 'hoodie' && !side && dir !== 3) { ctx.fillStyle = G.shade(look.shirt, -0.15); ctx.beginPath(); ctx.ellipse(0, -22, 8, 3.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
 
   // thân
-  const bw = side ? 11 : 15;
-  box(-bw / 2, -22, bw, 14, look.shirt, 3.5);
-  ctx.fillStyle = 'rgba(0,0,0,.14)'; ctx.fillRect(bw / 2 - 3.5, -20, 2.5, 11);
+  box(-bw / 2, -22, bw, top === 'dress' ? 10 : 14, look.shirt, 3.5);
+  ctx.fillStyle = 'rgba(0,0,0,.14)'; ctx.fillRect(bw / 2 - 3.5, -20, 2.5, top === 'dress' ? 8 : 11);
   ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(-bw / 2 + 1.5, -20, 2, 10);
-  if (look.belt) { ctx.fillStyle = look.belt; ctx.fillRect(-bw / 2 + 0.6, -10.5, bw - 1.2, 2.2); }
-  if (dir === 0) { // cổ áo
-    ctx.fillStyle = 'rgba(255,255,255,.75)';
-    ctx.beginPath(); ctx.moveTo(-3, -22); ctx.lineTo(0, -18.5); ctx.lineTo(3, -22); ctx.closePath(); ctx.fill();
-    if (look.logo) { ctx.fillStyle = look.logo; ctx.fillRect(2, -18, 3.5, 2.5); }
+  if (look.belt && bottom === 'pants') { ctx.fillStyle = look.belt; ctx.fillRect(-bw / 2 + 0.6, -10.5, bw - 1.2, 2.2); }
+  if (dir === 0) {
+    const light = G.shade(look.shirt, 0.45), dark = G.shade(look.shirt, -0.3);
+    if (look.logo) { // đồng phục kỹ thuật viên
+      ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.beginPath(); ctx.moveTo(-3, -22); ctx.lineTo(0, -18.5); ctx.lineTo(3, -22); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = look.logo; ctx.fillRect(2, -18, 3.5, 2.5);
+    } else if (top === 'tee' || top === 'dress') {
+      ctx.fillStyle = look.skin; ctx.beginPath(); ctx.arc(0, -22, 2.6, 0, Math.PI); ctx.fill();
+    } else if (top === 'polo' || top === 'shirt') {
+      ctx.fillStyle = light;
+      ctx.beginPath(); ctx.moveTo(-4, -22); ctx.lineTo(-0.5, -19); ctx.lineTo(-1.5, -22); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(4, -22); ctx.lineTo(0.5, -19); ctx.lineTo(1.5, -22); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = dark; const n = top === 'shirt' ? 4 : 2;
+      for (let i = 0; i < n; i++) ctx.fillRect(-0.6, -18.5 + i * 2.6, 1.2, 1.2);
+    } else if (top === 'hoodie') {
+      ctx.fillStyle = dark; rr(ctx, -4.5, -15, 9, 4, 1.5); ctx.fill();
+      ctx.strokeStyle = light; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.moveTo(-1.5, -21); ctx.lineTo(-1.5, -17); ctx.moveTo(1.5, -21); ctx.lineTo(1.5, -17); ctx.stroke(); ctx.strokeStyle = OL; ctx.lineWidth = 1.2;
+    } else if (top === 'jacket') {
+      ctx.fillStyle = '#fafafa'; ctx.fillRect(-2, -21.5, 4, 12);
+      ctx.fillStyle = dark; ctx.fillRect(-2.6, -21.5, 0.8, 12); ctx.fillRect(1.8, -21.5, 0.8, 12);
+    }
   }
-  // tay
+  if (top === 'hoodie' && dir === 3) { ctx.fillStyle = G.shade(look.shirt, -0.15); rr(ctx, -6, -24, 12, 7, 3); ctx.fill(); ctx.stroke(); }
+  // tay (áo dài tay: hoodie, áo khoác, sơ mi)
+  const longSl = top === 'hoodie' || top === 'jacket' || top === 'shirt';
+  const arm = (x0, y0) => {
+    if (longSl) { box(x0, y0, 4, 9.5, look.shirt, 1.5); box(x0 + 0.2, y0 + 8.5, 3.6, 2.6, look.skin, 1.5); }
+    else { box(x0, y0, 4, 5.5, look.shirt, 1.5); box(x0 + 0.2, y0 + 5, 3.6, 5, look.skin, 2); }
+  };
   if (side) {
-    const a = -step * 3;
-    ctx.save(); ctx.translate(0, -20); ctx.rotate(a * 0.12);
-    box(-2, 0, 4.5, 6, look.shirt, 1.5); box(-1.8, 5, 4, 4.5, look.skin, 2);
+    ctx.save(); ctx.translate(0, -20); ctx.rotate(-step * 0.36);
+    arm(-2, 0);
     ctx.restore();
   } else {
     const a = step * 2.5;
-    box(-10, -21 + a, 4, 6, look.shirt, 1.5); box(-9.8, -16 + a, 3.6, 4.5, look.skin, 2);
-    box(6, -21 - a, 4, 6, look.shirt, 1.5); box(6.2, -16 - a, 3.6, 4.5, look.skin, 2);
+    arm(-10, -21 + a); arm(6, -21 - a);
   }
+  // ba lô / túi đồ nghề nhìn từ sau lưng (đè lên thân)
+  if (bagCol && dir === 3) { box(-6, -21, 12, 11, bagCol, 2.5); ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.fillRect(-4, -18, 8, 2); }
 
   // đầu
   ctx.fillStyle = look.skin; ctx.beginPath(); ctx.arc(0, -30, 8.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
@@ -465,27 +507,42 @@ G.drawChar = function (ctx, x, y, dir, frame, look, scale = 1) {
     if (look.long) { box(-9.5, -31, 3.5, 12, look.hair, 1.5); box(6, -31, 3.5, 12, look.hair, 1.5); }
   }
   ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.beginPath(); ctx.ellipse(-3, -36, 3, 1.5, -0.4, 0, Math.PI * 2); ctx.fill();
-  // mũ lưỡi trai
-  if (look.cap) {
+  // mũ
+  const hat = look.hat || (look.cap ? 'cap' : null);
+  if (hat === 'cap') {
     ctx.fillStyle = look.cap;
     ctx.beginPath(); ctx.arc(0, -32, 9, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-    if (dir === 0) { box(-8, -33, 16, 3, look.cap, 1.5); }
-    else if (side) { box(2, -33, 10, 3, look.cap, 1.5); }
+    if (dir === 0) box(-8, -33, 16, 3, look.cap, 1.5);
+    else if (side) box(2, -33, 10, 3, look.cap, 1.5);
     ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.fillRect(-3, -39, 5, 2);
+  } else if (hat === 'sun') {
+    ctx.fillStyle = look.cap;
+    ctx.beginPath(); ctx.ellipse(side ? 1 : 0, -34, 13.5, 4, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, -35, 7, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = G.shade(look.cap, -0.3); ctx.fillRect(-7, -36, 14, 2);
+  } else if (hat === 'beanie') {
+    ctx.fillStyle = look.cap;
+    ctx.beginPath(); ctx.arc(0, -32, 9.2, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+    box(-9.2, -33.5, 18.4, 3.5, G.shade(look.cap, -0.15), 1.5);
+    ctx.fillStyle = G.shade(look.cap, 0.3); ctx.beginPath(); ctx.arc(0, -41.5, 2.4, 0, Math.PI * 2); ctx.fill();
   }
   // mặt
+  const glass = (gx, gw) => {
+    if (look.glasses === 'sun') { ctx.fillStyle = '#1b1b1b'; rr(ctx, gx, -30.6, gw, 3.8, 1.2); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(gx + 0.8, -30, 1.2, 1); }
+    else { ctx.strokeStyle = '#212121'; ctx.lineWidth = 0.9; ctx.strokeRect(gx, -30.5, gw, 3.6); }
+  };
   if (dir === 0) {
     ctx.fillStyle = '#1b1b1b';
     ctx.beginPath(); ctx.ellipse(-3.2, -28.5, 1.2, 1.7, 0, 0, Math.PI * 2); ctx.ellipse(3.2, -28.5, 1.2, 1.7, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.fillRect(-3.5, -29.6, 0.8, 0.8); ctx.fillRect(2.9, -29.6, 0.8, 0.8);
     ctx.fillStyle = 'rgba(255,110,110,.35)'; ctx.beginPath(); ctx.arc(-5.2, -25.8, 1.6, 0, Math.PI * 2); ctx.arc(5.2, -25.8, 1.6, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = 'rgba(90,40,30,.8)'; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.arc(0, -26, 1.8, 0.2, Math.PI - 0.2); ctx.stroke();
-    if (look.glasses) { ctx.strokeStyle = '#212121'; ctx.lineWidth = 0.9; ctx.strokeRect(-5.5, -30.5, 4.5, 3.6); ctx.strokeRect(1, -30.5, 4.5, 3.6); ctx.beginPath(); ctx.moveTo(-1, -29); ctx.lineTo(1, -29); ctx.stroke(); }
+    if (look.glasses) { glass(-5.5, 4.5); glass(1, 4.5); ctx.strokeStyle = '#212121'; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.moveTo(-1, -29); ctx.lineTo(1, -29); ctx.stroke(); }
   } else if (side) {
     ctx.fillStyle = '#1b1b1b'; ctx.beginPath(); ctx.ellipse(4.2, -28.5, 1.1, 1.6, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = 'rgba(255,110,110,.35)'; ctx.beginPath(); ctx.arc(3.5, -25.5, 1.5, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = look.skin; ctx.beginPath(); ctx.arc(8.4, -27.5, 1.5, -1.2, 1.4); ctx.fill();
-    if (look.glasses) { ctx.strokeStyle = '#212121'; ctx.lineWidth = 0.9; ctx.strokeRect(2.3, -30.5, 4.5, 3.6); }
+    if (look.glasses) glass(2.3, 4.5);
   }
   ctx.restore();
 };
@@ -509,8 +566,9 @@ G.LOOK_OPTS = {
   shirt: ['#1565c0', '#00897b', '#6a1b9a', '#e65100'],
 };
 G.playerLook = function (pf) {
-  const p = pf || (G.state && G.state.profile) || {};
+  const p = pf || (G.state && Object.assign({}, G.state.profile, { wear: G.state.wardrobe && G.state.wardrobe.wear })) || {};
   const o = G.LOOK_OPTS;
   const shirt = o.shirt[p.shirt || 0];
-  return Object.assign({}, G.PLAYER_LOOK, { skin: o.skin[p.skin || 0], hair: o.hair[p.hair || 0], shirt, belt: G.shade(shirt, -0.3), long: p.gender === 'f' });
+  const look = Object.assign({}, G.PLAYER_LOOK, { skin: o.skin[p.skin || 0], hair: o.hair[p.hair || 0], shirt, belt: G.shade(shirt, -0.3), long: p.gender === 'f' });
+  return G.applyOutfit ? G.applyOutfit(look, p.wear || {}) : look;
 };

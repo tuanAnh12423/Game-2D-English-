@@ -20,7 +20,7 @@ G.game = {
       stats: { jobs: 0, talks: 0, crafts: 0, caught: 0, wrong: 0, reviews: 0, planted: 0, harvested: 0, calls: 0, spoke: 0 },
       storyDone: {}, entered: {}, visited: {}, board: [], boardDay: '', job: null, gifts: {}, boost: 0,
       farm: {}, cropsMet: {}, convos: {}, phrases: {}, reqs: {},
-      settings: { tts: true, sfx: true, rate: 0.9, vi: true, night: 0.8, calls: true },
+      settings: { tts: true, sfx: true, rate: 0.9, vi: true, night: 0.8, calls: true, vpref: 'f', voice: '', pitch: 1.05 },
       profile: { name: 'Minh', gender: 'm', skin: 0, hair: 0, shirt: 0 },
       work: { days: [1, 2, 3, 4, 5], start: 8, log: {} },
     };
@@ -41,8 +41,9 @@ G.game = {
     const s = this.state;
     s.profile = Object.assign({ name: 'Minh', gender: 'm', skin: 0, hair: 0, shirt: 0 }, s.profile || {});
     G.work.cfg();
-    if (!saved) { this.addItem('tool_can', 1, true); this.addItem('seed_radish', 4, true); this.addItem('seed_lettuce', 2, true); }
-    if (!this.slotsCount(s.inv, 'tool_can') && !this.slotsCount(s.chest, 'tool_can')) this.addItem('tool_can', 1, true);
+    G.tts.choose();
+    s.wardrobe = Object.assign({ owned: [], wear: {} }, s.wardrobe || {});
+    if (G.feat.has('farm')) this.farmStarter();
     this.player = { x: s.x, y: s.y, dir: 0, frame: 0, moving: false };
     if (this.blocked(s.x, s.y)) { this.player.x = G.world.regions[0].spawnPx.x; this.player.y = G.world.regions[0].spawnPx.y; }
     this.camInit = false;
@@ -65,8 +66,19 @@ G.game = {
     }
     if (!saved) setTimeout(() => G.ui.createChar(() => G.ui.intro(), true), 300);
   },
+  // bình tưới + hạt giống khi mở khoá trồng trọt
+  farmStarter() {
+    const s = this.state;
+    if (this.slotsCount(s.inv, 'tool_can') || this.slotsCount(s.chest, 'tool_can')) return false;
+    this.addItem('tool_can', 1, true); this.addItem('seed_radish', 4, true); this.addItem('seed_lettuce', 2, true);
+    return true;
+  },
   // chuyển file lưu bản cũ sang bản mới
   migrate(s) {
+    // người chơi cũ đã dùng tính năng nào thì giữ mở tính năng đó
+    s.featForce = s.featForce || {};
+    if (Object.keys(s.farm || {}).length || (s.stats && s.stats.planted)) s.featForce.farm = true;
+    if (s.stats && s.stats.drinks) s.featForce.tea = true;
     if (!Array.isArray(s.inv)) s.inv = [];
     if (!Array.isArray(s.chest)) s.chest = [];
     s.bagSize = G.clamp(s.bagSize || 24, 24, 48);
@@ -265,6 +277,7 @@ G.game = {
     return { c, total, ready, stage, wet: (pl.w || 0) > now, left: Math.max(0, total - pl.g), pct: Math.min(1, pl.g / total) };
   },
   farmTarget() {
+    if (!G.feat.has('farm')) return null;
     const p = this.player, S = G.TS;
     let tx = Math.floor(p.x / S), ty = Math.floor((p.y - 4) / S);
     if (G.world.get(tx, ty) === G.T.FARM) return { tx, ty };
@@ -545,11 +558,12 @@ G.game = {
   // ---------- Cuộc gọi khách hàng (thời gian thực) ----------
   phoneTick() {
     const s = this.state, ph = this.phone, now = Date.now(), btn = document.getElementById('phone');
-    if (!s.settings.calls || !s.storyDone.q_work) { btn.classList.remove('on'); return; }
+    if (!s.settings.calls || !G.feat.has('phone')) { btn.classList.remove('on'); return; }
     if (!ph.ring) {
       if (now >= ph.at && !G.ui.isOpen()) {
         ph.ring = true; ph.until = now + 45000; ph.cd = 0;
         ph.kind = G.work.onShift() ? 'service' : 'afterhours';
+        if (ph.kind === 'afterhours' && !G.feat.has('afterhours')) { ph.at = now + 300000; return; }
         btn.classList.add('on');
         G.ui.toast(ph.kind === 'service' ? '📞 Có khách hàng gọi đến! Bấm nút điện thoại để nghe máy.' : '📞 Khách gọi NGOÀI GIỜ LÀM! Nghe máy và từ chối khéo nhé.');
       }
@@ -568,7 +582,6 @@ G.game = {
     if (!ph.ring) return;
     ph.ring = false; document.getElementById('phone').classList.remove('on');
     ph.at = Date.now() + (ph.kind === 'service' ? 360 + Math.random() * 360 : 600 + Math.random() * 600) * 1000;
-    this.state.stats.calls++;
     const offDay = !G.work.isWorkDay();
     const list = CONVOS.filter((c) => c.theme === (ph.kind || 'service') && (!c.when || c.when === (offDay ? 'off' : 'evening')));
     const fresh = list.filter((c) => (this.state.convos[c.id] || 0) < 3);
@@ -597,7 +610,10 @@ G.game = {
   },
 
   interact(tg) {
-    if (tg.kind === 'npc') { G.ui.chatNpc(tg.n); return; }
+    if (tg.kind === 'npc') {
+      if (!G.feat.has('talk')) { G.tts.speak('Hello! Nice to meet you!'); G.ui.toast('👋 “Hello!” — ' + G.feat.lockedMsg('talk')); return; }
+      G.ui.chatNpc(tg.n); return;
+    }
     if (tg.kind === 'peer') { G.online.panel(); return; }
     const b = tg.b;
     if (!b) return;
@@ -637,6 +653,7 @@ G.game = {
       case 'hvac': return { cur: G.hvac.passedCount(), max: q.n };
       case 'drinks': return { cur: s.stats.drinks || 0, max: q.n };
       case 'decline': return { cur: s.stats.declined || 0, max: q.n };
+      case 'mall': return { cur: s.stats.clothes || 0, max: q.n };
     }
     return { cur: 0, max: 1 };
   },
@@ -654,6 +671,11 @@ G.game = {
       this.addXp(q.xp);
       const nx = this.curQuest();
       if (nx) setTimeout(() => G.ui.toast('📜 Nhiệm vụ mới: ' + nx.title), 2200);
+      if (q.unlock && q.unlock.length) {
+        if (q.unlock.includes('farm')) this.farmStarter();
+        G.ui.unlocked(q.unlock);
+        G.ui.renderHotbar();
+      }
       this.save();
     }
     this.updateHud(true);
@@ -670,6 +692,7 @@ G.game = {
     else if (q.type === 'craft') type = 'shop';
     else if (q.type === 'hvac') type = 'hvac';
     else if (q.type === 'drinks') type = 'koi';
+    else if (q.type === 'mall') type = 'mall';
     else if (q.type === 'plant' || q.type === 'harvest') {
       if (q.type === 'plant' && !this.firstOfKind('seed')) type = 'farmshop';
       else {
@@ -698,7 +721,7 @@ G.game = {
     set('hCoins', s.coins);
     set('hClock', G.weather.icon(this.weather, this.nightRaw() > 0.3) + ' ' + G.clock.label());
     document.getElementById('hXp').style.width = Math.min(100, ((s.xp - a) / (b - a)) * 100) + '%';
-    set('hRegion', (this.curRegion ? this.curRegion.name + ' · ' : '') + G.work.label());
+    set('hRegion', (this.curRegion ? this.curRegion.name : '') + (G.feat.has('work') ? ' · ' + G.work.label() : ''));
     const q = this.curQuest();
     let txt = '';
     if (s.job) { const j = this.jobById(s.job.id), bb = this.jobBuilding(); txt = '🔧 ' + j.vi + ': ' + j.sv + (bb ? ' → ' + bb.name : ''); }
@@ -1033,4 +1056,21 @@ G.game = {
     if (self.running) self.render();
     requestAnimationFrame(self.loop);
   },
+};
+
+// ---------- Mở khoá tính năng theo tiến độ cốt truyện ----------
+G.feat = {
+  has(k) {
+    const s = G.state;
+    if (!s) return false;
+    if (s.featForce && s.featForce[k]) return true;
+    return STORY.some((q) => s.storyDone[q.id] && (q.unlock || []).includes(k));
+  },
+  quest(k) { return STORY.find((q) => (q.unlock || []).includes(k)); },
+  lockedMsg(k) {
+    const f = FEATURES[k], q = this.quest(k);
+    return '🔒 ' + (f ? f.name : k) + ' sẽ mở khi bạn hoàn thành nhiệm vụ “' + (q ? q.title : '?') + '”.';
+  },
+  // toà nhà cần tính năng nào
+  BUILD: { farmshop: 'farm', koi: 'tea', phela: 'tea', library: 'library', mall: 'mall' },
 };

@@ -116,7 +116,7 @@ G.online = {
   },
   presence(t = 'p') {
     const s = G.state, p = G.game.player, r = G.game.curRegion;
-    return { t, name: s.profile.name, look: s.profile, x: Math.round(p.x), y: Math.round(p.y), dir: p.dir, mv: p.moving ? 1 : 0, rg: r ? r.name : '', lv: G.game.level, at: Date.now() };
+    return { t, name: s.profile.name, look: Object.assign({}, s.profile, { wear: (s.wardrobe && s.wardrobe.wear) || {} }), x: Math.round(p.x), y: Math.round(p.y), dir: p.dir, mv: p.moving ? 1 : 0, rg: r ? r.name : '', lv: G.game.level, at: Date.now() };
   },
   sendPresence(force) {
     if (this.status !== 'on' || !G.game.player) return;

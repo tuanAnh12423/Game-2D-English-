@@ -4,6 +4,8 @@ Game nhập vai 2D (nhìn từ trên xuống) để **học tiếng Anh** và **
 
 ## Cách chơi
 
+> 🔓 **Mở khoá dần dần:** người mới chỉ thấy vài thứ cơ bản (đi lại, quả cầu chữ, nhặt linh kiện). Mỗi nhiệm vụ hoàn thành sẽ mở thêm tính năng kèm thẻ hướng dẫn ngắn: trò chuyện → thư viện → nhận đơn sửa chữa → lịch làm việc & điện thoại → trồng trọt → trà sữa → trung tâm thương mại → khách gọi ngoài giờ... Bảng 📜 Nhiệm vụ chỉ hiện việc hiện tại và việc kế tiếp.
+
 Bạn **tự đặt tên và chọn nhân vật nam/nữ** (màu da, tóc, áo) — một kỹ thuật viên trẻ vừa nhận việc ở Trung Tâm Bảo Hành. Game chạy theo **giờ thực** của điện thoại: sáng/chiều/tối, ngày mới, thời tiết (nắng, mây, mưa đổi mỗi 2 giờ) đều theo đời thật.
 
 | Hoạt động | Mô tả |
@@ -16,13 +18,15 @@ Bạn **tự đặt tên và chọn nhân vật nam/nữ** (màu da, tóc, áo) 
 | 💬 **Hội thoại nhiều lượt** | 14 tình huống (Call Center, chỉ đường, làm quen, mua linh kiện, gọi cà phê, khách sạn, sân bay, nhà máy, nông trại...). Mỗi câu trả lời được chấm: chuẩn / cộc lốc / sai, kèm **giải thích vì sao**. Đạt ⭐⭐⭐ khi trả lời chuẩn ở mọi lượt. |
 | 📞 **Khách gọi điện** | Thỉnh thoảng điện thoại đổ chuông: nghe máy và xử lý khách hàng bằng tiếng Anh (rò nước, không lạnh, khiếu nại đến muộn, mã lỗi, đổi lịch hẹn). |
 | ⏰ **Chào đúng giờ** | Lời chào trong hội thoại đổi theo giờ thật: *Good morning / afternoon / evening*; câu nói chuyện phiếm đổi theo thời tiết thật. |
-| 🎤 **Luyện nói** | Bấm 🎤 để đọc câu mẫu, máy chấm % độ giống (cần Safari iOS 14.5+ hoặc Chrome Android, cho phép micro). |
+| 🎤 **Luyện nói** | Bấm 🎤 để đọc câu mẫu, máy chấm % độ giống. Trong mọi hội thoại có nút **🎤 Nói câu trả lời**: nói câu nào, máy tự chọn câu gần nhất. Cần Safari iOS 14.5+ hoặc Chrome Android, cho phép micro. |
+| 🗣️ **Giọng đọc** | Tự chọn giọng tiếng Anh tự nhiên nhất trên máy (ưu tiên giọng Premium/Enhanced như Ava, Samantha, Google US English) và **loại bỏ các giọng méo/vui nhộn** (Albert, Fred, Bahh, Grandpa...). Chọn giọng nam/nữ, giọng cụ thể, độ cao giọng trong ⚙️ Cài đặt. Mẹo iPhone/iPad: Cài đặt → Trợ năng → Nội dung được đọc → Giọng nói → Tiếng Anh → tải **Ava (Premium)**. |
 | 📒 **Sổ tay mẫu câu** | Mọi câu chuẩn bạn gặp được lưu lại để nghe và luyện nói (📖 → Mẫu câu). |
 | 🔌 **Chợ Linh Kiện** | Mua/bán linh kiện, nâng cấp balo, **lắp ráp mạch** ở Xưởng. |
 | ☕ **Quán cà phê** | Mua cà phê (đi nhanh hơn), nhận **đơn đặt nông sản bằng tiếng Anh** mỗi ngày. |
 | 🌐 **Chơi cùng nhau (online)** | Bấm 🌐, hai người nhập **cùng một mã phòng** là thấy nhau trong thế giới theo thời gian thực (tên màu hồng 💞, người offline hiện mờ 💤 ở vị trí cuối). Chat (có câu tiếng Anh gợi ý, +2 XP mỗi tin tiếng Anh), gửi biểu cảm, **tặng đồ trong balo**, nút “📍 Đi tới” để đến ngay chỗ người kia, đứng gần nhau nút tròn đổi thành 💞 Chat. Có thể bật “Tự vào phòng khi mở game”. |
 | 📅 **Ngày đi làm / ngày nghỉ** | Mặc định Thứ 2–Thứ 6, 8:00–17:00 (nghỉ trưa 12:00–13:00) = **8 tiếng**; chỉnh ngày và giờ vào ca trong ⚙️ Cài đặt. Chỉ nhận đơn sửa chữa trong giờ làm; vào Trung Tâm Bảo Hành trong ca để **chấm công** (đi muộn quá 15 phút bị nhắc và nhận ít lương hơn). Ngày nghỉ: trồng trọt, uống trà sữa, khám phá. |
 | 📵 **Khách gọi ngoài giờ** | Buổi tối hoặc ngày nghỉ, khách có thể gọi bắt bạn đến sửa ngay, đòi trả thêm tiền, xin số riêng... Bạn phải **từ chối lịch sự bằng tiếng Anh** và đưa phương án thay thế (hẹn ngày làm việc kế tiếp, gọi hotline). Chọn “OK, I’ll come right now” sẽ bị tính sai. |
+| 🛍️ **Trung Tâm Thương Mại & tủ đồ** | Vùng đất mới **Khu Mua Sắm** (phía đông Chợ Linh Kiện). 19 món: áo thun, polo, sơ mi, hoodie, áo khoác, váy, quần jean, quần tây, short, chân váy, giày thể thao, dép, bốt, mũ lưỡi trai, mũ rộng vành, mũ len, kính râm, kính, ba lô — nhiều màu và size. Mua bằng hội thoại tiếng Anh tự sinh theo món bạn chọn (“I’m looking for a pair of jeans”, “Do you have them in black?”, “Can I try it on?”, “It’s a bit tight. Do you have a larger size?”...). Đồ mua về **mặc lên nhân vật** trong Tủ đồ, người chơi online cũng nhìn thấy. Đi làm mà không mặc đồng phục sẽ bị quản lý nhắc! |
 | 🧋 **KOI Thé & Phê La** | KOI Thé ở Phố Trung Tâm, Phê La ở Chợ Linh Kiện. Chọn món theo thực đơn thật (Trà sữa trân châu hoàng kim, Macchiato · Ô Long Sữa Phê La, Ô Long Nhài Sữa, Khói B’Lao, Lang Biang, Ô Long Sữa Gạo Rang, size Phê/La...), rồi **tự nói order bằng tiếng Anh** (không có câu mẫu): tên món + size + độ ngọt + đá + topping + “please”. Nhân viên rất khó tính: sai 2 lần là **bị từ chối phục vụ** cho tới khi học xong Lớp học order và đậu bài thi. Order xong: hỏi “For here or to go?”, hỏi tên, gọi tên khi đồ uống xong. Thiết bị không có micro thì gõ câu tiếng Anh (vẫn chấm như khi nói). |
 | ❄️ **Học Viện HVAC** *(nội dung khó, có khoá)* | Ở Khu Công Nghiệp. **Chỉ mở khi đạt Level 5 và hoàn thành 5 đơn sửa chữa.** Bên trong: 69 câu hỏi Daikin chia 5 cấp (đúng ≥ 80% mới mở cấp sau), câu tự luận có gợi ý, 7 bài nghe tiếng Anh (mức Trung bình mở sau Cấp 2, mức Khó sau Cấp 4), 20 câu luyện phỏng vấn có đếm giờ 90 giây (mở sau Cấp 4), nhãn độ tin cậy và nguồn cho từng câu. Đậu cả 5 cấp → 🎓 Chứng chỉ Kỹ sư HVAC. |
 | 📚 **Thư viện** | Ôn tập từ vựng, luyện hội thoại. 🚌 **Xe buýt** để đi nhanh giữa các vùng. |
@@ -31,13 +35,14 @@ Bạn **tự đặt tên và chọn nhân vật nam/nữ** (màu da, tóc, áo) 
 
 **Đồ hoạ:** mặt đất vẽ nét theo màn hình Retina, nhân vật có viền & đổ bóng, đèn đường sáng ban đêm, cửa sổ sáng đèn, mưa rơi, mây trôi, bướm bay, hiệu ứng hạt khi nhặt đồ/tưới/thu hoạch. Có thể chỉnh độ tối ban đêm trong ⚙️ Cài đặt.
 
-### Thế giới (9 vùng, mở khoá theo cấp độ)
+### Thế giới (10 vùng, mở khoá theo cấp độ)
 
 | Vùng | Level | Chủ đề từ vựng |
 |---|---|---|
 | Làng Ven Sông (nhà bạn) | 1 | Cuộc sống, trong nhà, ăn uống |
 | Phố Trung Tâm | 1 | Công việc, chăm sóc khách hàng, giao thông |
 | Chợ Linh Kiện | 2 | Điện tử cơ bản, dụng cụ |
+| Khu Mua Sắm | 2 | Quần áo & mua sắm |
 | Công Viên Hồ Sen | 2 | Thiên nhiên |
 | Bãi Biển Xanh | 3 | Du lịch |
 | Rừng Thông | 4 | Thiên nhiên, du lịch |
@@ -45,7 +50,7 @@ Bạn **tự đặt tên và chọn nhân vật nam/nữ** (màu da, tóc, áo) 
 | Khu Công Nghệ Cao | 6 | Điện tử, sản xuất |
 | Sân Bay Quốc Tế | 7 | Du lịch, thành phố |
 
-Hiện có **241 từ vựng / 13 nhóm**, **33 linh kiện**, **10 mạch lắp ráp**, **17 đơn sửa chữa**, **10 loại cây trồng**, **16 hội thoại nhiều lượt** (14 tình huống luyện tập + 2 khi sửa tại nhà khách) + 21 câu chào hỏi nhanh, **22 nhiệm vụ cốt truyện**, 3 tình huống từ chối khách gọi ngoài giờ, 2 quán trà sữa (10 món), cùng Học Viện HVAC (69 câu hỏi, 7 bài nghe, 20 câu phỏng vấn).
+Hiện có **241 từ vựng / 13 nhóm**, **33 linh kiện**, **10 mạch lắp ráp**, **17 đơn sửa chữa**, **10 loại cây trồng**, **16 hội thoại nhiều lượt** (14 tình huống luyện tập + 2 khi sửa tại nhà khách) + 21 câu chào hỏi nhanh, **23 nhiệm vụ cốt truyện** mở khoá dần 9 tính năng, 10 vùng đất, 19 món thời trang, 3 tình huống từ chối khách gọi ngoài giờ, 2 quán trà sữa (10 món), cùng Học Viện HVAC (69 câu hỏi, 7 bài nghe, 20 câu phỏng vấn).
 
 ## Chơi trên điện thoại / iPad
 
@@ -72,6 +77,8 @@ Mọi nội dung nằm trong thư mục `js/data/`, mỗi mục chỉ là một 
 | Mạch lắp ráp | `js/data/components.js` → `RECIPES` | `need: { id_linh_kiện: số_lượng }` và đoạn `learn` giải thích. |
 | Đơn sửa chữa / mã lỗi mới | `js/data/quests.js` → `JOBS` | Hiện tượng (EN + VN), linh kiện cần, câu hỏi chẩn đoán 4 đáp án + giải thích. |
 | Hội thoại nhiều lượt | `js/data/convos.js` → `CONVOS` | Mỗi lượt: câu NPC nói + các câu trả lời `[câu, điểm 0/1/2, giải thích]`. Dùng `{greet}` để tự chào đúng giờ thực. |
+| Quần áo | `js/data/mall.js` → `CLOTHES` | Thêm món: chỗ mặc (`slot`), kiểu vẽ (`type`), tên Anh/Việt, giá, màu, size. |
+| Tính năng mở khoá dần | `js/data/quests.js` → `FEATURES` + trường `unlock` của STORY | Khai báo tính năng mới rồi gắn vào nhiệm vụ sẽ mở nó. |
 | Thực đơn trà sữa | `js/data/teashops.js` | Thêm món: tên Anh/Việt, giá theo size, các nhóm từ khoá máy cần nghe thấy (`keys`), từ cấm (`not`). Thêm quán mới: thêm 1 khoá vào `TEA_SHOPS` và 1 toà nhà cùng tên trong regions.js. |
 | Câu chào hỏi nhanh | `js/data/quests.js` → `DIALOGS` | Câu NPC nói, nghĩa, các câu trả lời, `ok` = vị trí câu đúng. |
 | Cây trồng | `js/data/farm.js` → `CROPS` | Tên Anh/Việt, số phút thực để chín, giá hạt, giá bán, cấp mở khoá. Thêm từ vào nhóm `farm` trong words.js. |
@@ -110,6 +117,7 @@ js/icons.js         vẽ linh kiện, nông sản, cây trồng, đèn đường
 js/world.js         tạo bản đồ từ dữ liệu vùng đất, vẽ ô đất, toà nhà, bản đồ nhỏ
 js/input.js         cần điều khiển ảo, nút hành động, bàn phím
 js/game.js          vòng lặp game, kho đồ, trồng trọt, ánh sáng đêm, cuộc gọi, nhiệm vụ
+js/mall.js          trung tâm thương mại, hội thoại mua sắm, tủ đồ, trang phục
 js/online.js        chơi cùng nhau: kết nối MQTT, mã hoá, thấy nhau, chat, tặng quà
 js/vendor/          thư viện mqtt.js (MIT)
 js/work.js          lịch làm việc, giờ làm, chấm công

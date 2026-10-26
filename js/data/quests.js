@@ -170,22 +170,41 @@ window.DIALOGS = {
 };
 
 // ============================================================
+// MỞ KHOÁ DẦN — người mới chỉ thấy vài thứ cơ bản; mỗi nhiệm vụ hoàn thành
+// sẽ mở thêm tính năng (trường `unlock` trong STORY). Thêm tính năng mới:
+// khai báo ở FEATURES rồi gắn khoá vào `unlock` của một nhiệm vụ.
+// ============================================================
+window.FEATURES = {
+  talk: { icon: '💬', name: 'Trò chuyện với mọi người', how: 'Đứng gần người đi đường, bấm nút 💬 để nói chuyện bằng tiếng Anh. Chọn câu tự nhiên và lịch sự để được 3 sao.' },
+  library: { icon: '📚', name: 'Thư viện & Từ điển', how: 'Thư viện ở Phố Trung Tâm giúp ôn từ vựng và luyện hội thoại. Bấm 📖 để xem Từ điển của bạn.' },
+  jobs: { icon: '🔧', name: 'Nhận đơn sửa chữa', how: 'Vào Trung Tâm Bảo Hành nhận đơn, mang đủ linh kiện đến nhà khách, chào hỏi và chẩn đoán lỗi bằng tiếng Anh.' },
+  work: { icon: '📅', name: 'Lịch làm việc & chấm công', how: 'Từ giờ bạn đi làm theo ca 8 tiếng (mặc định T2–T6, 8:00–17:00), chỉ nhận đơn trong giờ làm. Vào Trung Tâm trong ca để chấm công. Đổi giờ làm trong ⚙️ Cài đặt nếu bạn hay chơi buổi tối.' },
+  phone: { icon: '📞', name: 'Khách gọi điện', how: 'Trong giờ làm, thỉnh thoảng điện thoại đổ chuông — bấm 📞 để hỗ trợ khách bằng tiếng Anh. Có thể luyện trước ở Trung Tâm Bảo Hành.' },
+  farm: { icon: '🌱', name: 'Trồng trọt & thanh đồ nhanh', how: 'Bạn nhận được bình tưới và hạt giống. Chọn hạt ở thanh đồ nhanh dưới màn hình, đứng trên ruộng cạnh nhà bấm 🌱 Gieo, rồi 💧 Tưới. Cây lớn theo giờ thực!' },
+  tea: { icon: '🧋', name: 'Quán trà sữa KOI Thé & Phê La', how: 'Chọn món rồi tự NÓI order bằng tiếng Anh. Nhân viên rất khó tính — sai 2 lần là bị từ chối phục vụ!' },
+  mall: { icon: '🛍️', name: 'Trung Tâm Thương Mại & tủ đồ', how: 'Khu Mua Sắm (phía đông Chợ Linh Kiện): mua quần áo, giày, phụ kiện bằng tiếng Anh với nhân viên bán hàng, rồi thay đồ cho nhân vật trong Tủ đồ.' },
+  afterhours: { icon: '📵', name: 'Khách gọi ngoài giờ', how: 'Buổi tối hoặc ngày nghỉ, khách có thể gọi bắt bạn đến ngay. Hãy từ chối lịch sự bằng tiếng Anh và hẹn ngày làm việc kế tiếp.' },
+};
+
+// ============================================================
 // CỐT TRUYỆN CHÍNH — làm lần lượt; mỗi nhiệm vụ có `id` riêng (không đổi id
 // đã có, để file lưu cũ vẫn đúng). Thêm nhiệm vụ mới: chèn vào vị trí bất kỳ.
 //   type: enter (vào toà nhà loại `target`), words, parts (số loại), jobs,
 //         craft, talk, level, regions, plant, harvest, calls, convo3,
 //         hvac (số cấp đã đậu ở Học Viện HVAC), drinks (số ly trà sữa order được),
-//         decline (số lần từ chối khéo cuộc gọi ngoài giờ)
+//         decline (số lần từ chối khéo cuộc gọi ngoài giờ), mall (số món đồ đã mua)
+//   unlock: các tính năng (FEATURES) được mở khi hoàn thành nhiệm vụ này
 // ============================================================
 window.STORY = [
-  { id: 'q_work', title: 'Ngày đầu đi làm', desc: 'Đi đến Trung Tâm Bảo Hành ở Phố Trung Tâm (phía đông nhà bạn) để nhận việc.', type: 'enter', target: 'service', n: 1, coins: 20, xp: 20 },
-  { id: 'q_words5', title: 'Thợ săn từ vựng', desc: 'Thu thập 5 từ tiếng Anh (quả cầu chữ phát sáng).', type: 'words', n: 5, coins: 20, xp: 30 },
-  { id: 'q_parts3', title: 'Nhặt linh kiện', desc: 'Nhặt 3 loại linh kiện khác nhau rơi trên đường.', type: 'parts', n: 3, coins: 20, xp: 30 },
-  { id: 'q_plant3', title: 'Nhà nông tập sự', desc: 'Gieo 3 hạt giống ở ruộng cạnh nhà (chọn hạt ở thanh đồ nhanh, đứng trên ruộng, bấm 🌱). Nhớ tưới nước!', type: 'plant', n: 3, coins: 25, xp: 30 },
-  { id: 'q_job1', title: 'Đơn sửa chữa đầu tiên', desc: 'Nhận 1 đơn ở Trung Tâm Bảo Hành và đến nhà khách hàng sửa xong.', type: 'jobs', n: 1, coins: 40, xp: 50 },
-  { id: 'q_talk3', title: 'Trò chuyện', desc: 'Trò chuyện tốt (2 sao trở lên) với 3 người — bấm 💬 khi đứng gần.', type: 'talk', n: 3, coins: 30, xp: 40 },
-  { id: 'q_call1', title: 'Nghe máy tổng đài', desc: 'Khi điện thoại 📞 đổ chuông, bấm vào để nghe và hỗ trợ khách hàng bằng tiếng Anh.', type: 'calls', n: 1, coins: 30, xp: 40 },
-  { id: 'q_tea1', title: 'Một ly trà sữa', desc: 'Vào 🧋 KOI Thé (Phố Trung Tâm) và order thành công một ly bằng giọng nói tiếng Anh. Nhân viên rất khó tính!', type: 'drinks', n: 1, coins: 30, xp: 40 },
+  { id: 'q_work', title: 'Ngày đầu đi làm', desc: 'Đi theo mũi tên vàng đến Trung Tâm Bảo Hành ở Phố Trung Tâm (phía đông nhà bạn).', type: 'enter', target: 'service', n: 1, coins: 20, xp: 20, unlock: ['talk'] },
+  { id: 'q_words5', title: 'Thợ săn từ vựng', desc: 'Chạm vào các quả cầu chữ phát sáng trên đường và trả lời đúng để thu thập 5 từ tiếng Anh.', type: 'words', n: 5, coins: 20, xp: 30, unlock: ['library'] },
+  { id: 'q_parts3', title: 'Nhặt linh kiện', desc: 'Nhặt 3 loại linh kiện khác nhau đang phát sáng trên đường (điện trở, tụ, LED...).', type: 'parts', n: 3, coins: 20, xp: 30, unlock: ['jobs'] },
+  { id: 'q_job1', title: 'Đơn sửa chữa đầu tiên', desc: 'Nhận 1 đơn ở Trung Tâm Bảo Hành và đến nhà khách hàng sửa xong.', type: 'jobs', n: 1, coins: 40, xp: 50, unlock: ['work', 'phone'] },
+  { id: 'q_talk3', title: 'Trò chuyện', desc: 'Trò chuyện tốt (2 sao trở lên) với 3 người — bấm 💬 khi đứng gần.', type: 'talk', n: 3, coins: 30, xp: 40, unlock: ['farm'] },
+  { id: 'q_plant3', title: 'Nhà nông tập sự', desc: 'Gieo 3 hạt giống ở ruộng cạnh nhà (chọn hạt ở thanh đồ nhanh, đứng trên ruộng, bấm 🌱). Nhớ tưới nước!', type: 'plant', n: 3, coins: 25, xp: 30, unlock: ['tea'] },
+  { id: 'q_tea1', title: 'Một ly trà sữa', desc: 'Vào 🧋 KOI Thé (Phố Trung Tâm) và order thành công một ly bằng giọng nói tiếng Anh. Nhân viên rất khó tính!', type: 'drinks', n: 1, coins: 30, xp: 40, unlock: ['mall'] },
+  { id: 'q_call1', title: 'Nghe máy tổng đài', desc: 'Hỗ trợ khách qua điện thoại bằng tiếng Anh: nghe máy khi điện thoại 📞 đổ chuông trong giờ làm, hoặc luyện ở Trung Tâm Bảo Hành → “Luyện nghe máy tổng đài”.', type: 'calls', n: 1, coins: 30, xp: 40 },
+  { id: 'q_mall1', title: 'Mua sắm bằng tiếng Anh', desc: 'Đến 🛍️ Trung Tâm Thương Mại ở Khu Mua Sắm (đi về phía đông Chợ Linh Kiện) và mua 1 món đồ bằng tiếng Anh.', type: 'mall', n: 1, coins: 40, xp: 50, unlock: ['afterhours'] },
   { id: 'q_harvest5', title: 'Mùa thu hoạch', desc: 'Thu hoạch 5 nông sản. Cây lớn theo thời gian thực, kể cả khi bạn tắt game!', type: 'harvest', n: 5, coins: 40, xp: 50 },
   { id: 'q_decline', title: 'Biết nói “không”', desc: 'Khi khách gọi NGOÀI GIỜ LÀM bắt bạn phải đến, hãy từ chối lịch sự (đạt ⭐⭐ trở lên) 1 lần.', type: 'decline', n: 1, coins: 40, xp: 50 },
   { id: 'q_shop', title: 'Ghé Chợ Linh Kiện', desc: 'Đến Chợ Linh Kiện (cần Level 2) để mua bán linh kiện.', type: 'enter', target: 'shop', n: 1, coins: 30, xp: 30 },

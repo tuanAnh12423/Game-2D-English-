@@ -199,9 +199,8 @@ G.hvac = {
   speakSegs(segs, onEnd) {
     if (!('speechSynthesis' in window)) return;
     G.tts.stop();
-    const vs = speechSynthesis.getVoices().filter((v) => /^en/i.test(v.lang));
-    const va = G.tts.voice || vs[0] || null;
-    const vb = vs.find((v) => v !== va && /female|samantha|karen|victoria|zira|susan|serena|moira|tessa/i.test(v.name)) || vs.find((v) => v !== va) || va;
+    if (!G.tts.voice) G.tts.choose();
+    const va = G.tts.voice, vb = G.tts.second();
     const who = {};
     const list = [];
     segs.forEach((sg) => {
@@ -209,12 +208,8 @@ G.hvac = {
       sg.text.split(/\n+/).forEach((part) => part.split(/(?<=[.?!])\s+/).forEach((t) => { if (t.trim()) list.push({ t: t.trim(), alt: who[sg.speaker] }); }));
     });
     list.forEach((it, k) => {
-      const u = new SpeechSynthesisUtterance(it.t);
-      u.lang = 'en-US';
-      const v = it.alt ? vb : va;
-      if (v) u.voice = v;
-      if (it.alt && vb === va) u.pitch = 1.3;
-      u.rate = (this.rate || 1) * 0.92;
+      const u = G.tts.utter(it.t, { voice: it.alt ? vb : va, rate: (this.rate || 1) * 0.92 });
+      if (it.alt && vb === va) u.pitch = Math.min(1.4, u.pitch + 0.2);
       if (k === list.length - 1 && onEnd) u.onend = onEnd;
       speechSynthesis.speak(u);
     });
