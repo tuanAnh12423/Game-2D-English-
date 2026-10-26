@@ -69,7 +69,12 @@ G.game = {
       setTimeout(() => G.ui.toast('⏰ Bạn vắng mặt ' + G.clock.fmtDur(away) + '. ' + (ready ? '🌾 Có ' + ready + ' ô ruộng đã chín!' : 'Thời gian trong game vẫn trôi theo giờ thực.')), 900);
     }
     if (!saved) setTimeout(() => G.ui.createChar(() => G.ui.intro(), true), 300);
+    // tính năng mới mở cho người chơi cũ (bản cập nhật) → báo & hướng dẫn
+    if (!s.featSeen) { s.featSeen = {}; Object.keys(FEATURES).forEach((k) => { if (G.feat.has(k) && !this.NEW_FEATS.includes(k)) s.featSeen[k] = true; }); }
+    const newF = Object.keys(FEATURES).filter((k) => G.feat.has(k) && !s.featSeen[k]);
+    if (newF.length) { newF.forEach((k) => { s.featSeen[k] = true; }); setTimeout(() => G.ui.unlocked(newF), 1500); }
   },
+  NEW_FEATS: ['events', 'ranch', 'cook', 'pets'],
   // bình tưới + hạt giống khi mở khoá trồng trọt
   farmStarter() {
     const s = this.state;
@@ -86,6 +91,9 @@ G.game = {
       s.xp = Math.round(this.xpForLevel(L) + frac * (this.xpForLevel(L + 1) - this.xpForLevel(L)));
       s.xpv = 2;
     }
+    // thú cưng chọn miễn phí ở bản cũ: vẫn được giữ
+    s.pets = s.pets || { owned: {} };
+    if (s.profile && s.profile.pet && !s.pets.owned[s.profile.pet]) s.pets.owned[s.profile.pet] = { name: '', love: 1 };
     // người chơi cũ đã dùng tính năng nào thì giữ mở tính năng đó
     s.featForce = s.featForce || {};
     if (Object.keys(s.farm || {}).length || (s.stats && s.stats.planted)) s.featForce.farm = true;
@@ -691,6 +699,10 @@ G.game = {
       case 'drinks': return { cur: s.stats.drinks || 0, max: q.n };
       case 'decline': return { cur: s.stats.declined || 0, max: q.n };
       case 'mall': return { cur: s.stats.clothes || 0, max: q.n };
+      case 'animals': return { cur: s.stats.animals || 0, max: q.n };
+      case 'collect': return { cur: s.stats.collected || 0, max: q.n };
+      case 'cook': return { cur: s.stats.cooked || 0, max: q.n };
+      case 'pets': return { cur: Object.keys((s.pets && s.pets.owned) || {}).length, max: q.n };
     }
     return { cur: 0, max: 1 };
   },
@@ -710,6 +722,7 @@ G.game = {
       if (nx) setTimeout(() => G.ui.toast('📜 Nhiệm vụ mới: ' + nx.title), 2200);
       if (q.unlock && q.unlock.length) {
         if (q.unlock.includes('farm')) this.farmStarter();
+        q.unlock.forEach((k) => { s.featSeen[k] = true; });
         G.ui.unlocked(q.unlock);
         G.ui.renderHotbar();
       }
@@ -732,6 +745,9 @@ G.game = {
     else if (q.type === 'hvac') type = 'hvac';
     else if (q.type === 'drinks') type = 'koi';
     else if (q.type === 'mall') type = 'mall';
+    else if (q.type === 'animals' || q.type === 'collect') type = 'ranch';
+    else if (q.type === 'cook') type = 'home';
+    else if (q.type === 'pets') type = 'petshop';
     else if (q.type === 'plant' || q.type === 'harvest') {
       if (q.type === 'plant' && !this.firstOfKind('seed')) type = 'farmshop';
       else {
@@ -853,6 +869,7 @@ G.game = {
       const lx = (l.x + 0.5) * S, ly = (l.y + 1) * S - 4;
       if (vis(lx, ly)) ents.push({ y: ly, d: () => G.drawLamp(ctx, lx, ly, nl > 0.12, this.t) });
     });
+    G.ranch.draw(ctx, cam, ents, this.t, this.dt);
     G.online.draw(ctx, cam, ents);
     ents.sort((a, b) => a.y - b.y).forEach((e) => e.d());
     if (G.online.isOn()) G.online.drawTag(ctx, p.x, p.y, '⭐ ' + this.state.profile.name, '#8e6cd9');
@@ -1129,5 +1146,5 @@ G.feat = {
     return '🔒 ' + (f ? f.name : k) + ' sẽ mở khi bạn hoàn thành nhiệm vụ “' + (q ? q.title : '?') + '”.';
   },
   // toà nhà cần tính năng nào
-  BUILD: { farmshop: 'farm', koi: 'tea', phela: 'tea', library: 'library', mall: 'mall' },
+  BUILD: { farmshop: 'farm', koi: 'tea', phela: 'tea', library: 'library', mall: 'mall', ranch: 'ranch', petshop: 'pets' },
 };

@@ -252,6 +252,8 @@ G.indexData = function () {
       desc: 'Nông sản tươi. Bán ở Tiệm Nông Sản, hoặc giao cho quán cà phê khi họ đặt hàng để được giá cao hơn.' };
   });
   FARM_ITEMS.forEach((t) => { G.items[t.id] = Object.assign({}, t); });
+  RANCH_ITEMS.forEach((t) => { G.items[t.id] = Object.assign({}, t); });
+  DISHES.forEach((d) => { G.items[d.id] = { id: d.id, kind: 'food', emoji: d.emoji, en: d.en, vi: d.vi, price: d.sell, desc: 'Món ăn tự nấu. Ăn để đi nhanh hơn 15 phút (vào 🏠 → Bếp), hoặc bán ở Tiệm Nông Sản.' }; });
   Object.keys(WORD_CATS).forEach((cat) => {
     WORD_CATS[cat].words.forEach((w) => {
       if (G.wordByEn[w[0]]) return; // trùng từ: giữ bản đầu tiên
@@ -267,6 +269,6 @@ G.sellPrice = function (id) {
   const it = G.items[id];
   if (!it || !it.price) return 0;
   if (it.kind === 'crop') return it.price * (G.events ? G.events.sellMul(id) : 1);
-  if (it.kind === 'mod') return it.price;
+  if (it.kind === 'mod' || it.kind === 'product' || it.kind === 'food') return it.price;
   return Math.max(1, Math.floor(it.price * 0.5));
 };

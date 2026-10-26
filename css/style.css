@@ -407,6 +407,27 @@ img.bigprev { width: 100%; max-width: 320px; height: 100px; object-fit: contain;
 .cert small { display: block; letter-spacing: 1.5px; color: #a07a24; font-weight: 800; }
 .cert b { display: block; font-size: 22px; color: #c2255c; margin: 4px 0; }
 
+/* ---------- Chăn nuôi · thú cưng · nấu ăn ---------- */
+.acard { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border: 2px solid var(--line); background: #fff; border-radius: 16px; padding: 8px 10px; }
+.acard .rn { flex: 1; min-width: 150px; font-size: 13px; }
+.acard .rn small { display: block; color: var(--muted); }
+.acard .bar { margin: 4px 0 2px; }
+.aemo { font-size: 38px; width: 50px; text-align: center; line-height: 1; }
+.aemo.sm { font-size: 28px; width: 40px; }
+.row img[src^="data"] { width: 40px; height: 40px; }
+.row.sel { border-color: var(--blue); background: #fff0f6; }
+.chip img { width: 18px; height: 18px; vertical-align: -4px; }
+.chip.no { background: #ffe5e8; color: var(--bad); }
+.dish .need { margin-top: 3px; }
+ol.tut { padding-left: 22px; margin: 8px 0; }
+ol.tut li { margin: 7px 0; line-height: 1.45; }
+ol.tut .en, ol.steps .en { font-weight: 700; }
+ol.steps { padding-left: 22px; }
+ol.steps li { margin: 5px 0; background: #effaf3; border-radius: 10px; padding: 4px 8px; }
+ol.steps small { display: block; color: var(--muted); }
+b.verb { color: #c2255c; background: #ffe3ee; border-radius: 6px; padding: 0 3px; }
+img.petbig { width: 96px; height: 96px; }
+
 /* ---------- Màn hình tiêu đề ---------- */
 #title {
   position: fixed; inset: 0; z-index: 40; display: flex; padding: 16px;

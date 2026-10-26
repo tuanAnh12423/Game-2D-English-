@@ -324,6 +324,11 @@ G.drawPlantInner = function (ctx, crop, stage, cx, cy, t) {
 // ---------- Vật phẩm (dùng chung cho thế giới & giao diện) ----------
 G.drawItem = function (ctx, item, cx, cy, s) {
   if (!item) return;
+  if (item.emoji) {
+    ctx.save(); ctx.font = Math.round(s * 0.78) + 'px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(item.emoji, cx, cy + s * 0.04); ctx.restore();
+    return;
+  }
   if (item.kind === 'crop') return G.drawCropIcon(ctx, G.cropById[item.crop], cx, cy, s);
   if (item.kind === 'seed') {
     ctx.save(); ctx.translate(cx, cy); ctx.scale(s / 32, s / 32);
@@ -594,7 +599,22 @@ G.flower = function (ctx, x, y, r, col, center) {
 };
 
 // ---------- Thú cưng đi theo ----------
-G.PETS = { cat: { vi: 'Mèo', icon: '🐱' }, dog: { vi: 'Cún', icon: '🐶' }, bunny: { vi: 'Thỏ', icon: '🐰' } };
+G.PETS = {
+  cat: { vi: 'Mèo', icon: '🐱' }, dog: { vi: 'Cún', icon: '🐶' }, bunny: { vi: 'Thỏ', icon: '🐰' },
+  hamster: { vi: 'Hamster', icon: '🐹' }, chick: { vi: 'Gà con', icon: '🐥' }, penguin: { vi: 'Cánh cụt', icon: '🐧' },
+  fox: { vi: 'Cáo', icon: '🦊' }, panda: { vi: 'Gấu trúc', icon: '🐼' },
+};
+// hình dáng từng loài: màu thân, màu phụ, kiểu tai, kiểu đuôi
+const PET_SHAPE = {
+  cat: { col: '#ffcc99', dark: '#f4a261', ears: 'tri', tail: 'curl' },
+  dog: { col: '#e6c09a', dark: '#a1785c', ears: 'flop', tail: 'wag' },
+  bunny: { col: '#ffffff', dark: '#ffd1dc', ears: 'long', tail: 'puff' },
+  hamster: { col: '#f6c28b', dark: '#fff3e0', ears: 'round', tail: 'none', belly: true, chubby: true },
+  chick: { col: '#ffe066', dark: '#ffd23f', ears: 'none', tail: 'none', beak: true, wing: true },
+  penguin: { col: '#46527a', dark: '#ffffff', ears: 'none', tail: 'none', beak: true, belly: true, wing: true, feet: '#ffa94d' },
+  fox: { col: '#ff9a5a', dark: '#ffffff', ears: 'tri', tail: 'fox', muzzle: true },
+  panda: { col: '#ffffff', dark: '#3b3b48', ears: 'round', tail: 'none', patches: true, chubby: true },
+};
 // thú cưng chạy theo sau chủ (lưu vị trí trong owner._pet)
 G.petFollow = function (owner, x, y, dir, dt) {
   const off = [[17, -3], [16, -4], [-16, -4], [-17, 3]][dir] || [17, -3];
@@ -608,37 +628,58 @@ G.petFollow = function (owner, x, y, dir, dt) {
   return pt;
 };
 G.drawPet = function (ctx, x, y, kind, dir, t, moving) {
-  if (!G.PETS[kind]) return;
+  const P = PET_SHAPE[kind];
+  if (!P) return;
   const hop = moving ? Math.abs(Math.sin(t * 10)) * 3 : Math.abs(Math.sin(t * 2.5)) * 0.8;
   ctx.save(); ctx.translate(Math.round(x), Math.round(y));
   ctx.fillStyle = 'rgba(120,70,110,.16)'; ctx.beginPath(); ctx.ellipse(0, 1, 7, 2.6, 0, 0, Math.PI * 2); ctx.fill();
   if (dir === 1) ctx.scale(-1, 1);
   ctx.translate(0, -hop);
-  const OL = 'rgba(110,62,84,.75)'; ctx.strokeStyle = OL; ctx.lineWidth = 1.1; ctx.lineJoin = 'round';
-  const col = { cat: '#ffcc99', dog: '#e6c09a', bunny: '#ffffff' }[kind], dark = { cat: '#f4a261', dog: '#a1785c', bunny: '#ffd1dc' }[kind];
+  const OL = 'rgba(110,62,84,.75)'; ctx.strokeStyle = OL; ctx.lineWidth = 1.1; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  const col = P.col, dark = P.dark;
   const back = dir === 3, front = dir === 0;
+  const ell = (ex, ey, rx, ry, c, rot = 0, stroke = true) => { ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(ex, ey, rx, ry, rot, 0, Math.PI * 2); ctx.fill(); if (stroke) ctx.stroke(); };
   // đuôi
-  if (kind === 'cat') { ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-5, -4); ctx.quadraticCurveTo(-11, -6, -9, -13 + Math.sin(t * 4) * 1.5); ctx.stroke(); ctx.strokeStyle = OL; ctx.lineWidth = 1.1; }
-  if (kind === 'dog') { ctx.fillStyle = dark; ctx.beginPath(); ctx.ellipse(-6, -7 + Math.sin(t * 12) * 1, 1.6, 3.2, -0.7 + Math.sin(t * 12) * 0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
-  if (kind === 'bunny') { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-6, -4, 2.4, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+  if (P.tail === 'curl') { ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-5, -4); ctx.quadraticCurveTo(-11, -6, -9, -13 + Math.sin(t * 4) * 1.5); ctx.stroke(); ctx.strokeStyle = OL; ctx.lineWidth = 1.1; }
+  if (P.tail === 'wag') ell(-6, -7 + Math.sin(t * 12), 1.6, 3.2, dark, -0.7 + Math.sin(t * 12) * 0.3);
+  if (P.tail === 'puff') ell(-6, -4, 2.4, 2.4, '#fff');
+  if (P.tail === 'fox') { const w = Math.sin(t * 3) * 0.2; ell(-8, -6, 3.6, 6, col, -0.9 + w); ell(-10.5, -10, 1.8, 2.4, '#fff', -0.9 + w, false); }
+  // chân chim cánh cụt / gà con
+  if (P.feet || P.beak) { ctx.fillStyle = P.feet || '#ffa94d'; [-2.5, 2.5].forEach((fx) => { ctx.beginPath(); ctx.ellipse(fx, -0.6, 2, 1.1, 0, 0, Math.PI * 2); ctx.fill(); }); }
   // thân
-  ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(0, -4.5, 6.5, 4.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  const chub = P.chubby ? 1.15 : 1;
+  if (P.beak) {
+    // thân chim tròn một khối
+    ell(0, -7, 6.5, 7, col);
+    if (P.belly) ell(front ? 0 : 1.5, -6, front ? 4 : 3.5, 5, dark, 0, false);
+    if (P.wing) ell(front ? -6 : -1, -7, 1.8, 4, P.feet ? col : '#ffd23f', 0.3);
+  } else {
+    ell(0, -4.5, 6.5 * chub, 4.5 * chub, col);
+    if (P.belly) ell(front ? 0 : 1.5, -3.8, 3.5, 2.6, dark, 0, false);
+    if (P.patches) [-3.5, 3].forEach((lx) => ell(lx, -1.5, 2, 1.8, dark, 0, false));
+  }
   // đầu
-  const hx = front || back ? 0 : 4, hy = -11;
-  // tai
+  const hx = front || back ? 0 : 4, hy = P.beak ? -15 : -11;
   ctx.fillStyle = col;
-  if (kind === 'cat') { [[-1, 1], [1, 1]].forEach(([sx]) => { ctx.beginPath(); ctx.moveTo(hx + sx * 2, hy - 4); ctx.lineTo(hx + sx * 5.5, hy - 8.5); ctx.lineTo(hx + sx * 5.8, hy - 2.5); ctx.closePath(); ctx.fill(); ctx.stroke(); }); }
-  if (kind === 'bunny') { [-1, 1].forEach((sx) => { ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(hx + sx * 2.5, hy - 9, 1.9, 5, sx * 0.15, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.fillStyle = dark; ctx.beginPath(); ctx.ellipse(hx + sx * 2.5, hy - 9, 0.9, 3.5, sx * 0.15, 0, Math.PI * 2); ctx.fill(); }); }
-  ctx.fillStyle = col; ctx.beginPath(); ctx.arc(hx, hy, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  if (kind === 'dog') { ctx.fillStyle = dark; [-1, 1].forEach((sx) => { ctx.beginPath(); ctx.ellipse(hx + sx * 5.2, hy - 0.5, 2, 3.6, sx * 0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }); }
+  if (P.ears === 'tri') [-1, 1].forEach((sx) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(hx + sx * 2, hy - 4); ctx.lineTo(hx + sx * 5.5, hy - (kind === 'fox' ? 10 : 8.5)); ctx.lineTo(hx + sx * 5.8, hy - 2.5); ctx.closePath(); ctx.fill(); ctx.stroke(); });
+  if (P.ears === 'long') [-1, 1].forEach((sx) => { ell(hx + sx * 2.5, hy - 9, 1.9, 5, col, sx * 0.15); ell(hx + sx * 2.5, hy - 9, 0.9, 3.5, dark, sx * 0.15, false); });
+  if (P.ears === 'round') [-1, 1].forEach((sx) => ell(hx + sx * 4.6, hy - 4.2, 2.2, 2.2, P.patches ? dark : col));
+  if (P.beak) ell(hx, hy, 5.5, 5.2, col);
+  else ell(hx, hy, 6 * (P.chubby ? 1.05 : 1), 6 * (P.chubby ? 0.95 : 1), col);
+  if (P.ears === 'flop') [-1, 1].forEach((sx) => ell(hx + sx * 5.2, hy - 0.5, 2, 3.6, dark, sx * 0.3));
+  if (P.beak && kind === 'penguin' && !back) ell(front ? hx : hx + 1.5, hy + 1, front ? 3.8 : 3, 3.4, '#ffffff', 0, false);
+  if (P.muzzle && !back) ell(front ? hx : hx + 2.5, hy + 2.2, 3.2, 2.2, '#ffffff', 0, false);
+  if (kind === 'chick') { ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.ellipse(hx, hy - 5.5, 1, 2, 0.3, 0, Math.PI * 2); ctx.fill(); }
   if (!back) {
-    const ex = front ? [-2.2, 2.2] : [hx + 2.2];
-    ex.forEach((e) => { ctx.fillStyle = '#4a2c3a'; ctx.beginPath(); ctx.arc(front ? hx + e : e, hy, 1.3, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc((front ? hx + e : e) - 0.4, hy - 0.5, 0.45, 0, Math.PI * 2); ctx.fill(); });
-    ctx.fillStyle = kind === 'bunny' ? '#ff8fab' : '#6d4c41'; ctx.beginPath(); ctx.arc(front ? hx : hx + 4.6, hy + 2, 0.9, 0, Math.PI * 2); ctx.fill();
+    const ex = front ? [hx - 2.2, hx + 2.2] : [hx + 2.2];
+    if (P.patches) ex.forEach((e) => ell(e, hy - 0.2, 1.9, 2.3, dark, front ? (e < hx ? 0.4 : -0.4) : 0.2, false));
+    ex.forEach((e) => { ctx.fillStyle = P.patches ? '#fff' : '#4a2c3a'; ctx.beginPath(); ctx.arc(e, hy, P.patches ? 0.9 : 1.3, 0, Math.PI * 2); ctx.fill(); if (!P.patches) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(e - 0.4, hy - 0.5, 0.45, 0, Math.PI * 2); ctx.fill(); } });
+    if (P.beak) { ctx.fillStyle = '#ffa94d'; ctx.beginPath(); const bx = front ? hx : hx + 5; ctx.moveTo(bx - 1.6, hy + 1.4); ctx.lineTo(bx + 1.6, hy + 1.4); ctx.lineTo(bx + (front ? 0 : 2), hy + 3.2); ctx.closePath(); ctx.fill(); }
+    else { ctx.fillStyle = kind === 'bunny' ? '#ff8fab' : '#6d4c41'; ctx.beginPath(); ctx.arc(front ? hx : hx + 4.6, hy + 2, 0.9, 0, Math.PI * 2); ctx.fill(); }
     ctx.fillStyle = 'rgba(255,120,150,.45)'; ctx.beginPath(); ctx.ellipse(front ? hx - 3.6 : hx + 1.5, hy + 2.4, 1.3, 0.8, 0, 0, Math.PI * 2); if (front) ctx.ellipse(hx + 3.6, hy + 2.4, 1.3, 0.8, 0, 0, Math.PI * 2); ctx.fill();
   }
   // chân
-  ctx.fillStyle = col; [-3.5, 3].forEach((lx) => { ctx.beginPath(); ctx.ellipse(lx, -0.8, 1.8, 1.4, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); });
+  if (!P.beak) { const lc = P.patches ? dark : col; [-3.5, 3].forEach((lx) => ell(lx, -0.8, 1.8, 1.4, lc)); }
   ctx.restore();
 };
 

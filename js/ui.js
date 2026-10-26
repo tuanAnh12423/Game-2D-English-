@@ -98,6 +98,7 @@ G.ui = {
       this.open(`<div class="center"><div class="big-emoji">🔓</div><h2>Mở khoá tính năng mới!</h2></div>
         ${keys.map((k) => FEATURES[k]).filter(Boolean).map((f) => `<div class="sec"><h4>${f.icon} ${G.esc(f.name)}</h4><p>${G.esc(f.how)}</p></div>`).join('')}
         <button class="btn big" data-close>Đã hiểu! 👍</button>`);
+      keys.filter((k) => TUTORIALS[k]).forEach((k) => this.later(() => G.tutorial(k)));
     });
   },
 
@@ -105,6 +106,7 @@ G.ui = {
   createChar(onDone, isNew) {
     const s = G.state;
     const pf = Object.assign({}, s.profile);
+    const owned = Object.keys((G.petshop.st()).owned).filter((k) => G.PETS[k]);
     const render = () => {
       const sw = (key, i, col) => `<button class="sw ${pf[key] === i ? 'on' : ''}" data-k="${key}" data-i="${i}" style="background:${col}"></button>`;
       const p = this.open(`<h2>${isNew ? '👋 Tạo nhân vật của bạn' : '🧑‍🔧 Đổi nhân vật'}</h2>
@@ -115,7 +117,7 @@ G.ui = {
           <div class="set">🎨 Màu da ${G.LOOK_OPTS.skin.map((c, i) => sw('skin', i, c)).join('')}</div>
           <div class="set">💇 Tóc ${G.LOOK_OPTS.hair.map((c, i) => sw('hair', i, c)).join('')}</div>
           <div class="set">👕 Áo ${G.LOOK_OPTS.shirt.map((c, i) => sw('shirt', i, c)).join('')}</div>
-          <div class="set">🐾 Thú cưng <button class="tchip ${!pf.pet ? 'on' : ''}" data-pet="">Không</button>${Object.entries(G.PETS).map(([k, v]) => `<button class="tchip ${pf.pet === k ? 'on' : ''}" data-pet="${k}">${v.icon} ${v.vi}</button>`).join('')}</div>
+          ${owned.length ? `<div class="set">🐾 Thú cưng <button class="tchip ${!pf.pet ? 'on' : ''}" data-pet="">Không</button>${owned.map((k) => [k, G.PETS[k]]).map(([k, v]) => `<button class="tchip ${pf.pet === k ? 'on' : ''}" data-pet="${k}">${v.icon} ${G.esc((s.pets.owned[k] && s.pets.owned[k].name) || v.vi)}</button>`).join('')}</div>` : ''}
         </div></div>
         <p class="hint">Tên sẽ được dùng trong các cuộc hội thoại tiếng Anh (“Nice to meet you, I’m …”), khi nhân viên trà sữa gọi tên, và khi khách hàng xưng hô (anh/chị).</p>
         <button class="btn big" id="ccok">${isNew ? 'Bắt đầu với nhân vật này ›' : 'Lưu'}</button>`, { noClose: isNew });
@@ -456,11 +458,13 @@ G.ui = {
         <div>🧋 Ly trà sữa<b>${s.stats.drinks || 0}</b></div>
       </div>
       <button class="btn big" id="chest">📦 Mở kho đồ (48 ô)</button>
+      ${G.feat.has('cook') ? '<button class="btn" id="kitchen">🍳 Bếp nấu ăn (Kitchen)</button>' : ''}
       ${G.feat.has('mall') ? '<button class="btn" id="wardrobe">🪞 Tủ quần áo</button>' : ''}
       <button class="btn" id="save">💾 Lưu game</button>
       <button class="btn ghost" id="rest">${night ? '😴 Chúc ngủ ngon' : '☕ Nghỉ một chút'}</button>`);
     this.on(p, '#chest', () => this.bag(true));
     this.on(p, '#wardrobe', () => G.mall.wardrobe(true));
+    this.on(p, '#kitchen', () => G.kitchen.panel());
     this.on(p, '#save', () => { g.save(); this.toast('💾 Đã lưu!'); this.close(); });
     this.on(p, '#rest', () => {
       const line = night ? 'Good night! Sleep well.' : 'Time for a short break.';
@@ -668,6 +672,8 @@ G.ui = {
 
   // ---------- Tiệm Nông Sản ----------
   b_farmshop(b) { this.farmshop(b, 'buy'); },
+  b_ranch(b) { G.ranch.panel(b); },
+  b_petshop(b) { G.petshop.panel(b); },
   farmshop(b, tab, keep) {
     const g = G.game, s = G.state, L = g.level;
     let body = '';
@@ -684,7 +690,7 @@ G.ui = {
         <button class="btn small" data-fert ${s.coins < 15 ? 'disabled' : ''}>15 🪙</button></div>`;
       if (!can) body += `<div class="row"><img src="${G.partImg('tool_can', 40)}"><div class="rn"><b>Bình tưới</b><small>Watering can</small></div><button class="btn small" data-can ${s.coins < 20 ? 'disabled' : ''}>20 🪙</button></div>`;
     } else {
-      body = this.sellRows((it) => it.kind === 'crop' || it.kind === 'seed');
+      body = this.sellRows((it) => it.kind === 'crop' || it.kind === 'seed' || it.kind === 'product' || it.kind === 'food');
       body += '<p class="hint">💡 Quán cà phê đặt mua nông sản mỗi ngày với giá cao hơn ~70%.</p>';
     }
     const p = this.open(`${this.head(b, 'Bác Ba: “' + G.esc(G.clock.greet()) + '! Fresh seeds, good harvest!”')}

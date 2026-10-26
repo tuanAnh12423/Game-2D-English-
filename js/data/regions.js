@@ -31,7 +31,9 @@ window.REGIONS = [
       { t: 'house', x: 28, y: 23, w: 5, h: 4, name: 'Nhà chú Tư' },
       { t: 'house', x: 10, y: 23, w: 5, h: 4, name: 'Nhà cô Mai' },
       { t: 'station', x: 33, y: 20, w: 3, h: 2, name: 'Trạm xe buýt' },
+      { t: 'ranch', x: 16, y: 23, w: 6, h: 4, name: 'Trại Chăn Nuôi' },
     ],
+    pens: [{ x: 15, y: 29, w: 8, h: 5 }],
   },
   {
     id: 'downtown', name: 'Phố Trung Tâm', en: 'Downtown', gx: 1, gy: 1, level: 1, ground: 'city',
@@ -137,6 +139,7 @@ window.REGIONS = [
       { t: 'cafe', x: 37, y: 7, w: 6, h: 4, name: 'Bánh Mì & Cà Phê' },
       { t: 'house', x: 9, y: 23, w: 5, h: 4, name: 'Nhà cô Hạnh' },
       { t: 'station', x: 30, y: 22, w: 3, h: 2, name: 'Trạm xe buýt' },
+      { t: 'petshop', x: 37, y: 22, w: 6, h: 4, name: 'Tiệm Thú Cưng Mochi' },
     ],
   },
 ];
@@ -158,4 +161,6 @@ window.BUILDING_TYPES = {
   koi: { icon: '🧋', roof: '#e0b38c', wall: '#fff7ec' },
   phela: { icon: '🍵', roof: '#a7d48f', wall: '#f6fbef' },
   mall: { icon: '🛍️', roof: '#ff9ec7', wall: '#fff1f7' },
+  ranch: { icon: '🐔', roof: '#e8968c', wall: '#fff6ee' },
+  petshop: { icon: '🐾', roof: '#ffc078', wall: '#fffaf0' },
 };

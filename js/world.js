@@ -24,7 +24,7 @@ G.world = {
     for (let y = 0; y < this.gh; y++) this.regionGrid.push(new Array(this.gw).fill(null));
     this.regions = REGIONS.map((r, i) => Object.assign({ idx: i }, r));
     this.regions.forEach((r) => { this.regionGrid[r.gy][r.gx] = r; });
-    this.buildings = []; this.lamps = []; this.farmTiles = [];
+    this.buildings = []; this.lamps = []; this.farmTiles = []; this.pens = [];
     this.regions.forEach((r) => this.genRegion(r));
     this.chunks.clear();
     this.buildMinimap();
@@ -97,6 +97,19 @@ G.world = {
       }
     });
 
+    // chuồng vật nuôi: rào trắng, cổng ở giữa cạnh trên
+    const penIn = [];
+    (r.pens || []).forEach((pn) => {
+      for (let y = pn.y; y < pn.y + pn.h; y++) for (let x = pn.x; x < pn.x + pn.w; x++) {
+        const edge = y === pn.y || y === pn.y + pn.h - 1 || x === pn.x || x === pn.x + pn.w - 1;
+        L(x, y, edge ? T.FENCE : T.GRASS);
+      }
+      const gx = pn.x + Math.floor(pn.w / 2) - 1;
+      [gx, gx + 1].forEach((x) => { L(x, pn.y, T.PATH); L(x, pn.y - 1, T.PATH); });
+      penIn.push(pn);
+      this.pens.push({ x: ox + pn.x + 1, y: oy + pn.y + 1, w: pn.w - 2, h: pn.h - 2 });
+    });
+
     // toà nhà (cửa luôn ở mặt trước = hàng dưới cùng)
     r.buildings.forEach((b, bi) => {
       const bx = ox + b.x, by = oy + b.y;
@@ -140,6 +153,7 @@ G.world = {
       const t = g(x, y);
       if (t !== base && t !== T.GRASS) continue;
       if (near(x, y)) continue;
+      if (penIn.some((pn) => x >= pn.x - 1 && x <= pn.x + pn.w && y >= pn.y - 1 && y <= pn.y + pn.h)) continue;
       const v = rnd();
       let acc = 0;
       if (v < (acc += d.tree || 0)) L(x, y, r.ground === 'forest' && rnd() < 0.6 ? T.PINE : T.TREE);
@@ -527,7 +541,7 @@ G.world = {
         ctx.fillStyle = '#fff59d'; G.star(ctx, X + W / 2, Y - 5, 5);
       }
       // mái hiên sọc kẹo có viền vỏ sò
-      if (b.t === 'shop' || b.t === 'cafe' || b.t === 'farmshop' || b.t === 'koi' || b.t === 'phela' || b.t === 'mall') {
+      if (b.t === 'shop' || b.t === 'cafe' || b.t === 'farmshop' || b.t === 'koi' || b.t === 'phela' || b.t === 'mall' || b.t === 'petshop' || b.t === 'ranch') {
         const aw = W - 16, ay = wallTop + 3, k = Math.max(4, Math.round(aw / 10)), sw2 = aw / k;
         for (let i = 0; i < k; i++) {
           ctx.fillStyle = i % 2 ? '#ffffff' : bt.roof;

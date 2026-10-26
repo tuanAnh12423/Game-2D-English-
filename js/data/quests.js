@@ -184,6 +184,9 @@ window.FEATURES = {
   tea: { icon: '🧋', name: 'Quán trà sữa KOI Thé & Phê La', how: 'Chọn món rồi tự NÓI order bằng tiếng Anh. Nhân viên rất khó tính — sai 2 lần là bị từ chối phục vụ!' },
   mall: { icon: '🛍️', name: 'Trung Tâm Thương Mại & tủ đồ', how: 'Khu Mua Sắm (phía đông Chợ Linh Kiện): mua quần áo, giày, phụ kiện bằng tiếng Anh với nhân viên bán hàng, rồi thay đồ cho nhân vật trong Tủ đồ.' },
   events: { icon: '📢', name: 'Sự kiện & thông báo', how: 'Hội thảo máy giặt, tủ lạnh, máy lọc nước, Ngày hội trà sữa, Chợ phiên… diễn ra theo giờ thật mỗi tuần. Bạn được báo trước 3 ngày và nhắc trước khi bắt đầu. Bấm dòng 📢 dưới nhiệm vụ để xem lịch.' },
+  ranch: { icon: '🐔', name: 'Trại chăn nuôi', how: 'Trại Chăn Nuôi ở Làng Ven Sông (phía nam ruộng, gần nhà bạn): hỏi mua gà, vịt, heo, cừu, bò bằng tiếng Anh; cho ăn để chúng làm ra trứng, sữa, lông cừu, nấm truffle theo giờ thực.' },
+  cook: { icon: '🍳', name: 'Nấu ăn', how: 'Vào nhà → 🍳 Bếp: nấu món ăn từ nông sản và sản phẩm chăn nuôi bằng cách sắp xếp các bước nấu tiếng Anh đúng thứ tự (chop, slice, boil, fry…).' },
+  pets: { icon: '🐾', name: 'Tiệm thú cưng', how: 'Tiệm Thú Cưng Mochi ở Khu Mua Sắm: 8 loại thú cưng, phải tự hỏi mua bằng tiếng Anh. Thú cưng đi theo bạn, người chơi online cũng thấy.' },
   afterhours: { icon: '📵', name: 'Khách gọi ngoài giờ', how: 'Buổi tối hoặc ngày nghỉ, khách có thể gọi bắt bạn đến ngay. Hãy từ chối lịch sự bằng tiếng Anh và hẹn ngày làm việc kế tiếp.' },
 };
 
@@ -206,7 +209,11 @@ window.STORY = [
   { id: 'q_tea1', title: 'Một ly trà sữa', desc: 'Vào 🧋 KOI Thé (Phố Trung Tâm) và order thành công một ly bằng giọng nói tiếng Anh. Nhân viên rất khó tính!', type: 'drinks', n: 1, coins: 30, xp: 40, unlock: ['mall'] },
   { id: 'q_call1', title: 'Nghe máy tổng đài', desc: 'Hỗ trợ khách qua điện thoại bằng tiếng Anh: nghe máy khi điện thoại 📞 đổ chuông trong giờ làm, hoặc luyện ở Trung Tâm Bảo Hành → “Luyện nghe máy tổng đài”.', type: 'calls', n: 1, coins: 30, xp: 40 },
   { id: 'q_mall1', title: 'Mua sắm bằng tiếng Anh', desc: 'Đến 🛍️ Trung Tâm Thương Mại ở Khu Mua Sắm (đi về phía đông Chợ Linh Kiện) và mua 1 món đồ bằng tiếng Anh.', type: 'mall', n: 1, coins: 40, xp: 50, unlock: ['afterhours'] },
-  { id: 'q_harvest5', title: 'Mùa thu hoạch', desc: 'Thu hoạch 5 nông sản. Cây lớn theo thời gian thực, kể cả khi bạn tắt game!', type: 'harvest', n: 5, coins: 40, xp: 50 },
+  { id: 'q_harvest5', title: 'Mùa thu hoạch', desc: 'Thu hoạch 5 nông sản. Cây lớn theo thời gian thực, kể cả khi bạn tắt game!', type: 'harvest', n: 5, coins: 40, xp: 50, unlock: ['ranch'] },
+  { id: 'q_animal1', title: 'Chủ trại nhỏ', desc: 'Đến 🐔 Trại Chăn Nuôi (Làng Ven Sông, phía nam ruộng) và hỏi mua 1 con vật bằng tiếng Anh.', type: 'animals', n: 1, coins: 30, xp: 40 },
+  { id: 'q_collect1', title: 'Trứng tươi', desc: 'Ở Trại Chăn Nuôi, bấm 🧺 Collect để thu sản phẩm đầu tiên (trứng, sữa…). Nhớ 🌾 cho ăn — đói thì không có sản phẩm!', type: 'collect', n: 1, coins: 30, xp: 40, unlock: ['cook'] },
+  { id: 'q_cook1', title: 'Đầu bếp tập sự', desc: 'Vào 🏠 nhà → 🍳 Bếp, nấu 1 món (ví dụ Fried egg) bằng cách xếp các bước tiếng Anh đúng thứ tự.', type: 'cook', n: 1, coins: 40, xp: 50, unlock: ['pets'] },
+  { id: 'q_pet1', title: 'Người bạn nhỏ', desc: 'Đến 🐾 Tiệm Thú Cưng Mochi (Khu Mua Sắm, cạnh trạm xe buýt) và nhận nuôi 1 thú cưng bằng tiếng Anh.', type: 'pets', n: 1, coins: 50, xp: 60 },
   { id: 'q_decline', title: 'Biết nói “không”', desc: 'Khi khách gọi NGOÀI GIỜ LÀM bắt bạn phải đến, hãy từ chối lịch sự (đạt ⭐⭐ trở lên) 1 lần.', type: 'decline', n: 1, coins: 40, xp: 50 },
   { id: 'q_shop', title: 'Ghé Chợ Linh Kiện', desc: 'Đến Chợ Linh Kiện (cần Level 2) để mua bán linh kiện.', type: 'enter', target: 'shop', n: 1, coins: 30, xp: 30 },
   { id: 'q_craft', title: 'Kỹ sư tập sự', desc: 'Lắp ráp 1 mạch ở Xưởng Lắp Ráp (Chợ Linh Kiện).', type: 'craft', n: 1, coins: 40, xp: 60 },
