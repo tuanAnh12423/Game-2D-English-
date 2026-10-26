@@ -173,7 +173,8 @@ window.DIALOGS = {
 // CỐT TRUYỆN CHÍNH — làm lần lượt; mỗi nhiệm vụ có `id` riêng (không đổi id
 // đã có, để file lưu cũ vẫn đúng). Thêm nhiệm vụ mới: chèn vào vị trí bất kỳ.
 //   type: enter (vào toà nhà loại `target`), words, parts (số loại), jobs,
-//         craft, talk, level, regions, plant, harvest, calls, convo3
+//         craft, talk, level, regions, plant, harvest, calls, convo3,
+//         hvac (số cấp đã đậu ở Học Viện HVAC)
 // ============================================================
 window.STORY = [
   { id: 'q_work', title: 'Ngày đầu đi làm', desc: 'Đi đến Trung Tâm Bảo Hành ở Phố Trung Tâm (phía đông nhà bạn) để nhận việc.', type: 'enter', target: 'service', n: 1, coins: 20, xp: 20 },
@@ -191,7 +192,9 @@ window.STORY = [
   { id: 'q_lv5', title: 'Lên Level 5', desc: 'Đạt cấp độ 5 để mở các vùng đất xa hơn.', type: 'level', n: 5, coins: 80, xp: 0 },
   { id: 'q_parts15', title: 'Nhà sưu tầm', desc: 'Sưu tầm 15 loại linh kiện khác nhau.', type: 'parts', n: 15, coins: 100, xp: 120 },
   { id: 'q_jobs10', title: 'Kỹ thuật viên lành nghề', desc: 'Hoàn thành 10 đơn sửa chữa.', type: 'jobs', n: 10, coins: 150, xp: 150 },
+  { id: 'q_hvac1', title: 'Học Viện HVAC', desc: 'Đạt Level 5 và sửa xong 5 đơn để mở ❄️ Học Viện HVAC (Khu Công Nghiệp), rồi thi đậu Cấp 1.', type: 'hvac', n: 1, coins: 100, xp: 120 },
   { id: 'q_regions', title: 'Nhà thám hiểm', desc: 'Đặt chân tới tất cả các vùng đất.', type: 'regions', n: 0, coins: 200, xp: 200 },
   { id: 'q_words100', title: 'Bậc thầy từ vựng', desc: 'Sở hữu 100 từ vựng.', type: 'words', n: 100, coins: 300, xp: 300 },
+  { id: 'q_hvac5', title: 'Kỹ sư HVAC', desc: 'Thi đậu cả 5 cấp ở Học Viện HVAC để nhận Chứng chỉ Kỹ sư HVAC.', type: 'hvac', n: 5, coins: 300, xp: 400 },
   { id: 'q_partsall', title: 'Chuyên gia linh kiện', desc: 'Sưu tầm đủ tất cả các loại linh kiện.', type: 'parts', n: 0, coins: 300, xp: 300 },
 ];

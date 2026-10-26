@@ -622,6 +622,7 @@ G.game = {
       case 'harvest': return { cur: s.stats.harvested, max: q.n };
       case 'calls': return { cur: s.stats.calls, max: q.n };
       case 'convo3': return { cur: Object.values(s.convos).filter((v) => v >= 3).length, max: q.n };
+      case 'hvac': return { cur: G.hvac.passedCount(), max: q.n };
     }
     return { cur: 0, max: 1 };
   },
@@ -653,6 +654,7 @@ G.game = {
     if (q.type === 'enter') type = q.target;
     else if (q.type === 'jobs') type = 'service';
     else if (q.type === 'craft') type = 'shop';
+    else if (q.type === 'hvac') type = 'hvac';
     else if (q.type === 'plant' || q.type === 'harvest') {
       if (q.type === 'plant' && !this.firstOfKind('seed')) type = 'farmshop';
       else {

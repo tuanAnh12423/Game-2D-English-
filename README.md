@@ -20,6 +20,7 @@ Bạn là **Minh**, một kỹ thuật viên trẻ vừa nhận việc ở Trung
 | 📒 **Sổ tay mẫu câu** | Mọi câu chuẩn bạn gặp được lưu lại để nghe và luyện nói (📖 → Mẫu câu). |
 | 🔌 **Chợ Linh Kiện** | Mua/bán linh kiện, nâng cấp balo, **lắp ráp mạch** ở Xưởng. |
 | ☕ **Quán cà phê** | Mua cà phê (đi nhanh hơn), nhận **đơn đặt nông sản bằng tiếng Anh** mỗi ngày. |
+| ❄️ **Học Viện HVAC** *(nội dung khó, có khoá)* | Ở Khu Công Nghiệp. **Chỉ mở khi đạt Level 5 và hoàn thành 5 đơn sửa chữa.** Bên trong: 69 câu hỏi Daikin chia 5 cấp (đúng ≥ 80% mới mở cấp sau), câu tự luận có gợi ý, 7 bài nghe tiếng Anh (mức Trung bình mở sau Cấp 2, mức Khó sau Cấp 4), 20 câu luyện phỏng vấn có đếm giờ 90 giây (mở sau Cấp 4), nhãn độ tin cậy và nguồn cho từng câu. Đậu cả 5 cấp → 🎓 Chứng chỉ Kỹ sư HVAC. |
 | 📚 **Thư viện** | Ôn tập từ vựng, luyện hội thoại. 🚌 **Xe buýt** để đi nhanh giữa các vùng. |
 
 **Điều khiển:** kéo ngón tay ở nửa trái màn hình để đi; nút tròn bên phải để Vào nhà / Nói chuyện / Gieo / Tưới / Thu hoạch (hoặc cứ đi thẳng vào cửa). Chạm ô ở thanh đồ nhanh để chọn hạt giống / phân bón; chạm lần nữa để mở balo. Trên máy tính: WASD/mũi tên + Space.
@@ -40,7 +41,7 @@ Bạn là **Minh**, một kỹ thuật viên trẻ vừa nhận việc ở Trung
 | Khu Công Nghệ Cao | 6 | Điện tử, sản xuất |
 | Sân Bay Quốc Tế | 7 | Du lịch, thành phố |
 
-Hiện có **241 từ vựng / 13 nhóm**, **33 linh kiện**, **10 mạch lắp ráp**, **17 đơn sửa chữa**, **10 loại cây trồng**, **16 hội thoại nhiều lượt** (14 tình huống luyện tập + 2 khi sửa tại nhà khách) + 21 câu chào hỏi nhanh, **18 nhiệm vụ cốt truyện**.
+Hiện có **241 từ vựng / 13 nhóm**, **33 linh kiện**, **10 mạch lắp ráp**, **17 đơn sửa chữa**, **10 loại cây trồng**, **16 hội thoại nhiều lượt** (14 tình huống luyện tập + 2 khi sửa tại nhà khách) + 21 câu chào hỏi nhanh, **20 nhiệm vụ cốt truyện**, cùng Học Viện HVAC (69 câu hỏi, 7 bài nghe, 20 câu phỏng vấn).
 
 ## Chơi trên điện thoại / iPad
 
@@ -78,6 +79,13 @@ Sau khi sửa, tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `tech-eng
 
 > ⚠️ Giá trị đo trong thẻ linh kiện chỉ mang tính tham khảo — luôn đối chiếu tài liệu kỹ thuật của từng model.
 
+### Dữ liệu HVAC
+
+- Dữ liệu gốc nằm trong `data/hvac/` (`daikin_questions.json`, `listening.json`). Khi cập nhật, thay file JSON rồi chạy `python3 tools/hvac_to_js.py` để sinh lại `js/data/hvac_questions.js` và `js/data/hvac_listening.js`.
+- **File âm thanh:** chép thư mục `audio/` (p1.mp3 … p7.mp3, iNN_q.mp3, iNN_a.mp3) vào `data/hvac/audio/`. Có file MP3 thì game phát MP3; chưa có thì game đọc lời thoại bằng giọng máy (hai người nói được phân biệt bằng giọng/cao độ khác nhau).
+- Điều kiện mở khoá chỉnh ở đầu `js/hvac.js`: `REQ_LEVEL`, `REQ_JOBS`, `PASS` (tỉ lệ đậu), `LISTEN_NEED`, `INTERVIEW_NEED`.
+- Lưu ý từ gói dữ liệu: giọng đọc do máy tạo; nội dung chưa đối chiếu giáo trình; không so CSPF với SEER như cùng thang đo.
+
 ## Cấu trúc mã nguồn
 
 ```
@@ -88,8 +96,11 @@ js/icons.js         vẽ linh kiện, nông sản, cây trồng, đèn đường
 js/world.js         tạo bản đồ từ dữ liệu vùng đất, vẽ ô đất, toà nhà, bản đồ nhỏ
 js/input.js         cần điều khiển ảo, nút hành động, bàn phím
 js/game.js          vòng lặp game, kho đồ, trồng trọt, ánh sáng đêm, cuộc gọi, nhiệm vụ
+js/hvac.js          Học Viện HVAC: khoá/mở, thi 5 cấp, bài nghe, phỏng vấn
 js/ui.js            hộp thoại: đố từ, balo/kho, cửa hàng, hội thoại nhiều lượt, luyện nói, từ điển, bản đồ...
 js/data/*.js        TOÀN BỘ nội dung có thể mở rộng
+data/hvac/          dữ liệu HVAC gốc (JSON) + thư mục audio/
+tools/hvac_to_js.py chuyển JSON HVAC thành file JS
 sw.js, manifest.json  chơi offline & cài lên màn hình chính
 ```
 

@@ -13,7 +13,7 @@
 //   farms   : các thửa ruộng [{x, y, w, h}] để trồng trọt
 //   buildings: t = loại toà nhà:
 //      home · service · shop · library · cafe · house · station
-//      factory · hotel · airport · farmshop
+//      factory · hotel · airport · farmshop · hvac
 //   Toà nhà KHÔNG được đè lên đường giữa (hàng 16–19, cột 22–25).
 //   Cửa luôn ở mặt trước (phía dưới); lối đi ra đường lớn được tạo tự động.
 // ============================================================
@@ -99,6 +99,7 @@ window.REGIONS = [
       { t: 'factory', x: 5, y: 3, w: 13, h: 8, name: 'Nhà Máy Điện Lạnh' },
       { t: 'factory', x: 29, y: 3, w: 13, h: 8, name: 'Nhà Máy Bo Mạch' },
       { t: 'house', x: 8, y: 23, w: 5, h: 4, name: 'Kho phụ tùng' },
+      { t: 'hvac', x: 34, y: 22, w: 9, h: 6, name: 'Học Viện HVAC' },
       { t: 'station', x: 30, y: 22, w: 3, h: 2, name: 'Trạm xe buýt' },
     ],
   },
@@ -139,4 +140,5 @@ window.BUILDING_TYPES = {
   hotel: { icon: '🏨', roof: '#00838f', wall: '#e0f7fa' },
   airport: { icon: '✈️', roof: '#455a64', wall: '#eceff1' },
   farmshop: { icon: '🌱', roof: '#7cb342', wall: '#f9fbe7' },
+  hvac: { icon: '❄️', roof: '#0277bd', wall: '#e1f5fe' },
 };

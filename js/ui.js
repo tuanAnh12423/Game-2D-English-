@@ -108,7 +108,8 @@ G.ui = {
     const rec = s.words[w.en];
     const m = rec ? rec.m : 0;
     const types = m === 0 ? ['vi'] : m === 1 ? ['vi', 'en'] : m === 2 ? ['en', 'listen', 'blank'] : ['listen', 'blank', 'en'];
-    const type = G.pick(types);
+    let type = G.pick(types);
+    if (type === 'blank' && !w.ex.toLowerCase().includes(w.en.toLowerCase())) type = 'en';
     const sameCat = G.allWords.filter((x) => x.cat === w.cat && x.en !== w.en);
     const others = G.shuffle(sameCat.length >= 3 ? sameCat : G.allWords.filter((x) => x.en !== w.en)).slice(0, 3);
     const opts = G.shuffle([w, ...others]);
@@ -490,6 +491,7 @@ G.ui = {
     });
   },
 
+  b_hvac(b) { G.hvac.open(b); },
   b_shop(b) { this.shop(b, 'buy'); },
   shop(b, tab, keep) {
     const g = G.game, s = G.state, L = g.level;
@@ -653,7 +655,8 @@ G.ui = {
         return;
       }
       const w = qs[i];
-      const type = G.pick(['vi', 'en', 'listen', 'blank']);
+      let type = G.pick(['vi', 'en', 'listen', 'blank']);
+      if (type === 'blank' && !w.ex.toLowerCase().includes(w.en.toLowerCase())) type = 'vi';
       const others = G.shuffle(G.allWords.filter((x) => x.en !== w.en && x.cat === w.cat)).slice(0, 3);
       const opts = G.shuffle([w, ...others]);
       const blank = w.ex.replace(new RegExp(w.en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'), '_____');

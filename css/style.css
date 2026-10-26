@@ -317,6 +317,21 @@ div.ipa { margin-bottom: 4px; }
 .tagline { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
 .drow b.ph { font-family: Georgia, serif; font-size: 15px; }
 
+/* ---------- Học Viện HVAC ---------- */
+.kind { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; vertical-align: middle; }
+.k-n { background: #e8f5e9; color: #2e7d32; } .k-t { background: #e3f2fd; color: #1565c0; }
+.k-c { background: #f3e5f5; color: #6a1b9a; } .k-g { background: #fff3e0; color: #a65800; }
+.qsent.left { text-align: left; font-family: inherit; font-size: 15.5px; line-height: 1.45; }
+.job.ok { border-color: #a5d6a7; background: #f1f8f1; } .job.no { border-color: #ffcdd2; background: #fff6f6; }
+.job .sbtns { margin-top: 6px; }
+ul.ans { margin: 8px 0 4px; padding-left: 18px; font-size: 13.5px; line-height: 1.45; } ul.ans li { margin-bottom: 4px; }
+p.tr { font-family: Georgia, serif; font-size: 14px; line-height: 1.5; }
+.timer { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin: 6px 0; }
+.timer .bar { flex: 1; margin: 0; }
+mark { background: #fff59d; padding: 0 2px; border-radius: 3px; }
+.wcard .model { font-style: normal; line-height: 1.5; }
+.drow a { color: var(--blue2); word-break: break-word; }
+
 /* ---------- Màn hình tiêu đề ---------- */
 #title {
   position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; padding: 16px;
