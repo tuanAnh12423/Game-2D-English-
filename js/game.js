@@ -470,12 +470,16 @@ G.game = {
       const d = Math.hypot((xx + 0.5) * G.TS - p.x, (yy + 0.5) * G.TS - p.y);
       if (d < 50 && d < best + 10) { best = d; this.target = { kind: 'door', b: G.world.buildingAt(xx, yy) }; }
     }
+    if (G.online.isOn()) {
+      const np = G.online.nearPeer();
+      if (np && Math.hypot(np.x - p.x, np.y - p.y) < best) this.target = { kind: 'peer', peer: np };
+    }
     if (!this.target) {
       const ft = this.farmTarget();
       if (ft) this.target = { kind: 'farm', ft, plan: this.farmPlan(ft) };
     }
     const btn = document.getElementById('btnA');
-    const label = !this.target ? '✋<small>—</small>' : this.target.kind === 'door' ? '🚪<small>Vào</small>' : this.target.kind === 'npc' ? '💬<small>Nói</small>' : this.target.plan.label;
+    const label = !this.target ? '✋<small>—</small>' : this.target.kind === 'door' ? '🚪<small>Vào</small>' : this.target.kind === 'npc' ? '💬<small>Nói</small>' : this.target.kind === 'peer' ? '💞<small>Chat</small>' : this.target.plan.label;
     if (btn.dataset.l !== label) { btn.innerHTML = label; btn.dataset.l = label; btn.classList.toggle('dim', !this.target); }
 
     this.pushDoor = pushingDoor ? this.pushDoor + dt : 0;
@@ -501,6 +505,7 @@ G.game = {
     if (this.rainCd <= 0) { this.rainCd = 10; if (this.weather === 'rain') this.rainWater(); }
 
     this.updateFx(dt);
+    G.online.update(dt);
     this.phoneTick();
 
     this.saveCd -= dt;
@@ -593,6 +598,7 @@ G.game = {
 
   interact(tg) {
     if (tg.kind === 'npc') { G.ui.chatNpc(tg.n); return; }
+    if (tg.kind === 'peer') { G.online.panel(); return; }
     const b = tg.b;
     if (!b) return;
     G.audio.sfx('door');
@@ -775,7 +781,10 @@ G.game = {
       const lx = (l.x + 0.5) * S, ly = (l.y + 1) * S - 4;
       if (vis(lx, ly)) ents.push({ y: ly, d: () => G.drawLamp(ctx, lx, ly, nl > 0.12, this.t) });
     });
+    G.online.draw(ctx, cam, ents);
     ents.sort((a, b) => a.y - b.y).forEach((e) => e.d());
+    if (G.online.isOn()) G.online.drawTag(ctx, p.x, p.y, '⭐ ' + this.state.profile.name, '#1565c0');
+    if (this.playerBubble && this.playerBubble.until > Date.now()) G.online.drawBubble(ctx, p.x, p.y - 62, this.playerBubble);
 
     // bướm
     this.flies.forEach((b) => {
@@ -1020,7 +1029,7 @@ G.game = {
     const dt = Math.min(0.05, now - (self.last || now));
     self.last = now; self.dt = dt;
     if (self.running && !G.ui.isOpen()) self.update(dt);
-    else if (self.running) { self.updateFx(dt); self.phoneTick(); }
+    else if (self.running) { self.updateFx(dt); G.online.update(dt); self.phoneTick(); }
     if (self.running) self.render();
     requestAnimationFrame(self.loop);
   },

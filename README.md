@@ -20,6 +20,7 @@ Bạn **tự đặt tên và chọn nhân vật nam/nữ** (màu da, tóc, áo) 
 | 📒 **Sổ tay mẫu câu** | Mọi câu chuẩn bạn gặp được lưu lại để nghe và luyện nói (📖 → Mẫu câu). |
 | 🔌 **Chợ Linh Kiện** | Mua/bán linh kiện, nâng cấp balo, **lắp ráp mạch** ở Xưởng. |
 | ☕ **Quán cà phê** | Mua cà phê (đi nhanh hơn), nhận **đơn đặt nông sản bằng tiếng Anh** mỗi ngày. |
+| 🌐 **Chơi cùng nhau (online)** | Bấm 🌐, hai người nhập **cùng một mã phòng** là thấy nhau trong thế giới theo thời gian thực (tên màu hồng 💞, người offline hiện mờ 💤 ở vị trí cuối). Chat (có câu tiếng Anh gợi ý, +2 XP mỗi tin tiếng Anh), gửi biểu cảm, **tặng đồ trong balo**, nút “📍 Đi tới” để đến ngay chỗ người kia, đứng gần nhau nút tròn đổi thành 💞 Chat. Có thể bật “Tự vào phòng khi mở game”. |
 | 📅 **Ngày đi làm / ngày nghỉ** | Mặc định Thứ 2–Thứ 6, 8:00–17:00 (nghỉ trưa 12:00–13:00) = **8 tiếng**; chỉnh ngày và giờ vào ca trong ⚙️ Cài đặt. Chỉ nhận đơn sửa chữa trong giờ làm; vào Trung Tâm Bảo Hành trong ca để **chấm công** (đi muộn quá 15 phút bị nhắc và nhận ít lương hơn). Ngày nghỉ: trồng trọt, uống trà sữa, khám phá. |
 | 📵 **Khách gọi ngoài giờ** | Buổi tối hoặc ngày nghỉ, khách có thể gọi bắt bạn đến sửa ngay, đòi trả thêm tiền, xin số riêng... Bạn phải **từ chối lịch sự bằng tiếng Anh** và đưa phương án thay thế (hẹn ngày làm việc kế tiếp, gọi hotline). Chọn “OK, I’ll come right now” sẽ bị tính sai. |
 | 🧋 **KOI Thé & Phê La** | KOI Thé ở Phố Trung Tâm, Phê La ở Chợ Linh Kiện. Chọn món theo thực đơn thật (Trà sữa trân châu hoàng kim, Macchiato · Ô Long Sữa Phê La, Ô Long Nhài Sữa, Khói B’Lao, Lang Biang, Ô Long Sữa Gạo Rang, size Phê/La...), rồi **tự nói order bằng tiếng Anh** (không có câu mẫu): tên món + size + độ ngọt + đá + topping + “please”. Nhân viên rất khó tính: sai 2 lần là **bị từ chối phục vụ** cho tới khi học xong Lớp học order và đậu bài thi. Order xong: hỏi “For here or to go?”, hỏi tên, gọi tên khi đồ uống xong. Thiết bị không có micro thì gõ câu tiếng Anh (vẫn chấm như khi nói). |
@@ -92,6 +93,13 @@ Sau khi sửa, tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `tech-eng
 
 > Thực đơn và giá trà sữa lấy từ các trang công khai (blog, trang trung tâm thương mại, trang thương hiệu) tháng 10/2026, chỉ mang tính tham khảo. Mức đường/đá trong game (0–100%, không/ít/bình thường) là cách gọi phổ biến, chưa xác nhận đầy đủ với từng quán.
 
+### Chơi online hoạt động thế nào?
+
+- Không cần máy chủ riêng hay tài khoản: game kết nối cùng lúc tới 2 máy chủ MQTT công cộng miễn phí (`broker.hivemq.com`, `broker.emqx.io`) để dự phòng.
+- Vị trí, tin nhắn, quà tặng được **mã hoá AES-GCM** bằng khoá sinh từ mã phòng ngay trên điện thoại — máy chủ và người ngoài không đọc được. Hãy dùng mã phòng khó đoán và chỉ chia sẻ với người cần chơi cùng.
+- Máy chủ công cộng không cam kết luôn hoạt động; nếu cần ổn định hơn có thể tự dựng máy chủ MQTT (hỗ trợ WebSocket) rồi mở game với `?broker=wss://ten-may-chu:cong/mqtt`.
+- Lịch sử chat lưu trên từng máy (100 tin gần nhất). Tin nhắn gửi lúc người kia offline sẽ không đến được.
+
 ## Cấu trúc mã nguồn
 
 ```
@@ -102,6 +110,8 @@ js/icons.js         vẽ linh kiện, nông sản, cây trồng, đèn đường
 js/world.js         tạo bản đồ từ dữ liệu vùng đất, vẽ ô đất, toà nhà, bản đồ nhỏ
 js/input.js         cần điều khiển ảo, nút hành động, bàn phím
 js/game.js          vòng lặp game, kho đồ, trồng trọt, ánh sáng đêm, cuộc gọi, nhiệm vụ
+js/online.js        chơi cùng nhau: kết nối MQTT, mã hoá, thấy nhau, chat, tặng quà
+js/vendor/          thư viện mqtt.js (MIT)
 js/work.js          lịch làm việc, giờ làm, chấm công
 js/tea.js           quán trà sữa: chấm câu order nói bằng tiếng Anh, lớp học order
 js/hvac.js          Học Viện HVAC: khoá/mở, thi 5 cấp, bài nghe, phỏng vấn

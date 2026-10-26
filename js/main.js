@@ -16,6 +16,7 @@
   menu('mQuest', () => G.ui.quests());
   menu('mMap', () => G.ui.map());
   menu('mSet', () => G.ui.settings());
+  menu('mNet', () => G.online.panel());
   document.getElementById('mini').addEventListener('click', () => { G.audio.unlock(); G.ui.map(); });
   document.getElementById('hQuest').addEventListener('click', () => { G.audio.unlock(); G.ui.quests(); });
   document.getElementById('hotbar').addEventListener('pointerdown', (e) => {
@@ -38,6 +39,7 @@
     if (fresh) G.store.clear();
     title.classList.add('hide');
     G.game.start(fresh);
+    G.online.autoStart();
     G.tts.speak(fresh || !hasSave ? 'Welcome, technician!' : 'Welcome back!');
   };
   document.getElementById('tContinue').addEventListener('click', () => go(false));
