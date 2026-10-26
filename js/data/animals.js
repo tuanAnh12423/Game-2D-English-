@@ -15,20 +15,22 @@ window.PET_SHOP = [
   { id: 'panda', en: 'baby panda', vi: 'Gấu trúc con', price: 600, level: 6, age: 'one year', eat: 'lots and lots of bamboo', eatVi: 'thật nhiều, thật nhiều tre' },
 ];
 
-// Vật nuôi ở Trại Chăn Nuôi. cycle: số giờ (đã cho ăn) để ra 1 sản phẩm.
-// feedH: một lần cho ăn đủ no bao nhiêu giờ (thời gian thực).
+// Vật nuôi ở Trại Chăn Nuôi. cycle: số giờ (đã cho ăn) để ra 1 lượt sản phẩm.
+// feedH: một lần cho ăn no bao nhiêu giờ (24 = cho ăn 1 lần/ngày là đủ).
+// Sản phẩm tích lại tối đa RANCH_STORE lượt, nên ghé sáng & tối vẫn không phí.
 window.ANIMALS = [
-  { id: 'chicken', en: 'hen', plural: 'hens', vi: 'Gà mái', emoji: '🐔', price: 60, level: 1, product: 'egg', cycle: 6, feedH: 8, sound: 'Cluck cluck!', eats: 'grains and corn', eatsVi: 'ngũ cốc và bắp' },
-  { id: 'duck', en: 'duck', plural: 'ducks', vi: 'Vịt', emoji: '🦆', price: 80, level: 1, product: 'duck_egg', cycle: 8, feedH: 8, sound: 'Quack quack!', eats: 'grains and small fish', eatsVi: 'ngũ cốc và cá nhỏ' },
-  { id: 'pig', en: 'pig', plural: 'pigs', vi: 'Heo', emoji: '🐷', price: 150, level: 2, product: 'truffle', cycle: 24, feedH: 12, sound: 'Oink oink!', eats: 'vegetables, fruit and grains', eatsVi: 'rau, trái cây và ngũ cốc' },
-  { id: 'sheep', en: 'sheep', plural: 'sheep', vi: 'Cừu', emoji: '🐑', price: 180, level: 3, product: 'wool', cycle: 24, feedH: 12, sound: 'Baa baa!', eats: 'grass and hay', eatsVi: 'cỏ và cỏ khô' },
-  { id: 'cow', en: 'cow', plural: 'cows', vi: 'Bò sữa', emoji: '🐮', price: 250, level: 3, product: 'milk', cycle: 12, feedH: 12, sound: 'Moo!', eats: 'grass, hay and corn', eatsVi: 'cỏ, cỏ khô và bắp' },
+  { id: 'chicken', en: 'hen', plural: 'hens', vi: 'Gà mái', emoji: '🐔', price: 60, level: 1, product: 'egg', cycle: 3, feedH: 24, sound: 'Cluck cluck!', eats: 'grains and corn', eatsVi: 'ngũ cốc và bắp' },
+  { id: 'duck', en: 'duck', plural: 'ducks', vi: 'Vịt', emoji: '🦆', price: 80, level: 1, product: 'duck_egg', cycle: 4, feedH: 24, sound: 'Quack quack!', eats: 'grains and small fish', eatsVi: 'ngũ cốc và cá nhỏ' },
+  { id: 'pig', en: 'pig', plural: 'pigs', vi: 'Heo', emoji: '🐷', price: 150, level: 2, product: 'truffle', cycle: 8, feedH: 24, sound: 'Oink oink!', eats: 'vegetables, fruit and grains', eatsVi: 'rau, trái cây và ngũ cốc' },
+  { id: 'sheep', en: 'sheep', plural: 'sheep', vi: 'Cừu', emoji: '🐑', price: 180, level: 3, product: 'wool', cycle: 12, feedH: 24, sound: 'Baa baa!', eats: 'grass and hay', eatsVi: 'cỏ và cỏ khô' },
+  { id: 'cow', en: 'cow', plural: 'cows', vi: 'Bò sữa', emoji: '🐮', price: 250, level: 3, product: 'milk', cycle: 6, feedH: 24, sound: 'Moo!', eats: 'grass, hay and corn', eatsVi: 'cỏ, cỏ khô và bắp' },
 ];
 window.RANCH_MAX = 8;
+window.RANCH_STORE = 3;
 
 // Vật phẩm mới: sản phẩm chăn nuôi, thức ăn gia súc, món ăn
 window.RANCH_ITEMS = [
-  { id: 'feed', kind: 'feed', emoji: '🌾', en: 'Animal feed', vi: 'Thức ăn gia súc', price: 4, desc: 'Cho vật nuôi ăn ở Trại Chăn Nuôi. Một lần cho ăn giúp con vật no 8–12 giờ thời gian thực.' },
+  { id: 'feed', kind: 'feed', emoji: '🌾', en: 'Animal feed', vi: 'Thức ăn gia súc', price: 4, desc: 'Cho vật nuôi ăn ở Trại Chăn Nuôi. Một lần cho ăn giúp con vật no 24 giờ thời gian thực.' },
   { id: 'egg', kind: 'product', emoji: '🥚', en: 'egg', vi: 'Trứng gà', price: 12, desc: 'Gà mái đẻ khi được cho ăn đầy đủ. Dùng để nấu ăn hoặc bán.' },
   { id: 'duck_egg', kind: 'product', emoji: '🪺', en: 'duck egg', vi: 'Trứng vịt', price: 16, desc: 'Trứng vịt to hơn trứng gà. Dùng để luộc hoặc bán.' },
   { id: 'milk', kind: 'product', emoji: '🥛', en: 'milk', vi: 'Sữa bò', price: 25, desc: 'Vắt từ bò sữa. Dùng làm súp, sinh tố, bánh.' },
@@ -64,7 +66,7 @@ window.TUTORIALS = {
     ['Feed your animals with animal feed or vegetables. A full animal is a happy animal.', 'Cho vật nuôi ăn bằng thức ăn gia súc hoặc rau củ. Con vật no là con vật vui.'],
     ['When an animal is fed, it makes a product: eggs, milk, wool or truffles.', 'Khi được cho ăn, con vật làm ra sản phẩm: trứng, sữa, lông cừu hoặc nấm truffle.'],
     ['Collect the products and sell them, or use them to cook delicious food.', 'Thu sản phẩm để bán, hoặc dùng để nấu món ăn ngon.'],
-    ['Animals grow in real time, even when the game is closed. Come back every day!', 'Vật nuôi sống theo thời gian thực, kể cả khi tắt game. Hãy quay lại mỗi ngày!'],
+    ['Feed them once a day. Products keep piling up (up to three) even when the game is closed.', 'Cho ăn mỗi ngày một lần. Sản phẩm vẫn tích lại (tối đa 3 lượt) kể cả khi tắt game.'],
   ] },
   cook: { title: 'Let’s Cook!', lines: [
     ['Your home has a kitchen now. Open your home and tap “Kitchen”.', 'Nhà bạn đã có bếp. Vào nhà và bấm “Bếp”.'],

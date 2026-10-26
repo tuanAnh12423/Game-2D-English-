@@ -1,6 +1,6 @@
 // ============================================================
 // TRỒNG TRỌT — cây lớn theo THỜI GIAN THỰC (phút ngoài đời).
-// Cây chỉ lớn khi đất còn ẩm: mỗi lần tưới giữ ẩm 4 giờ, trời mưa tự tưới.
+// Cây chỉ lớn khi đất còn ẩm: mỗi lần tưới giữ ẩm 12 giờ, trời mưa tự tưới.
 // Muốn thêm cây mới: thêm 1 object, rồi thêm từ tiếng Anh vào nhóm `farm`
 // trong words.js để từ đó vào Từ điển khi thu hoạch lần đầu.
 //   min   : số phút thực để chín · seed: giá hạt · sell: giá bán 1 nông sản
@@ -22,7 +22,7 @@ window.CROPS = [
 // Dụng cụ & vật phẩm nông trại
 window.FARM_ITEMS = [
   { id: 'tool_can', kind: 'tool', en: 'Watering can', vi: 'Bình tưới', price: 0, sym: 'can', color: '#29b6f6',
-    desc: 'Tưới nước cho cây. Đất giữ ẩm 4 giờ (thời gian thực) sau mỗi lần tưới; hết ẩm cây sẽ ngừng lớn.' },
+    desc: 'Tưới nước cho cây. Đất giữ ẩm 12 giờ (thời gian thực) sau mỗi lần tưới; hết ẩm cây sẽ ngừng lớn.' },
   { id: 'fert', kind: 'fert', en: 'Fertilizer', vi: 'Phân bón', price: 15, sym: 'fert', color: '#8d6e63',
     desc: 'Chọn phân bón ở thanh đồ nhanh rồi bấm vào cây đang lớn: cây lớn nhanh thêm 25%.' },
 ];

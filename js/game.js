@@ -2,7 +2,7 @@
 const NPC_NAMES = ['Anh Nam', 'Chị Hương', 'Bác Ba', 'Cô Thu', 'Anh Khoa', 'Chị Vy', 'Ông Tâm', 'Bé Bin', 'Anh Long', 'Chị Ngọc', 'Chú Hải', 'Cô Linh', 'Mr. John', 'Ms. Emma', 'Mr. Kenji', 'Ms. Sarah'];
 // thứ tự nhiệm vụ của bản cũ (để chuyển đổi file lưu)
 const OLD_STORY = ['q_work', 'q_words5', 'q_parts3', 'q_job1', 'q_talk3', 'q_shop', 'q_craft', 'q_words30', 'q_lv5', 'q_parts15', 'q_jobs10', 'q_regions', 'q_words100', 'q_partsall'];
-const WET_MS = 4 * 3600e3; // mỗi lần tưới giữ ẩm 4 giờ
+const WET_MS = 12 * 3600e3; // mỗi lần tưới giữ ẩm 12 giờ (tưới sáng là đủ tới tối)
 
 G.game = {
   state: null, player: null, npcs: [], items: [], floaters: [], fx: [], flies: [], drops: [],
@@ -64,10 +64,7 @@ G.game = {
     G.ui.renderHotbar();
     // vắng mặt bao lâu?
     const away = G.clock.now() - (s.lastSeen || G.clock.now());
-    if (saved && away > 20 * 60000) {
-      const ready = Object.values(s.farm).filter((pl) => this.plotInfo(pl).ready).length;
-      setTimeout(() => G.ui.toast('⏰ Bạn vắng mặt ' + G.clock.fmtDur(away) + '. ' + (ready ? '🌾 Có ' + ready + ' ô ruộng đã chín!' : 'Thời gian trong game vẫn trôi theo giờ thực.')), 900);
-    }
+    if (saved && away > 20 * 60000) setTimeout(() => G.ui.later(() => G.ui.welcomeBack(away)), 900);
     if (!saved) setTimeout(() => G.ui.createChar(() => G.ui.intro(), true), 300);
     // tính năng mới mở cho người chơi cũ (bản cập nhật) → báo & hướng dẫn
     if (!s.featSeen) { s.featSeen = {}; Object.keys(FEATURES).forEach((k) => { if (G.feat.has(k) && !this.NEW_FEATS.includes(k)) s.featSeen[k] = true; }); }
@@ -605,6 +602,7 @@ G.game = {
     if (!s.settings.calls || !G.feat.has('phone')) { btn.classList.remove('on'); return; }
     if (!ph.ring) {
       if (now >= ph.at && !G.ui.isOpen()) {
+        if (G.work.status().type === 'ready') { ph.at = now + 300000; return; }
         ph.ring = true; ph.until = now + 45000; ph.cd = 0;
         ph.kind = G.work.onShift() ? 'service' : 'afterhours';
         if (ph.kind === 'afterhours' && !G.feat.has('afterhours')) { ph.at = now + 300000; return; }

@@ -8,13 +8,15 @@
 //   kind   : workshop (hội thảo: nghe giảng → hỏi đáp → kiểm tra)
 //            teafest (ngày hội trà sữa) · market (chợ phiên nông sản)
 // Người chơi được thông báo trước 3 ngày, nhắc lại trước 1 giờ và 10 phút.
+// Khung giờ để dài (cả buổi tối / cả ngày) vì người chơi không ở trong game liên tục;
+// lỡ hội thảo thì xem lại “bản ghi” trong 7 ngày (thưởng ít hơn).
 // ============================================================
 window.EVENT_NOTICE_H = 72;
 
 window.EVENTS = [
   {
     id: 'washer', kind: 'workshop', icon: '🧺', name: 'Hội thảo Máy Giặt Inverter', en: 'Washing Machine Workshop',
-    days: [6], start: 9, dur: 2, place: 'service', need: 'jobs',
+    days: [6], start: 8, dur: 13, place: 'service', need: 'jobs',
     desc: 'Kỹ sư hãng giới thiệu cấu tạo máy giặt cửa trước / cửa trên, động cơ inverter, cách xử lý máy không xả nước, rung mạnh, không vắt. Cuối buổi có bài kiểm tra — đậu nhận chứng nhận.',
     host: 'Kỹ sư Hằng', look: 1,
     xp: 120, coins: 80, repeatXp: 40, gift: 'doorlock',
@@ -42,7 +44,7 @@ window.EVENTS = [
   },
   {
     id: 'fridge', kind: 'workshop', icon: '🧊', name: 'Lớp chuyên đề Tủ Lạnh', en: 'Refrigerator Clinic',
-    days: [3], start: 18.5, dur: 1.5, place: 'library', need: 'jobs',
+    days: [3], start: 18, dur: 4.5, place: 'library', need: 'jobs',
     desc: 'Buổi tối thứ 4 sau giờ làm: máy nén inverter, dàn lạnh, dàn nóng, hệ thống xả đá, gioăng cửa. Học cách giải thích cho khách vì sao tủ không lạnh hoặc đóng tuyết.',
     host: 'Thầy Phong', look: 2,
     xp: 120, coins: 80, repeatXp: 40, gift: 'ntc',
@@ -69,7 +71,7 @@ window.EVENTS = [
   },
   {
     id: 'water', kind: 'workshop', icon: '💧', name: 'Ngày hội Máy Lọc Nước', en: 'Water Purifier Day',
-    days: [5], start: 19, dur: 1.5, place: 'service', need: 'jobs',
+    days: [5], start: 18, dur: 4.5, place: 'service', need: 'jobs',
     desc: 'Tối thứ 6: các lõi lọc, màng RO, chỉ số TDS, lịch thay lõi, bơm tăng áp. Luyện cách tư vấn khách thay lõi lọc đúng hạn bằng tiếng Anh.',
     host: 'Chị Mai', look: 3,
     xp: 120, coins: 80, repeatXp: 40, gift: 'booster',
@@ -95,8 +97,8 @@ window.EVENTS = [
   },
   {
     id: 'teafest', kind: 'teafest', icon: '🧋', name: 'Ngày hội Trà Sữa', en: 'Bubble Tea Festival',
-    days: [0], start: 14, dur: 4, place: 'koi', place2: 'phela', need: 'tea',
-    desc: 'Chiều Chủ nhật ở KOI Thé và Phê La: giảm 50% mọi đồ uống, thẻ tích điểm — order chuẩn tiếng Anh 3 ly để nhận quà. Có gian đố vui từ vựng topping.',
+    days: [0], start: 9, dur: 12, place: 'koi', place2: 'phela', need: 'tea',
+    desc: 'Cả ngày Chủ nhật ở KOI Thé và Phê La: giảm 50% mọi đồ uống, thẻ tích điểm — order chuẩn tiếng Anh 3 ly để nhận quà. Có gian đố vui từ vựng topping.',
     host: 'MC Bảo Anh', look: 6,
     xp: 90, coins: 60, stamps: 3,
     quiz: [
@@ -110,8 +112,8 @@ window.EVENTS = [
   },
   {
     id: 'market', kind: 'market', icon: '🌾', name: 'Chợ phiên Nông Sản', en: 'Farmers’ Market',
-    days: [6], start: 7, dur: 3, place: 'farmshop', need: 'farm',
-    desc: 'Sáng thứ 7 sớm: Tiệm Nông Sản mua nông sản giá GẤP ĐÔI. Hãy thu hoạch sẵn từ tối thứ 6 và luyện câu chào hàng bằng tiếng Anh.',
+    days: [6, 0], start: 6, dur: 6, place: 'farmshop', need: 'farm',
+    desc: 'Sáng thứ 7 và Chủ nhật: Tiệm Nông Sản mua nông sản giá GẤP ĐÔI. Hãy thu hoạch sẵn từ tối hôm trước và luyện câu chào hàng bằng tiếng Anh.',
     host: 'Bác Ba', look: 4,
     sellMul: 2,
   },

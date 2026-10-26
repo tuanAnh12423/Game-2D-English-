@@ -13,6 +13,7 @@ G.events = {
     const e = s.events;
     e.notified = e.notified || {}; e.done = e.done || {}; e.certs = e.certs || {}; e.attended = e.attended || {};
     e.stamps = e.stamps || {}; e.claimed = e.claimed || {}; e.booth = e.booth || {};
+    if (!e.since && this.on()) e.since = G.clock.now(); // chỉ tính “lỡ” từ khi đã mở tính năng sự kiện
     return e;
   },
   on() { return G.feat.has('events'); },
@@ -161,7 +162,8 @@ G.events = {
         ${o ? `<div>🗓️ Lần tới: <b>${G.esc(this.whenText(o))}</b> · ${live ? 'kết thúc sau ' + this.dur(o.end - now) : 'còn ' + this.dur(o.start - now)}</div>` : ''}
         <div>📍 ${G.esc(this.placeName(ev))}${far ? ` <small>(🔒 vùng này mở ở Lv ${b.region.level})</small>` : ''}</div>
         <p class="hint">${G.esc(ev.desc)}</p>
-        <div class="sbtns"><button class="btn small" data-go="${ev.id}">📍 Chỉ đường</button><button class="btn small ghost" data-ics="${ev.id}">📅 Thêm vào lịch</button></div></div>`;
+        ${!live && this.missed(ev) ? `<div class="res mid">🎬 Bạn đã lỡ buổi ${G.esc(this.whenText(this.missed(ev)).replace(/ \d\d:\d\d.*$/, ''))} — xem lại bản ghi được trong 7 ngày (thưởng 60%).</div>` : ''}
+        <div class="sbtns">${!live && this.missed(ev) ? `<button class="btn small" data-rep="${ev.id}">🎬 Xem bản ghi</button>` : ''}<button class="btn small ${!live && this.missed(ev) ? 'ghost' : ''}" data-go="${ev.id}">📍 Chỉ đường</button><button class="btn small ghost" data-ics="${ev.id}">📅 Thêm vào lịch</button></div></div>`;
     };
     const p = ui.open(`<h2>📢 Sự kiện & Thông báo</h2>
       <p class="sub">Sự kiện diễn ra theo giờ thật, lặp lại mỗi tuần. Bạn sẽ được báo trước 3 ngày, nhắc trước 1 giờ và 10 phút.</p>
@@ -170,6 +172,7 @@ G.events = {
       <button class="btn ghost" id="evall">📅 Thêm tất cả vào lịch điện thoại</button>
       <p class="hint">Lịch (.ics) có nhắc trước 1 giờ và 10 phút, hoạt động cả khi tắt game. Trên iPhone: mở tệp vừa tải → “Thêm tất cả”.</p>`, { cls: 'wide' });
     ui.on(p, '[data-go]', (x) => { this.guide = x.dataset.go; ui.close(); G.ui.toast('📍 Đi theo mũi tên hồng để tới nơi tổ chức.'); });
+    ui.on(p, '[data-rep]', (x) => this.replay(this.missed(EVENTS.find((ev) => ev.id === x.dataset.rep))));
     ui.on(p, '[data-ics]', (x) => this.ics([EVENTS.find((ev) => ev.id === x.dataset.ics)]));
     ui.on(p, '#evall', () => this.ics(this.list()));
   },
@@ -201,6 +204,18 @@ G.events = {
     G.ui.toast('📅 Đã tạo tệp lịch — mở tệp để thêm vào Lịch của điện thoại.');
   },
 
+  // hội thảo đã lỡ trong 7 ngày qua (chưa hoàn thành) → xem lại bản ghi
+  missed(ev, now = G.clock.now()) {
+    if (ev.kind !== 'workshop') return null;
+    const e = this.st();
+    const past = this.occ(ev, now - 7 * 864e5, now).filter((o) => o.end <= now && !e.done[o.key] && e.since && o.start >= e.since);
+    return past.length ? past[past.length - 1] : null;
+  },
+  replay(o) {
+    const now = G.clock.now();
+    this.workshop(Object.assign({}, o, { start: now, end: now + 2 * this.HOUR, replay: true }), this.building(o.ev));
+  },
+
   // ---------- Vào toà nhà khi đang có sự kiện ----------
   door(b) {
     if (!this.on()) return false;
@@ -214,8 +229,8 @@ G.events = {
     return true;
   },
   head(o, sub) {
-    const left = this.dur(o.end - G.clock.now());
-    return `<div class="tag">${o.ev.icon} Sự kiện · ${G.esc(o.ev.en)} · còn ${left}</div><h2>${o.ev.icon} ${G.esc(o.ev.name)}</h2>${sub ? `<p class="sub">${sub}</p>` : ''}`;
+    const left = o.replay ? '🎬 bản ghi' : 'còn ' + this.dur(o.end - G.clock.now());
+    return `<div class="tag">${o.ev.icon} Sự kiện · ${G.esc(o.ev.en)} · ${left}</div><h2>${o.ev.icon} ${G.esc(o.ev.name)}</h2>${sub ? `<p class="sub">${sub}</p>` : ''}`;
   },
   face(p, ev) {
     const c = p.querySelector('.face');
@@ -297,7 +312,7 @@ G.events = {
     if (!pass) {
       G.audio.sfx('bad');
       const p = ui.open(`${this.head(o)}<div class="center"><div class="big-emoji">📚</div><h2>Chưa đạt (${right}/${n})</h2>
-        <p>Cần đúng ít nhất ${Math.ceil(n * 0.8)}/${n} câu. Xem lại slide rồi làm lại — sự kiện còn ${this.dur(o.end - G.clock.now())}.</p></div>
+        <p>Cần đúng ít nhất ${Math.ceil(n * 0.8)}/${n} câu. Xem lại slide rồi làm lại${o.replay ? '' : ' — sự kiện còn ' + this.dur(o.end - G.clock.now())}.</p></div>
         <div class="row2"><button class="btn ghost" id="evre">📑 Xem lại slide</button><button class="btn" id="evagain">🔁 Làm lại bài kiểm tra</button></div>`);
       ui.on(p, '#evre', () => this.slide(o, 0));
       ui.on(p, '#evagain', () => this.quiz(o));
@@ -306,7 +321,8 @@ G.events = {
     const first = !e.certs[ev.id];
     e.done[o.key] = true; e.certs[ev.id] = e.certs[ev.id] || G.clock.dateKey();
     e.attended[ev.id] = (e.attended[ev.id] || 0) + 1;
-    const xp = first ? ev.xp : ev.repeatXp, coins = first ? ev.coins : Math.round(ev.coins / 2);
+    const rk = o.replay ? 0.6 : 1;
+    const xp = Math.round((first ? ev.xp : ev.repeatXp) * rk), coins = Math.round((first ? ev.coins : ev.coins / 2) * rk);
     if (first && ev.gift) g.addItem(ev.gift, 1, true);
     g.addCoins(coins); g.addXp(xp);
     g.hearts(g.player.x, g.player.y - 20, 14);

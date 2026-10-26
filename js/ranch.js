@@ -109,7 +109,12 @@ G.ranch = {
     const d = this.def(a.kind);
     const dt = Math.max(0, now - (a.last || now));
     const fedPart = G.clamp((a.fed || 0) - (a.last || now), 0, dt);
-    if (!a.ready) { a.prog = (a.prog || 0) + fedPart; if (a.prog >= d.cycle * RANCH_H) { a.ready = 1; a.prog = 0; } }
+    a.ready = +a.ready || 0;
+    if (a.ready < RANCH_STORE) {
+      a.prog = (a.prog || 0) + fedPart;
+      while (a.prog >= d.cycle * RANCH_H && a.ready < RANCH_STORE) { a.ready++; a.prog -= d.cycle * RANCH_H; }
+      if (a.ready >= RANCH_STORE) a.prog = 0;
+    }
     a.last = now;
   },
   hungry(a) { return (a.fed || 0) <= G.clock.now(); },
@@ -118,7 +123,7 @@ G.ranch = {
   feed(a) {
     const g = G.game, d = this.def(a.kind), now = G.clock.now();
     this.grow(a, now);
-    if ((a.fed || 0) > now + RANCH_H) return G.ui.toast('😊 ' + d.vi + ' còn no ' + G.clock.fmtDur(a.fed - now) + ' nữa.');
+    if ((a.fed || 0) > now + 12 * RANCH_H) return G.ui.toast('😊 ' + d.vi + ' còn no ' + G.clock.fmtDur(a.fed - now) + ' nữa.');
     const f = this.hasFood();
     if (!f) return G.ui.toast('🌾 Hết thức ăn! Mua “Animal feed” ở trại, hoặc dùng nông sản trong balo.');
     g.addItem(f, -1);
@@ -132,7 +137,7 @@ G.ranch = {
     const g = G.game, d = this.def(a.kind), it = G.items[d.product];
     this.grow(a);
     if (!a.ready) return;
-    const n = 1 + ((a.love || 0) >= 8 ? 1 : 0);
+    const n = a.ready * (1 + ((a.love || 0) >= 8 ? 1 : 0));
     if (g.addItem(d.product, n) > 0) return;
     a.ready = 0;
     G.state.stats.collected = (G.state.stats.collected || 0) + n;
@@ -156,18 +161,18 @@ G.ranch = {
     this.growAll();
     const list = r.animals.map((a, i) => {
       const d = this.def(a.kind), it = G.items[d.product];
-      const pr = a.ready ? 100 : Math.min(100, (a.prog || 0) / (d.cycle * RANCH_H) * 100);
+      const pr = a.ready >= RANCH_STORE ? 100 : Math.min(100, (a.prog || 0) / (d.cycle * RANCH_H) * 100);
       const hungry = this.hungry(a);
       return `<div class="acard"><div class="aemo">${d.emoji}</div><div class="rn"><b>${G.esc(a.name || d.vi)}</b> <small>${G.esc(d.en)} · ${'💗'.repeat(Math.max(1, Math.round((a.love || 0) / 2)))}</small>
           <small>${hungry ? '😋 <b>Hungry!</b> Đang đói — sản phẩm ngừng lớn' : '😊 Full · no thêm ' + G.clock.fmtDur(a.fed - now)}</small>
-          <div class="bar"><i style="width:${pr}%"></i></div><small>${a.ready ? '✅ ' + it.emoji + ' ' + G.esc(it.en) + ' sẵn sàng!' : it.emoji + ' ' + G.esc(it.en) + ' · ' + Math.round(pr) + '%'}</small></div>
-        <div class="sbtns"><button class="btn small" data-feed="${i}" ${hungry || a.fed < now + RANCH_H ? '' : 'disabled'}>🌾 Feed</button>
+          <div class="bar"><i style="width:${pr}%"></i></div><small>${a.ready ? '✅ ' + it.emoji.repeat(a.ready) + ' ' + G.esc(it.en) + ' ×' + a.ready + ' chờ thu' + (a.ready >= RANCH_STORE ? ' (đầy kho — thu để tiếp tục)' : '') : it.emoji + ' ' + G.esc(it.en) + ' · ' + Math.round(pr) + '%'}</small></div>
+        <div class="sbtns"><button class="btn small" data-feed="${i}" ${a.fed < now + 12 * RANCH_H ? '' : 'disabled'}>🌾 Feed</button>
           <button class="btn small ${a.ready ? '' : 'ghost'}" data-col="${i}" ${a.ready ? '' : 'disabled'}>🧺 Collect</button>
           <button class="btn small ghost" data-pet="${i}">💗 Pet</button></div></div>`;
     }).join('') || '<p class="hint">Trại còn trống. Hãy hỏi mua con vật đầu tiên bên dưới!</p>';
     const shop = ANIMALS.map((d) => {
       const lock = d.level > L, it = G.items[d.product];
-      return `<div class="row ${lock ? 'locked' : ''}"><div class="aemo sm">${d.emoji}</div><div class="rn"><b>${G.esc(d.vi)}</b><small>${G.esc(d.en)} · ${it.emoji} ${G.esc(it.en)} mỗi ${d.cycle} giờ khi no</small></div>
+      return `<div class="row ${lock ? 'locked' : ''}"><div class="aemo sm">${d.emoji}</div><div class="rn"><b>${G.esc(d.vi)}</b><small>${G.esc(d.en)} · ${it.emoji} ${G.esc(it.en)} mỗi ${d.cycle} giờ · cho ăn 1 lần/ngày</small></div>
         ${lock ? `<span class="lockt">🔒 Lv ${d.level}</span>` : `<button class="btn small" data-buy="${d.id}" ${s.coins < d.price || r.animals.length >= RANCH_MAX ? 'disabled' : ''}>${d.price} 🪙</button>`}</div>`;
     }).join('');
     const p = ui.open(`${ui.head(b, 'Bác Năm: “' + G.esc(G.clock.greet()) + '! Happy animals, fresh eggs!”')}
