@@ -15,7 +15,7 @@ G.game = {
   newState() {
     const home = G.world.regions[0];
     return {
-      v: 2, x: home.spawnPx.x, y: home.spawnPx.y, xp: 0, coins: 50, days: 1, lastDate: G.clock.dateKey(), lastSeen: G.clock.now(),
+      v: 2, xpv: 2, x: home.spawnPx.x, y: home.spawnPx.y, xp: 0, coins: 50, days: 1, lastDate: G.clock.dateKey(), lastSeen: G.clock.now(),
       words: {}, inv: new Array(24).fill(null), bagSize: 24, chest: new Array(48).fill(null), sel: 0, seen: {},
       stats: { jobs: 0, talks: 0, crafts: 0, caught: 0, wrong: 0, reviews: 0, planted: 0, harvested: 0, calls: 0, spoke: 0 },
       storyDone: {}, entered: {}, visited: {}, board: [], boardDay: '', job: null, gifts: {}, boost: 0,
@@ -25,8 +25,10 @@ G.game = {
       work: { days: [1, 2, 3, 4, 5], start: 8, log: {} },
     };
   },
-  levelFromXp(xp) { let L = 1; while (xp >= 40 * (L + 1) * L) L++; return L; },
-  xpForLevel(L) { return 40 * L * (L - 1); },
+  // Đường cong cấp độ (bản 2, dốc hơn): tổng XP cần để đạt Level L.
+  // Lv2 = 120 · Lv3 ≈ 395 · Lv4 ≈ 850 · Lv5 ≈ 1.510 · Lv6 ≈ 2.390 · Lv7 ≈ 3.500 · Lv10 ≈ 8.040
+  xpForLevel(L) { return L <= 1 ? 0 : Math.round(60 * Math.pow(L - 1, 2.2) + 60 * (L - 1)); },
+  levelFromXp(xp) { let L = 1; while (xp >= this.xpForLevel(L + 1)) L++; return L; },
   get level() { return this.levelFromXp(this.state.xp); },
 
   start(fresh) {
@@ -37,6 +39,8 @@ G.game = {
       stats: Object.assign(base.stats, saved.stats || {}),
     }) : base;
     G.state = this.state;
+    // bản lưu cũ chưa có xpv thì phải đổi XP sang đường cong mới (newState đã gán sẵn xpv: 2)
+    if (saved && saved.xpv !== 2) this.state.xpv = 0;
     this.migrate(this.state);
     const s = this.state;
     s.profile = Object.assign({ name: 'Minh', gender: 'm', skin: 0, hair: 0, shirt: 0 }, s.profile || {});
@@ -47,7 +51,7 @@ G.game = {
     this.player = { x: s.x, y: s.y, dir: 0, frame: 0, moving: false };
     if (this.blocked(s.x, s.y)) { this.player.x = G.world.regions[0].spawnPx.x; this.player.y = G.world.regions[0].spawnPx.y; }
     this.camInit = false;
-    this.items = []; this.fx = []; this.flies = [];
+    this.items = []; this.fx = []; this.flies = []; this.petals = [];
     this.makeNpcs();
     G.world.regions.forEach((r) => { if (r.level <= this.level) this.fillRegion(r, true); });
     this.weather = G.weather.now();
@@ -75,6 +79,13 @@ G.game = {
   },
   // chuyển file lưu bản cũ sang bản mới
   migrate(s) {
+    if (s.xpv !== 2) {
+      const oldFor = (L) => 40 * L * (L - 1);
+      let L = 1; while ((s.xp || 0) >= oldFor(L + 1)) L++;
+      const frac = ((s.xp || 0) - oldFor(L)) / (oldFor(L + 1) - oldFor(L));
+      s.xp = Math.round(this.xpForLevel(L) + frac * (this.xpForLevel(L + 1) - this.xpForLevel(L)));
+      s.xpv = 2;
+    }
     // người chơi cũ đã dùng tính năng nào thì giữ mở tính năng đó
     s.featForce = s.featForce || {};
     if (Object.keys(s.farm || {}).length || (s.stats && s.stats.planted)) s.featForce.farm = true;
@@ -119,12 +130,13 @@ G.game = {
     if (!n) return;
     const before = this.level;
     this.state.xp += n;
-    if (x !== undefined) this.float('+' + n + ' XP', x, y, '#7cf');
+    if (x !== undefined) this.float('+' + n + ' XP', x, y, '#c3a6ff');
     const after = this.level;
     if (after > before) {
       G.audio.sfx('level');
       const opened = G.world.regions.filter((r) => r.level > before && r.level <= after);
       opened.forEach((r) => this.fillRegion(r, true));
+      this.hearts(this.player.x, this.player.y - 20, 18);
       G.ui.levelUp(after, opened);
     }
     this.updateHud(true);
@@ -385,6 +397,29 @@ G.game = {
       const a = (i / 14) * Math.PI * 2;
       this.fx.push({ x, y, vx: Math.cos(a) * 80, vy: Math.sin(a) * 80, g: 0, life: 0.5, max: 0.5, c: i % 2 ? '#fff59d' : '#ffffff', r: 2, star: true });
     }
+    this.hearts(x, y, 5);
+  },
+  hearts(x, y, n) {
+    const cols = ['#ff8fab', '#ff6f9f', '#c3a6ff', '#ffc4d9'];
+    for (let i = 0; i < n; i++) {
+      this.fx.push({ x: x + (Math.random() - 0.5) * 24, y, vx: (Math.random() - 0.5) * 50, vy: -40 - Math.random() * 50, g: -10, life: 0.9 + Math.random() * 0.6, max: 1.5, c: cols[i % 4], r: 2.5 + Math.random() * 2, heart: true });
+    }
+  },
+  drawPetals(ctx, cv) {
+    const W = cv.width, H = cv.height, d = this.dpr;
+    const want = this.nightRaw() > 0.5 ? 8 : 18;
+    while (this.petals.length < want) this.petals.push({ x: Math.random() * W, y: Math.random() * H, v: (18 + Math.random() * 22) * d, s: (3 + Math.random() * 3) * d, ph: Math.random() * 6, c: G.pick(['#ffc4d9', '#ffb3d1', '#ffe3ee', '#fff']) });
+    if (this.petals.length > want) this.petals.length = want;
+    this.petals.forEach((q) => {
+      q.ph += this.dt; q.y += q.v * this.dt; q.x += Math.sin(q.ph * 1.3) * 18 * d * this.dt - 6 * d * this.dt;
+      if (q.y > H + 10) { q.y = -10; q.x = Math.random() * W * 1.1; }
+      if (q.x < -10) q.x = W + 10;
+      ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(Math.sin(q.ph * 2) * 0.9);
+      ctx.globalAlpha = 0.85; ctx.fillStyle = q.c;
+      ctx.beginPath(); ctx.ellipse(0, 0, q.s, q.s * 0.55, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    });
+    ctx.globalAlpha = 1;
   },
 
   // ---------- Va chạm ----------
@@ -436,7 +471,7 @@ G.game = {
     const r = G.world.regionOfPx(p.x, p.y);
     if (r && r !== this.curRegion) {
       this.curRegion = r;
-      if (!s.visited[r.id]) { s.visited[r.id] = true; G.ui.banner(r.name, r.en, true); this.addXp(15); }
+      if (!s.visited[r.id]) { s.visited[r.id] = true; G.ui.banner(r.name, r.en, true); this.addXp(10); }
       else G.ui.banner(r.name, r.en, false);
       this.fillRegion(r, true);
       this.updateHud(true);
@@ -592,8 +627,9 @@ G.game = {
 
   collect(it) {
     if (it.kind === 'word') {
+      const isNew = !this.state.words[it.w.en];
       G.ui.quizWord(it.w, (ok) => {
-        if (ok) { this.addXp(10, this.player.x, this.player.y - 40); this.addCoins(2, this.player.x, this.player.y - 40); }
+        if (ok) { this.addXp(isNew ? 10 : 3, this.player.x, this.player.y - 40); this.addCoins(isNew ? 2 : 1, this.player.x, this.player.y - 40); }
         this.checkStory();
       });
     } else {
@@ -602,7 +638,7 @@ G.game = {
       this.addItem(it.id, 1);
       const p = G.partById[it.id];
       this.float('+1 ' + p.vi, this.player.x, this.player.y - 44, '#fff');
-      this.addXp(first ? 15 : 4);
+      this.addXp(first ? 12 : 2);
       if (first) G.ui.partCard(it.id, true);
       else G.ui.toast('🔩 +1 ' + p.vi + ' (' + p.en + ') · đang có ' + this.count(it.id));
       this.checkStory();
@@ -763,7 +799,7 @@ G.game = {
     const night = this.nightRaw() > 0.3;
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.fillStyle = '#2b86d1'; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.fillStyle = '#8fd5f5'; ctx.fillRect(0, 0, cv.width, cv.height);
     G.world.drawGround(ctx, cam, sc);
     ctx.setTransform(sc, 0, 0, sc, -cam.x * sc, -cam.y * sc);
     ctx.imageSmoothingEnabled = true;
@@ -791,8 +827,9 @@ G.game = {
     if (gt) {
       const gx = (gt.x + 0.5) * S, gy = (gt.y + 0.5) * S;
       const pr = 14 + Math.sin(this.t * 5) * 4;
-      ctx.strokeStyle = 'rgba(255,214,0,.9)'; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.ellipse(gx, gy, pr, pr * 0.5, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,111,159,.9)'; ctx.lineWidth = 3; ctx.setLineDash([6, 4]); ctx.lineDashOffset = -this.t * 12;
+      ctx.beginPath(); ctx.ellipse(gx, gy, pr, pr * 0.5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      G.heart(ctx, gx, gy - 26 + Math.sin(this.t * 4) * 3, 5, '#ff6f9f');
     }
 
     // nhân vật + đèn đường (sắp xếp theo chiều sâu)
@@ -800,13 +837,21 @@ G.game = {
     const ents = this.npcs.filter((n) => vis(n.x, n.y)).map((n) => ({ y: n.y, d: () => G.drawChar(ctx, n.x, n.y, n.dir, n.frame, n.look) }));
     const look = G.playerLook();
     ents.push({ y: p.y, d: () => G.drawChar(ctx, p.x, p.y, p.dir, p.frame, look) });
+    const pk = this.state.profile.pet;
+    if (pk && G.PETS[pk]) {
+      const pt = G.petFollow(this, p.x, p.y, p.dir, this.dt);
+      ents.push({ y: pt.y, d: () => {
+        G.drawPet(ctx, pt.x, pt.y, pk, pt.dir, this.t, pt.mv);
+        if (!pt.mv && !p.moving && (this.t % 4) < 1.2) G.heart(ctx, pt.x + 6, pt.y - 22 - (this.t % 4) * 6, 3, '#ff8fab');
+      } });
+    }
     G.world.lamps.forEach((l) => {
       const lx = (l.x + 0.5) * S, ly = (l.y + 1) * S - 4;
       if (vis(lx, ly)) ents.push({ y: ly, d: () => G.drawLamp(ctx, lx, ly, nl > 0.12, this.t) });
     });
     G.online.draw(ctx, cam, ents);
     ents.sort((a, b) => a.y - b.y).forEach((e) => e.d());
-    if (G.online.isOn()) G.online.drawTag(ctx, p.x, p.y, '⭐ ' + this.state.profile.name, '#1565c0');
+    if (G.online.isOn()) G.online.drawTag(ctx, p.x, p.y, '⭐ ' + this.state.profile.name, '#8e6cd9');
     if (this.playerBubble && this.playerBubble.until > Date.now()) G.online.drawBubble(ctx, p.x, p.y - 62, this.playerBubble);
 
     // bướm
@@ -820,7 +865,8 @@ G.game = {
     this.fx.forEach((f) => {
       ctx.globalAlpha = Math.max(0, f.life / f.max);
       ctx.fillStyle = f.c;
-      if (f.star) { ctx.fillRect(f.x - f.r, f.y - 0.6, f.r * 2, 1.2); ctx.fillRect(f.x - 0.6, f.y - f.r, 1.2, f.r * 2); }
+      if (f.heart) G.heart(ctx, f.x, f.y, f.r, f.c);
+      else if (f.star) { ctx.fillRect(f.x - f.r, f.y - 0.6, f.r * 2, 1.2); ctx.fillRect(f.x - 0.6, f.y - f.r, 1.2, f.r * 2); }
       else { ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill(); }
     });
     ctx.globalAlpha = 1;
@@ -828,16 +874,17 @@ G.game = {
     // tên NPC
     if (this.target && this.target.kind === 'npc') {
       const n = this.target.n;
-      ctx.font = 'bold 10px system-ui, sans-serif'; ctx.textAlign = 'center';
-      const tw = ctx.measureText(n.name).width + 10;
-      ctx.fillStyle = 'rgba(0,0,0,.6)'; G.rr(ctx, n.x - tw / 2, n.y - 58, tw, 14, 5); ctx.fill();
-      ctx.fillStyle = '#fff'; ctx.fillText(n.name, n.x, n.y - 48);
+      ctx.font = '800 10px "Nunito", system-ui, sans-serif'; ctx.textAlign = 'center';
+      const tw = ctx.measureText(n.name).width + 12;
+      ctx.fillStyle = 'rgba(255,250,252,.95)'; G.rr(ctx, n.x - tw / 2, n.y - 58, tw, 14, 7); ctx.fill();
+      ctx.strokeStyle = '#ffb3d1'; ctx.lineWidth = 1.2; ctx.stroke();
+      ctx.fillStyle = '#6b3d5a'; ctx.fillText(n.name, n.x, n.y - 47.5);
       ctx.font = '14px system-ui'; ctx.fillText('💬', n.x + tw / 2 + 6, n.y - 46 + Math.sin(this.t * 6) * 2);
     }
 
     // bóng mây trôi
     const ca = this.weather === 'cloudy' ? 0.12 : this.weather === 'rain' ? 0.1 : 0.05;
-    ctx.fillStyle = `rgba(20,30,50,${ca})`;
+    ctx.fillStyle = `rgba(120,80,150,${ca * 0.8})`;
     for (let i = 0; i < 6; i++) {
       const span = ww + 800;
       const x = ((G.hash2(i, 3) * span + this.t * (10 + i * 2)) % span) - 400;
@@ -852,8 +899,8 @@ G.game = {
     ctx.textAlign = 'center';
     this.floaters.forEach((f) => {
       ctx.globalAlpha = Math.max(0, 1 - f.t / 1.6);
-      ctx.font = 'bold ' + (f.big ? 14 : 13) + 'px system-ui, sans-serif';
-      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.65)'; ctx.strokeText(f.text, f.x, f.y);
+      ctx.font = '900 ' + (f.big ? 14 : 13) + 'px "Nunito", system-ui, sans-serif';
+      ctx.lineWidth = 3.5; ctx.strokeStyle = 'rgba(120,50,100,.75)'; ctx.strokeText(f.text, f.x, f.y);
       ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y);
     });
     ctx.globalAlpha = 1;
@@ -861,6 +908,7 @@ G.game = {
     // ----- lớp màn hình -----
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     if (this.weather === 'rain') this.drawRain(ctx, cv);
+    else this.drawPetals(ctx, cv);
     if (nl > 0.02) this.drawLighting(ctx, cam, sc, nl);
     if (gt) this.drawGuideArrow(ctx, gt, cam, sc);
     this.drawMini();
@@ -923,7 +971,7 @@ G.game = {
     const lc = this.lc, lx = this.lcx, k = lc.width / ctx.canvas.width, S = G.TS;
     lx.globalCompositeOperation = 'source-over';
     lx.clearRect(0, 0, lc.width, lc.height);
-    lx.fillStyle = `rgba(8,14,44,${Math.min(0.85, nl)})`;
+    lx.fillStyle = `rgba(46,28,92,${Math.min(0.8, nl)})`;
     lx.fillRect(0, 0, lc.width, lc.height);
     lx.globalCompositeOperation = 'destination-out';
     const night = nl > 0.15;
@@ -951,7 +999,7 @@ G.game = {
       ctx.globalCompositeOperation = 'lighter';
       glows.forEach(([x, y, r]) => {
         const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-        g.addColorStop(0, `rgba(255,190,90,${0.22 * Math.min(1, nl * 1.6)})`); g.addColorStop(1, 'rgba(255,190,90,0)');
+        g.addColorStop(0, `rgba(255,180,200,${0.24 * Math.min(1, nl * 1.6)})`); g.addColorStop(1, 'rgba(255,180,200,0)');
         ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
       });
       ctx.globalCompositeOperation = 'source-over';
@@ -961,20 +1009,24 @@ G.game = {
   drawWordOrb(ctx, it, bob) {
     const x = it.x, y = it.y - 6 + bob;
     const owned = !!this.state.words[it.w.en];
-    ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath(); ctx.ellipse(it.x, it.y + 9, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
-    const g = ctx.createRadialGradient(x, y, 2, x, y, 18);
-    g.addColorStop(0, owned ? 'rgba(200,255,200,.95)' : 'rgba(255,255,255,.95)');
-    g.addColorStop(0.5, owned ? 'rgba(76,175,80,.7)' : 'rgba(255,193,7,.75)');
-    g.addColorStop(1, 'rgba(255,193,7,0)');
-    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 18, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = owned ? 'rgba(46,125,50,.6)' : 'rgba(255,160,0,.7)'; ctx.lineWidth = 1.2;
-    ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = owned ? '#1b5e20' : '#5d4037';
-    ctx.font = 'bold 15px Georgia, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const c1 = owned ? '#bff0d0' : '#ffd1e3', c2 = owned ? '#7fd3a0' : '#ff8fb8', ink = owned ? '#2f7a52' : '#b8326a';
+    ctx.fillStyle = 'rgba(120,70,110,.16)'; ctx.beginPath(); ctx.ellipse(it.x, it.y + 9, 9, 3, 0, 0, Math.PI * 2); ctx.fill();
+    const g = ctx.createRadialGradient(x, y, 4, x, y, 19);
+    g.addColorStop(0, owned ? 'rgba(190,240,210,.55)' : 'rgba(255,190,215,.55)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 19, 0, Math.PI * 2); ctx.fill();
+    // bong bóng xà phòng
+    const bg = ctx.createRadialGradient(x - 3, y - 4, 1, x, y, 11);
+    bg.addColorStop(0, '#ffffff'); bg.addColorStop(0.55, c1); bg.addColorStop(1, c2);
+    ctx.fillStyle = bg; ctx.beginPath(); ctx.arc(x, y, 11, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.lineWidth = 1.6; ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.beginPath(); ctx.ellipse(x - 4.5, y - 5, 3, 1.8, -0.6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = ink;
+    ctx.font = '900 13px "Nunito", system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(it.w.en[0].toUpperCase(), x, y + 1);
     ctx.textBaseline = 'alphabetic';
-    const k = (this.t * 2 + it.ph) % 2;
-    if (k < 0.5) { ctx.fillStyle = '#fff'; ctx.fillRect(x + 9, y - 12, 2, 6); ctx.fillRect(x + 7, y - 10, 6, 2); }
+    const k = (this.t * 1.5 + it.ph) % 2;
+    ctx.fillStyle = '#fff59d'; G.star(ctx, x + 10, y - 10, 3 + Math.sin(this.t * 5 + it.ph));
+    if (k < 0.8) G.heart(ctx, x - 11, y - 9 - k * 4, 2.2, '#ff8fab');
   },
 
   drawWaterShimmer(ctx, cam) {
@@ -1006,17 +1058,18 @@ G.game = {
     ctx.translate(ax, ay);
     ctx.rotate(ang);
     const s = this.dpr;
-    ctx.fillStyle = 'rgba(255,214,0,.95)'; ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 2 * s;
+    ctx.fillStyle = 'rgba(255,111,159,.95)'; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2 * s;
     ctx.beginPath(); ctx.moveTo(18 * s, 0); ctx.lineTo(-10 * s, -13 * s); ctx.lineTo(-4 * s, 0); ctx.lineTo(-10 * s, 13 * s); ctx.closePath();
     ctx.fill(); ctx.stroke();
     ctx.restore();
     const dist = Math.round(Math.hypot(tx - p.x, ty - p.y) / G.TS);
-    ctx.font = `bold ${11 * s}px system-ui, sans-serif`; ctx.textAlign = 'center';
+    ctx.font = `800 ${11 * s}px "Nunito", system-ui, sans-serif`; ctx.textAlign = 'center';
     const lx = ax - Math.cos(ang) * 34 * s, ly = ay - Math.sin(ang) * 34 * s;
     const lbl = gt.label + ' · ' + dist + 'm';
     const tw = ctx.measureText(lbl).width + 10 * s;
-    ctx.fillStyle = 'rgba(0,0,0,.6)'; G.rr(ctx, lx - tw / 2, ly - 9 * s, tw, 17 * s, 6 * s); ctx.fill();
-    ctx.fillStyle = '#ffd600'; ctx.fillText(lbl, lx, ly + 4 * s);
+    ctx.fillStyle = 'rgba(255,250,252,.95)'; G.rr(ctx, lx - tw / 2, ly - 9 * s, tw, 17 * s, 8.5 * s); ctx.fill();
+    ctx.strokeStyle = '#ffb3d1'; ctx.lineWidth = 1.5 * s; ctx.stroke();
+    ctx.fillStyle = '#c2255c'; ctx.fillText(lbl, lx, ly + 4 * s);
   },
 
   drawMini() {
@@ -1030,19 +1083,19 @@ G.game = {
     const ptx = p.x / G.TS, pty = p.y / G.TS;
     const sx = G.clamp(ptx - vw / 2, 0, Math.max(0, G.world.w - vw)), sy = G.clamp(pty - vh / 2, 0, Math.max(0, G.world.h - vh));
     x.imageSmoothingEnabled = false;
-    x.fillStyle = '#2f8fd8'; x.fillRect(0, 0, W, H);
+    x.fillStyle = '#8fd5f5'; x.fillRect(0, 0, W, H);
     x.drawImage(G.world.mini, sx, sy, vw, vh, 0, 0, W, H);
     G.world.regions.forEach((r) => {
       if (r.level <= this.level) return;
-      x.fillStyle = 'rgba(0,0,0,.5)';
+      x.fillStyle = 'rgba(90,60,110,.45)';
       x.fillRect((r.gx * G.RW - sx) * z, (r.gy * G.RH - sy) * z, G.RW * z, G.RH * z);
     });
     const gt = this.guideTarget();
     if (gt) {
-      x.fillStyle = (Math.floor(this.t * 3) % 2) ? '#ffd600' : '#ff1744';
+      x.fillStyle = (Math.floor(this.t * 3) % 2) ? '#ffd166' : '#ff6f9f';
       x.beginPath(); x.arc((gt.x - sx) * z, (gt.y - sy) * z, 4 * (W / 120), 0, Math.PI * 2); x.fill();
     }
-    x.fillStyle = '#fff'; x.strokeStyle = '#000'; x.lineWidth = 1.5;
+    x.fillStyle = '#fff'; x.strokeStyle = '#c2255c'; x.lineWidth = 1.8;
     x.beginPath(); x.arc((ptx - sx) * z, (pty - sy) * z, 3.5 * (W / 120), 0, Math.PI * 2); x.fill(); x.stroke();
   },
 

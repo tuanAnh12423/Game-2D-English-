@@ -151,7 +151,7 @@ G.hvac = {
       let reward = '';
       if (first) {
         h.passed[L] = true;
-        const coins = 60 * L, xp = 80 * L;
+        const coins = 60 * L, xp = 50 * L;
         G.game.addCoins(coins); G.game.addXp(xp);
         reward = `<p><b>+${coins} 🪙 · +${xp} XP</b></p>` + (L < 5 ? `<p>🔓 Đã mở <b>${G.esc(this.levelName(L + 1))}</b>${L === 2 ? ' và các bài nghe mức Trung bình' : ''}${L === 4 ? ', bài nghe mức Khó và luyện phỏng vấn' : ''}.</p>` : '');
         if (this.passedCount() === 5) { G.game.addCoins(300); reward += '<div class="res good">🎓 Chúc mừng! Bạn nhận <b>Chứng chỉ Kỹ sư HVAC</b> và thưởng thêm 300 🪙.</div>'; }

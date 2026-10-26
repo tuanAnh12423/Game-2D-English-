@@ -115,15 +115,18 @@ G.ui = {
           <div class="set">🎨 Màu da ${G.LOOK_OPTS.skin.map((c, i) => sw('skin', i, c)).join('')}</div>
           <div class="set">💇 Tóc ${G.LOOK_OPTS.hair.map((c, i) => sw('hair', i, c)).join('')}</div>
           <div class="set">👕 Áo ${G.LOOK_OPTS.shirt.map((c, i) => sw('shirt', i, c)).join('')}</div>
+          <div class="set">🐾 Thú cưng <button class="tchip ${!pf.pet ? 'on' : ''}" data-pet="">Không</button>${Object.entries(G.PETS).map(([k, v]) => `<button class="tchip ${pf.pet === k ? 'on' : ''}" data-pet="${k}">${v.icon} ${v.vi}</button>`).join('')}</div>
         </div></div>
         <p class="hint">Tên sẽ được dùng trong các cuộc hội thoại tiếng Anh (“Nice to meet you, I’m …”), khi nhân viên trà sữa gọi tên, và khi khách hàng xưng hô (anh/chị).</p>
         <button class="btn big" id="ccok">${isNew ? 'Bắt đầu với nhân vật này ›' : 'Lưu'}</button>`, { noClose: isNew });
       const c = p.querySelector('#ccprev'), x = c.getContext('2d');
       x.scale(2, 2);
       const look = G.playerLook(pf);
-      [0, 2, 3].forEach((d, k) => G.drawChar(x, 30 + k * 45, 80, d, 0, look, 1.5));
+      [0, 2, 3].forEach((d, k) => G.drawChar(x, pf.pet ? 24 + k * 37 : 30 + k * 45, 80, d, 0, look, 1.5));
+      if (pf.pet) { x.save(); x.translate(134, 84); x.scale(1.4, 1.4); G.drawPet(x, 0, 0, pf.pet, 0, 0, false); x.restore(); }
       p.querySelector('#ccname').addEventListener('input', (e) => { pf.name = e.target.value; });
       p.querySelectorAll('[data-g]').forEach((b) => b.addEventListener('click', () => { pf.gender = b.dataset.g; G.audio.sfx('click'); render(); }));
+      p.querySelectorAll('[data-pet]').forEach((b) => b.addEventListener('click', () => { pf.pet = b.dataset.pet || ''; G.audio.sfx('click'); render(); }));
       p.querySelectorAll('[data-k]').forEach((b) => b.addEventListener('click', () => { pf[b.dataset.k] = +b.dataset.i; G.audio.sfx('click'); render(); }));
       this.on(p, '#ccok', () => {
         pf.name = (pf.name || '').trim().replace(/[<>{}]/g, '').slice(0, 16) || (pf.gender === 'f' ? 'Lan' : 'Minh');
@@ -141,7 +144,7 @@ G.ui = {
     if (this.isOpen()) { this.later(() => this.levelUp(L, opened)); return; }
     const txt = opened.length ? `<p>🔓 Mở khoá vùng đất: <b>${opened.map((r) => G.esc(r.name)).join(', ')}</b></p>` : '';
     const newCrops = CROPS.filter((c) => c.level === L);
-    this.open(`<div class="center"><div class="big-emoji">🎉</div><h2>LEVEL UP! Lv ${L}</h2>${txt}
+    this.open(`<div class="center"><div class="big-emoji">🎀🎉💖</div><h2>LEVEL UP! Lv ${L}</h2>${txt}
       ${newCrops.length ? `<p>🌱 Hạt giống mới: <b>${newCrops.map((c) => G.esc(c.vi + ' (' + c.en + ')')).join(', ')}</b></p>` : ''}
       <p class="hint">Chợ linh kiện có hàng mới · Đơn sửa chữa mới đã mở.</p>
       <button class="btn big" data-close>Tuyệt vời!</button></div>`);
@@ -404,10 +407,10 @@ G.ui = {
       const ok = opts[+b.dataset.i] === right;
       p.querySelectorAll('.opt').forEach((x, i) => { if (opts[i] === right) x.classList.add('right'); else if (x === b) x.classList.add('wrong'); x.disabled = true; });
       G.tts.speak(right);
-      if (ok) { s.stats.talks++; G.audio.sfx('good'); G.game.addXp(15); G.game.addCoins(3); s.phrases[right] = { th: theme, tip: 'Đáp lại: “' + d.say + '”', t: Date.now() }; }
+      if (ok) { s.stats.talks++; G.audio.sfx('good'); G.game.addXp(8); G.game.addCoins(3); s.phrases[right] = { th: theme, tip: 'Đáp lại: “' + d.say + '”', t: Date.now() }; }
       else G.audio.sfx('bad');
       const res = this.el('tres');
-      res.innerHTML = `<div class="res ${ok ? 'good' : 'bad'}">${ok ? '✅ Rất tự nhiên! +15 XP, +3 🪙' : '❌ Câu đó chưa phù hợp. Câu đúng là: <b>' + G.esc(right) + '</b>'}</div>
+      res.innerHTML = `<div class="res ${ok ? 'good' : 'bad'}">${ok ? '✅ Rất tự nhiên! +8 XP, +3 🪙' : '❌ Câu đó chưa phù hợp. Câu đúng là: <b>' + G.esc(right) + '</b>'}</div>
         ${G.stt.supported ? `<button class="btn ghost" id="tmic">🎤 Luyện nói câu đúng</button><div id="tmicres"></div>` : ''}
         <button class="btn big" data-close2>Tạm biệt 👋</button>`;
       const mic = this.el('tmic');
@@ -1042,7 +1045,7 @@ G.ui = {
       <div class="set">Ngày đi làm ${[1, 2, 3, 4, 5, 6, 0].map((d) => `<button class="tchip ${G.work.cfg().days.includes(d) ? 'on' : ''}" data-wd="${d}">${G.work.DAYS_VI[d]}</button>`).join('')}</div>
       <label class="set">Giờ vào ca <select id="s-start">${[6, 7, 8, 9, 10, 11, 12, 13, 14].map((h) => `<option value="${h}" ${G.work.cfg().start === h ? 'selected' : ''}>${G.work.hhmm(h)}</option>`).join('')}</select></label>
       <p class="hint" id="s-sched">${G.esc(G.work.scheduleText())}. Ngày không đi làm là ngày nghỉ. Ngoài giờ làm, Trung Tâm Bảo Hành đóng cửa và khách có thể gọi bắt bạn đến.</p>
-      <button class="btn ghost" id="s-char">🧑‍🔧 Đổi tên / nhân vật</button>
+      <button class="btn ghost" id="s-char">🧑‍🔧 Đổi tên / nhân vật / thú cưng 🐾</button>
       <p class="hint">⏰ Game chạy theo giờ thực của máy: bây giờ là ${G.esc(G.clock.label())} — lời chào đúng là “${G.clock.greet()}”.</p>
       <button class="btn" id="s-test">🔊 Thử giọng đọc</button>
       <button class="btn" id="s-mic">🎤 Thử luyện nói</button><div id="s-micres"></div>

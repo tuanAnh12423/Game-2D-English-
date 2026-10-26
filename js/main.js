@@ -29,6 +29,16 @@
 
   // màn hình tiêu đề
   const title = document.getElementById('title');
+  // tim & hoa bay lơ lửng trên màn hình tiêu đề
+  ['💖', '🌸', '✨', '🎀', '💕', '🌷', '⭐', '🫧', '💗', '🌼', '🐰', '🧋'].forEach((e, i) => {
+    const f = document.createElement('span');
+    f.className = 'floaty'; f.textContent = e;
+    f.style.left = (4 + i * 8) + '%';
+    f.style.fontSize = (18 + (i * 7) % 16) + 'px';
+    f.style.animationDuration = (9 + (i * 5) % 8) + 's';
+    f.style.animationDelay = (-(i * 1.7) % 9) + 's';
+    title.appendChild(f);
+  });
   const hasSave = !!G.store.load();
   document.getElementById('tContinue').style.display = hasSave ? '' : 'none';
   document.getElementById('tNew').textContent = hasSave ? 'Chơi mới' : 'Bắt đầu chơi';

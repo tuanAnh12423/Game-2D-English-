@@ -242,19 +242,22 @@ G.online = {
         ctx.save();
         if (!p.online) ctx.globalAlpha = 0.45;
         G.drawChar(ctx, p.x, p.y, p.dir || 0, p.frame, G.playerLook(p.look || {}));
+        const pk = p.look && p.look.pet;
+        if (pk && G.PETS[pk]) { const pt = G.petFollow(p, p.x, p.y, p.dir || 0, G.game.dt); G.drawPet(ctx, pt.x, pt.y, pk, pt.dir, G.game.t, pt.mv); }
         ctx.restore();
         // đứng sát người chơi thì đẩy bảng tên lên cao để không đè nhau
         const me = G.game.player, near = Math.abs(p.x - me.x) < 80 && Math.abs(p.y - me.y) < 40;
         const off = near ? 16 : 0;
-        this.drawTag(ctx, p.x, p.y - off, (p.online ? '💞 ' : '💤 ') + p.name, p.online ? '#ec407a' : '#78909c');
+        this.drawTag(ctx, p.x, p.y - off, (p.online ? '💞 ' : '💤 ') + p.name, p.online ? '#ff6f9f' : '#b9a7b5');
         if (p.bubble && p.bubble.until > Date.now()) this.drawBubble(ctx, p.x, p.y - 62 - off, p.bubble);
       } });
     });
   },
   drawTag(ctx, x, y, text, col) {
-    ctx.font = 'bold 10px system-ui, sans-serif'; ctx.textAlign = 'center';
-    const tw = ctx.measureText(text).width + 10;
-    ctx.fillStyle = col; G.rr(ctx, x - tw / 2, y - 58, tw, 14, 6); ctx.fill();
+    ctx.font = '800 10px "Nunito", system-ui, sans-serif'; ctx.textAlign = 'center';
+    const tw = ctx.measureText(text).width + 12;
+    ctx.fillStyle = col; G.rr(ctx, x - tw / 2, y - 58, tw, 14, 7); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2; ctx.stroke();
     ctx.fillStyle = '#fff'; ctx.fillText(text, x, y - 48);
   },
   drawBubble(ctx, x, y, b) {
