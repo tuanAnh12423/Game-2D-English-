@@ -40,6 +40,8 @@ Bạn **tự đặt tên và chọn nhân vật nam/nữ** (màu da, tóc, áo);
 
 **Điều khiển:** kéo ngón tay ở nửa trái màn hình để đi; nút tròn bên phải để Vào nhà / Nói chuyện / Gieo / Tưới / Thu hoạch (hoặc cứ đi thẳng vào cửa). Chạm ô ở thanh đồ nhanh để chọn hạt giống / phân bón; chạm lần nữa để mở balo. Trên máy tính: WASD/mũi tên + Space.
 
+**Đồ hoạ pixel (mặc định):** mặt đất, cây, hàng rào, ruộng, nhà cửa, một số cây trồng (cà rốt, củ cải, bắp, cà chua, xà lách) và gà/bò/cừu dùng bộ **Kenney Tiny Town + Tiny Farm** (giấy phép CC0, file trong `assets/kenney/`, vẽ bởi `js/pixel.js`). Mái nhà được tô theo màu từng loại toà nhà. Nước, cầu, nhân vật chibi, thú cưng và giao diện giữ nét vẽ riêng. Đổi lại kiểu cũ trong ⚙️ Cài đặt → 🎨 Đồ hoạ → 🌸 Pastel vẽ tay.
+
 **Đồ hoạ phong cách pastel dễ thương:** nhân vật chibi đầu to mắt long lanh, má hồng, tóc dài có nơ; nhà mái lượn vỏ sò màu kẹo, cửa sổ tròn có rèm hồng và bồn hoa, cửa vòm hình tim, biển tên bo tròn; cây hoa anh đào, cỏ bạc hà, đường lavender, hàng rào trắng; đèn đường có nơ; cánh hoa anh đào bay khắp màn hình; quả cầu chữ dạng bong bóng xà phòng; tim bay khi lên cấp / nhặt từ; ban đêm tông tím lavender, đèn hồng ấm. Giao diện hồng – tím, font Nunito tròn trịa, nút bo tròn. Thú cưng theo chủ, khi đứng yên sẽ thả tim; người chơi online cũng thấy thú cưng của nhau. Có thể chỉnh độ tối ban đêm trong ⚙️ Cài đặt.
 
 **Lên cấp khó dần:** XP cần cho mỗi cấp tăng theo luỹ thừa (Lv2: 120 · Lv3: ~400 · Lv5: ~1.500 · Lv10: ~8.100 · Lv15: ~20.800 · Lv20: ~40.000 XP). Từ đã biết chỉ cho 3 XP, linh kiện nhặt lại 2 XP — muốn lên cấp nhanh phải học từ mới, làm đơn sửa chữa, hội thoại chuẩn và thi HVAC. Người chơi cũ được giữ nguyên Level hiện tại khi cập nhật.
@@ -142,3 +144,6 @@ sw.js, manifest.json  chơi offline & cài lên màn hình chính
 ```
 
 Chạy thử trên máy tính: `python3 -m http.server` trong thư mục game rồi mở `http://localhost:8000`.
+
+## Ghi công đồ hoạ
+- Tiny Town, Tiny Farm — Kenney (www.kenney.nl), CC0 1.0. Không bắt buộc ghi công, nhưng cảm ơn Kenney!

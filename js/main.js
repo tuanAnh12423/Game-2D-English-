@@ -3,6 +3,7 @@
   G.clock.init();
   G.weather.init();
   G.events.init();
+  G.pix.load(() => G.pix.reset());
   G.indexData();
   G.tts.init();
   G.world.build();

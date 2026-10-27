@@ -1,10 +1,10 @@
 // Bộ nhớ đệm để chơi offline. Mỗi lần cập nhật game, tăng số phiên bản.
-const CACHE = 'tech-english-v10';
+const CACHE = 'tech-english-v11';
 const FILES = [
   './', './index.html', './css/style.css', './manifest.json',
   './js/util.js', './js/icons.js', './js/world.js', './js/input.js', './js/game.js', './js/ui.js', './js/main.js',
   './js/data/words.js', './js/data/components.js', './js/data/quests.js', './js/data/regions.js',
-  './js/data/farm.js', './js/data/convos.js', './js/data/hvac_questions.js', './js/data/hvac_listening.js', './js/hvac.js', './js/data/teashops.js', './js/work.js', './js/tea.js', './js/online.js', './js/vendor/mqtt.min.js', './js/data/mall.js', './js/mall.js', './js/data/events.js', './js/events.js', './js/data/animals.js', './js/ranch.js',
+  './js/data/farm.js', './js/data/convos.js', './js/data/hvac_questions.js', './js/data/hvac_listening.js', './js/hvac.js', './js/data/teashops.js', './js/work.js', './js/tea.js', './js/online.js', './js/vendor/mqtt.min.js', './js/data/mall.js', './js/mall.js', './js/data/events.js', './js/events.js', './js/data/animals.js', './js/ranch.js', './js/pixel.js', './assets/kenney/tiny-town.png', './assets/kenney/tiny-farm.png',
   './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png',
 ];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });

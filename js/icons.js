@@ -272,6 +272,7 @@ G.drawCropIcon = function (ctx, crop, cx, cy, s) {
 
 // Cây trên ruộng theo giai đoạn (0 hạt, 1 mầm, 2 đang lớn, 3 chín). (cx, cy) = tâm ô.
 G.drawPlant = function (ctx, crop, stage, cx, cy, t) {
+  if (G.pix && G.pix.plant(ctx, crop.id, stage, cx, cy)) return;
   ctx.save();
   ctx.translate(cx, cy + 9); ctx.scale(1.3, 1.3); ctx.translate(-cx, -(cy + 9));
   G.drawPlantInner(ctx, crop, stage, cx, cy, t);

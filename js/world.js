@@ -228,6 +228,7 @@ G.world = {
     this.drawTile(ctx, t, tx, ty, px, py);
   },
   drawTile(ctx, t, tx, ty, px, py) {
+    if (G.pix.on() && G.pix.tile(this, ctx, t, tx, ty, px, py)) return;
     const S = G.TS, h = G.hash2(tx, ty), h2 = G.hash2(ty + 91, tx + 17);
     const H = (i) => G.hash2(tx * 13 + i, ty * 7 - i);
     const nb = (a, b) => this.get(tx + a, ty + b);
@@ -486,6 +487,9 @@ G.world = {
       const roofH = Math.max(S, Math.floor(H * 0.5));
       const wallTop = Y + roofH - 4;
       const DX = b.dx * S, DY = b.dy * S;
+      const pix = G.pix.on();
+      if (pix) G.pix.drawBuilding(ctx, b, night);
+      if (!pix) {
       // bóng mềm
       ctx.fillStyle = 'rgba(120,70,110,.13)';
       ctx.beginPath(); ctx.ellipse(X + W / 2 + 6, Y + H + 2, W / 2 + 6, 7, 0, 0, Math.PI * 2); ctx.fill();
@@ -569,6 +573,7 @@ G.world = {
       if (b.t === 'farmshop') {
         ctx.fillStyle = '#e8c39e'; G.rr(ctx, X + 4, Y + H - 16, 18, 12, 2); ctx.fill();
         ['#ff6f91', '#ffb347', '#9ee09e'].forEach((c, i) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(X + 8 + i * 5, Y + H - 16, 3, 0, Math.PI * 2); ctx.fill(); });
+      }
       }
       // biển tên hình viên thuốc có tim
       const label = bt.icon + ' ' + b.name;

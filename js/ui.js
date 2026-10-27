@@ -1089,6 +1089,7 @@ G.ui = {
       <div class="set">Kiểu ca <button class="tchip ${G.work.flex() ? 'on' : ''}" data-wm="flex">🕒 Linh hoạt</button><button class="tchip ${G.work.flex() ? '' : 'on'}" data-wm="fixed">📌 Cố định</button></div>
       <label class="set ${G.work.flex() ? 'hide' : ''}">Giờ vào ca <select id="s-start">${[6, 7, 8, 9, 10, 11, 12, 13, 14].map((h) => `<option value="${h}" ${G.work.cfg().start === h ? 'selected' : ''}>${G.work.hhmm(h)}</option>`).join('')}</select></label>
       <p class="hint" id="s-sched">${G.esc(G.work.scheduleText())}. Ngày không đi làm là ngày nghỉ. Ngoài giờ làm, Trung Tâm Bảo Hành đóng cửa và khách có thể gọi bắt bạn đến.</p>
+      <div class="set">🎨 Đồ hoạ <button class="tchip ${(s.gfx || 'pixel') === 'pixel' ? 'on' : ''}" data-gfx="pixel">🟩 Pixel (Kenney)</button><button class="tchip ${s.gfx === 'pastel' ? 'on' : ''}" data-gfx="pastel">🌸 Pastel vẽ tay</button></div>
       <button class="btn ghost" id="s-char">🧑‍🔧 Đổi tên / nhân vật / thú cưng 🐾</button>
       <p class="hint">⏰ Game chạy theo giờ thực của máy: bây giờ là ${G.esc(G.clock.label())} — lời chào đúng là “${G.clock.greet()}”.</p>
       <button class="btn" id="s-test">🔊 Thử giọng đọc</button>
@@ -1103,6 +1104,7 @@ G.ui = {
     p.querySelector('#s-vi').addEventListener('change', (e) => { s.vi = e.target.checked; });
     p.querySelector('#s-calls').addEventListener('change', (e) => { s.calls = e.target.checked; });
     p.querySelector('#s-rate').addEventListener('input', (e) => { s.rate = +e.target.value; this.el('s-rv').textContent = s.rate; });
+    p.querySelectorAll('[data-gfx]').forEach((b) => b.addEventListener('click', () => { s.gfx = b.dataset.gfx; G.pix.reset(); G.audio.sfx('click'); this.settings(); }));
     p.querySelectorAll('[data-vp]').forEach((b) => b.addEventListener('click', () => { s.vpref = b.dataset.vp; s.voice = ''; G.tts.choose(); G.tts.speak('Hello! This is my new voice.'); this.settings(); }));
     const vsel = p.querySelector('#s-voice');
     vsel.addEventListener('change', () => { s.voice = vsel.value; G.tts.choose(); G.tts.speak('Hello! How do I sound?'); });

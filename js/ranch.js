@@ -237,7 +237,7 @@ G.ranch = {
         const big = a.kind === 'cow' || a.kind === 'pig' || a.kind === 'sheep' ? 24 : 18;
         ctx.save(); ctx.translate(m.x, m.y - big * 0.45 - hop); ctx.scale(-m.dir, 1);
         ctx.font = big + 'px system-ui, "Apple Color Emoji", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#000'; ctx.fillText(d.emoji, 0, 0); ctx.restore();
+        ctx.fillStyle = '#000'; if (!G.pix.animal(ctx, a.kind, 0, big * 0.45)) ctx.fillText(d.emoji, 0, 0); ctx.restore();
         const it = G.items[d.product];
         if (a.ready || this.hungry(a)) {
           const by = m.y - big - 8 + Math.sin(t * 4 + a.uid) * 1.5;
