@@ -128,6 +128,7 @@ G.game = {
     s.lastDate = k; s.days = (s.days || 1) + 1;
     this.refreshBoard(true);
     if (!silent) G.ui.toast('☀️ Ngày mới bắt đầu! ' + G.clock.greet() + '! Đơn sửa chữa mới đã có ở Trung Tâm Bảo Hành.');
+    if (!silent) setTimeout(() => G.ui.toast('💡 Câu hay hôm nay: “' + SENTENCES[G.ui.quoteIdx()][0] + '” (📖 → 💡 Câu hay)'), 2500);
   },
 
   // ---------- Kinh nghiệm & tiền ----------

@@ -20,7 +20,7 @@
 window.REGIONS = [
   {
     id: 'village', name: 'Làng Ven Sông', en: 'Riverside Village', gx: 0, gy: 1, level: 1, ground: 'grass',
-    words: ['daily', 'home', 'food', 'farm'], parts: ['resistor', 'led', 'fuse', 'ceramic', 'diode', 'buzzer', 'elcap'],
+    words: ['daily', 'home', 'food', 'farm', 'feelings', 'phrase_daily'], parts: ['resistor', 'led', 'fuse', 'ceramic', 'diode', 'buzzer', 'elcap'],
     river: { x: 40, w: 3 }, ponds: 1, deco: { tree: 0.05, flower: 0.05, rock: 0.006, bush: 0.012 }, npcs: 3, dialog: 'street',
     spawn: { x: 30, y: 15 },
     farms: [{ x: 16, y: 8, w: 6, h: 5 }],
@@ -37,7 +37,7 @@ window.REGIONS = [
   },
   {
     id: 'downtown', name: 'Phố Trung Tâm', en: 'Downtown', gx: 1, gy: 1, level: 1, ground: 'city',
-    words: ['work', 'service', 'city'], parts: ['resistor', 'elcap', 'relay', 'bjt', 'diode', 'ceramic', 'ptc', 'valve', 'fuse', 'led'],
+    words: ['work', 'service', 'city', 'phrase_work', 'money'], parts: ['resistor', 'elcap', 'relay', 'bjt', 'diode', 'ceramic', 'ptc', 'valve', 'fuse', 'led'],
     ponds: 0, deco: { tree: 0.012, flower: 0.01, rock: 0, bush: 0.01 }, npcs: 5, dialog: 'service',
     buildings: [
       { t: 'service', x: 7, y: 5, w: 10, h: 7, name: 'Trung Tâm Bảo Hành' },
@@ -51,7 +51,7 @@ window.REGIONS = [
   },
   {
     id: 'market', name: 'Chợ Linh Kiện', en: 'Electronics Market', gx: 2, gy: 1, level: 2, ground: 'city',
-    words: ['electronics', 'tools'], parts: ['resistor', 'ceramic', 'elcap', 'diode', 'zener', 'led', 'bridge', 'bjt', 'reg7805', 'opto', 'relay', 'inductor', 'transformer', 'mov'],
+    words: ['electronics', 'tools', 'phrase_tech', 'money'], parts: ['resistor', 'ceramic', 'elcap', 'diode', 'zener', 'led', 'bridge', 'bjt', 'reg7805', 'opto', 'relay', 'inductor', 'transformer', 'mov'],
     ponds: 0, deco: { tree: 0.01, flower: 0.006, rock: 0, bush: 0.006 }, npcs: 5, dialog: 'shop',
     buildings: [
       { t: 'shop', x: 7, y: 5, w: 11, h: 7, name: 'Chợ Linh Kiện & Xưởng' },
@@ -64,7 +64,7 @@ window.REGIONS = [
   },
   {
     id: 'park', name: 'Công Viên Hồ Sen', en: 'Lotus Lake Park', gx: 1, gy: 2, level: 2, ground: 'grass',
-    words: ['nature', 'daily', 'farm'], parts: ['ntc', 'resistor', 'led', 'mov', 'inductor', 'tfuse', 'buzzer'],
+    words: ['nature', 'daily', 'farm', 'health', 'feelings'], parts: ['ntc', 'resistor', 'led', 'mov', 'inductor', 'tfuse', 'buzzer'],
     ponds: 4, deco: { tree: 0.06, flower: 0.09, rock: 0.01, bush: 0.015 }, npcs: 4, dialog: 'street',
     farms: [{ x: 35, y: 23, w: 6, h: 4 }],
     buildings: [
@@ -76,7 +76,7 @@ window.REGIONS = [
   },
   {
     id: 'beach', name: 'Bãi Biển Xanh', en: 'Blue Beach', gx: 0, gy: 2, level: 3, ground: 'sand', sea: true,
-    words: ['travel', 'nature', 'food'], parts: ['mov', 'ntc', 'inductor', 'crystal', 'diode', 'runcap'],
+    words: ['travel', 'nature', 'food', 'health', 'phrase_daily'], parts: ['mov', 'ntc', 'inductor', 'crystal', 'diode', 'runcap'],
     ponds: 0, deco: { tree: 0.018, flower: 0, rock: 0.012, bush: 0.004 }, npcs: 4, dialog: 'travel',
     buildings: [
       { t: 'hotel', x: 7, y: 5, w: 9, h: 6, name: 'Khách Sạn Biển' },
@@ -87,7 +87,7 @@ window.REGIONS = [
   },
   {
     id: 'forest', name: 'Rừng Thông', en: 'Pine Forest', gx: 0, gy: 0, level: 4, ground: 'forest',
-    words: ['nature', 'travel'], parts: ['crystal', 'ntc', 'hall', 'tfuse', 'inductor', 'mcu'],
+    words: ['nature', 'travel', 'feelings'], parts: ['crystal', 'ntc', 'hall', 'tfuse', 'inductor', 'mcu'],
     ponds: 2, deco: { tree: 0.16, flower: 0.03, rock: 0.02, bush: 0.03 }, npcs: 2, dialog: 'travel',
     buildings: [
       { t: 'house', x: 10, y: 8, w: 5, h: 4, name: 'Nhà gỗ kiểm lâm' },
@@ -97,7 +97,7 @@ window.REGIONS = [
   },
   {
     id: 'industrial', name: 'Khu Công Nghiệp', en: 'Industrial Park', gx: 2, gy: 2, level: 5, ground: 'industrial',
-    words: ['industry', 'appliance', 'electronics'], parts: ['mosfet', 'igbt', 'transformer', 'triac', 'hall', 'pump', 'heater', 'opto', 'reg7805', 'valve', 'pswitch', 'doorlock', 'olp'],
+    words: ['industry', 'appliance', 'electronics', 'phrase_tech'], parts: ['mosfet', 'igbt', 'transformer', 'triac', 'hall', 'pump', 'heater', 'opto', 'reg7805', 'valve', 'pswitch', 'doorlock', 'olp'],
     ponds: 0, deco: { tree: 0.01, flower: 0, rock: 0.004, bush: 0.006 }, npcs: 4, dialog: 'factory',
     buildings: [
       { t: 'factory', x: 5, y: 3, w: 13, h: 8, name: 'Nhà Máy Điện Lạnh' },
@@ -109,7 +109,7 @@ window.REGIONS = [
   },
   {
     id: 'techpark', name: 'Khu Công Nghệ Cao', en: 'Hi-Tech Park', gx: 1, gy: 0, level: 6, ground: 'city',
-    words: ['electronics', 'industry', 'work'], parts: ['mcu', 'igbt', 'hall', 'booster', 'opto', 'crystal', 'mosfet', 'reg7805'],
+    words: ['electronics', 'industry', 'work', 'phrase_work', 'phrase_tech'], parts: ['mcu', 'igbt', 'hall', 'booster', 'opto', 'crystal', 'mosfet', 'reg7805'],
     ponds: 1, deco: { tree: 0.02, flower: 0.02, rock: 0, bush: 0.01 }, npcs: 4, dialog: 'factory',
     buildings: [
       { t: 'library', x: 7, y: 5, w: 9, h: 6, name: 'Phòng Lab R&D' },
@@ -120,7 +120,7 @@ window.REGIONS = [
   },
   {
     id: 'airport', name: 'Sân Bay Quốc Tế', en: 'International Airport', gx: 2, gy: 0, level: 7, ground: 'city',
-    words: ['travel', 'city', 'service'], parts: ['booster', 'doorlock', 'pswitch', 'pump', 'heater', 'mcu', 'igbt'],
+    words: ['travel', 'city', 'service', 'phrase_daily', 'money'], parts: ['booster', 'doorlock', 'pswitch', 'pump', 'heater', 'mcu', 'igbt'],
     ponds: 0, deco: { tree: 0.01, flower: 0.01, rock: 0, bush: 0.01 }, npcs: 6, dialog: 'travel',
     buildings: [
       { t: 'airport', x: 5, y: 3, w: 15, h: 9, name: 'Nhà Ga Sân Bay' },
@@ -131,7 +131,7 @@ window.REGIONS = [
   },
   {
     id: 'shopping', name: 'Khu Mua Sắm', en: 'Shopping District', gx: 3, gy: 1, level: 2, ground: 'city',
-    words: ['clothes', 'city', 'daily'], parts: ['resistor', 'led', 'buzzer', 'fuse', 'elcap', 'ceramic', 'diode'],
+    words: ['clothes', 'city', 'daily', 'money', 'feelings'], parts: ['resistor', 'led', 'buzzer', 'fuse', 'elcap', 'ceramic', 'diode'],
     ponds: 0, deco: { tree: 0.015, flower: 0.015, rock: 0, bush: 0.01 }, npcs: 6, dialog: 'shop',
     buildings: [
       { t: 'mall', x: 5, y: 3, w: 16, h: 9, name: 'TTTM Sao Mai' },

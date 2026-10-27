@@ -127,6 +127,8 @@ G.ui = {
       const miss = G.events.list().map((ev) => G.events.missed(ev)).filter(Boolean);
       if (miss.length) rows.push(['🎬', 'Bạn lỡ ' + miss.map((m) => m.ev.name).join(', ') + ' — xem lại bản ghi trong 📢 Sự kiện.']);
     }
+    const qi = this.quoteIdx();
+    if ((s.quotes || {})[qi] !== G.clock.dateKey()) rows.push(['💡', 'Câu hay hôm nay: “' + SENTENCES[qi][0] + '” — ' + SENTENCES[qi][1] + ' (📖 → 💡 Câu hay)']);
     const pk = s.profile.pet, po = pk && s.pets && s.pets.owned[pk];
     if (po && po.treatDay !== G.clock.dateKey()) rows.push(['🍪', 'Bé ' + (po.name || G.PETS[pk].vi) + ' đang chờ được ăn vặt hôm nay (Tiệm Thú Cưng → Treat).']);
     this.open(`<div class="center"><div class="big-emoji">👋</div><h2>${G.esc(G.clock.greet())}, ${G.esc(s.profile.name)}!</h2>
@@ -492,6 +494,7 @@ G.ui = {
         <div>🧋 Ly trà sữa<b>${s.stats.drinks || 0}</b></div>
       </div>
       <button class="btn big" id="chest">📦 Mở kho đồ (48 ô)</button>
+      <button class="btn" id="quote">💡 Câu hay hôm nay</button>
       ${G.feat.has('cook') ? '<button class="btn" id="kitchen">🍳 Bếp nấu ăn (Kitchen)</button>' : ''}
       ${G.feat.has('mall') ? '<button class="btn" id="wardrobe">🪞 Tủ quần áo</button>' : ''}
       <button class="btn" id="save">💾 Lưu game</button>
@@ -499,6 +502,7 @@ G.ui = {
     this.on(p, '#chest', () => this.bag(true));
     this.on(p, '#wardrobe', () => G.mall.wardrobe(true));
     this.on(p, '#kitchen', () => G.kitchen.panel());
+    this.on(p, '#quote', () => this.dictionary(null, 'quotes'));
     this.on(p, '#save', () => { g.save(); this.toast('💾 Đã lưu!'); this.close(); });
     this.on(p, '#rest', () => {
       const line = night ? 'Good night! Sleep well.' : 'Time for a short break.';
@@ -767,7 +771,7 @@ G.ui = {
   // danh sách tình huống hội thoại để luyện
   convoMenu(theme) {
     const s = G.state;
-    const names = { service: '📞 Call Center', street: '🚶 Đường phố', shop: '🔌 Mua hàng', cafe: '☕ Quán cà phê', travel: '✈️ Du lịch', factory: '🏭 Nhà máy', farm: '🌱 Nông trại' };
+    const names = { quote: '💡 Câu hay', cook: '🍳 Nấu ăn', event: '📢 Sự kiện', service: '📞 Call Center', street: '🚶 Đường phố', shop: '🔌 Mua hàng', cafe: '☕ Quán cà phê', travel: '✈️ Du lịch', factory: '🏭 Nhà máy', farm: '🌱 Nông trại' };
     const list = CONVOS.filter((c) => !c.theme.startsWith('visit') && (!theme || c.theme === theme));
     const p = this.open(`<h2>🗣️ Luyện hội thoại</h2><p class="sub">Chọn tình huống. Đạt ⭐⭐⭐ khi chọn câu chuẩn ngay lần đầu ở mọi lượt. Lời chào đổi theo giờ thực: bây giờ nói <b>“${G.clock.greet()}”</b> (${G.clock.greetVi()}).</p>
       <div class="list">${list.map((c) => `<div class="row"><div class="big-emoji">${(names[c.theme] || '💬').split(' ')[0]}</div><div class="rn"><b>${G.esc(c.title)}</b><small>${names[c.theme] || ''} · ${c.steps.length} lượt · ${'⭐'.repeat(s.convos[c.id] || 0) || 'chưa luyện'}</small></div>
@@ -986,8 +990,9 @@ G.ui = {
   // ---------- Từ điển / Mẫu câu / Hội thoại ----------
   dictionary(cat, tab = 'words') {
     const s = G.state;
-    const tabs = `<div class="tabs"><button data-dt="words" class="${tab === 'words' ? 'on' : ''}">📖 Từ vựng</button><button data-dt="phrases" class="${tab === 'phrases' ? 'on' : ''}">📒 Mẫu câu</button><button data-dt="convos" class="${tab === 'convos' ? 'on' : ''}">🗣️ Hội thoại</button></div>`;
+    const tabs = `<div class="tabs"><button data-dt="words" class="${tab === 'words' ? 'on' : ''}">📖 Từ vựng</button><button data-dt="phrases" class="${tab === 'phrases' ? 'on' : ''}">📒 Mẫu câu</button><button data-dt="quotes" class="${tab === 'quotes' ? 'on' : ''}">💡 Câu hay</button><button data-dt="convos" class="${tab === 'convos' ? 'on' : ''}">🗣️ Hội thoại</button></div>`;
     if (tab === 'convos') { this.convoMenu(); return; }
+    if (tab === 'quotes') { this.quotes(tabs); return; }
     if (tab === 'phrases') {
       const names = { service: '📞 Call Center', street: '🚶 Đường phố', shop: '🔌 Mua hàng', cafe: '☕ Quán cà phê', travel: '✈️ Du lịch', factory: '🏭 Nhà máy', farm: '🌱 Nông trại', visit: '🔧 Tại nhà khách', visit_end: '🔧 Tại nhà khách' };
       const ph = Object.keys(s.phrases).sort((a, b) => (s.phrases[a].th || '').localeCompare(s.phrases[b].th || ''));
@@ -1013,6 +1018,33 @@ G.ui = {
         <div class="vi">${G.esc(w.vi)}</div><div class="ex">${G.esc(w.ex)}</div></div>`).join('') : '<p class="hint">Chưa có từ nào trong nhóm này. Hãy đi tìm các quả cầu chữ phát sáng!</p>'}</div>`);
     this.on(p, '[data-cat]', (x) => this.dictionary(x.dataset.cat));
     this.on(p, '[data-dt]', (x) => this.dictionary(null, x.dataset.dt));
+  },
+  // ---------- Câu hay mỗi ngày ----------
+  quoteIdx(d = G.clock.date()) { return Math.floor(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / 864e5 + 0.5) % SENTENCES.length; },
+  quotes(tabs) {
+    const s = G.state, today = this.quoteIdx(), day = G.clock.dateKey();
+    s.quotes = s.quotes || {};
+    const [en, vi, note] = SENTENCES[today];
+    const learned = Object.keys(s.quotes).map(Number).filter((i) => i !== today && SENTENCES[i]);
+    const p = this.open(`<h2>💡 Câu hay mỗi ngày</h2>${tabs}
+      <div class="qcard"><small>Câu của hôm nay · ${G.esc(day)}</small><div class="qen">${G.esc(en)} ${this.sayBtn(en)}</div>
+        <div class="qvi">${G.esc(vi)}</div><div class="hint">💬 ${G.esc(note)}</div>
+        ${G.stt.supported ? `<button class="btn" id="qsay">🎤 Đọc to câu này${s.quotes[today] === day ? ' (đã đạt hôm nay ✅)' : ' · +10 XP'}</button>` : `<button class="btn" id="qok">✅ Mình đã thuộc câu này${s.quotes[today] === day ? ' (đã lưu)' : ' · +5 XP'}</button>`}
+        <div id="qres"></div></div>
+      <p class="sub">Mỗi ngày mở 1 câu mới (theo ngày thật) — ${SENTENCES.length} câu tục ngữ, châm ngôn, câu chăm sóc khách hàng. Đã sưu tầm ${learned.length + (s.quotes[today] ? 1 : 0)}/${SENTENCES.length}.</p>
+      <div class="dict">${learned.map((i) => `<div class="drow"><div><b class="ph">${G.esc(SENTENCES[i][0])}</b> ${this.sayBtn(SENTENCES[i][0])}</div><div class="vi">${G.esc(SENTENCES[i][1])}</div><div class="ex">${G.esc(SENTENCES[i][2])}</div></div>`).join('')
+        || '<p class="hint">Các câu bạn đã luyện sẽ được lưu ở đây. Quay lại mỗi ngày để có câu mới nhé!</p>'}</div>`);
+    const learn = (xp) => {
+      if (s.quotes[today] === day) return;
+      s.quotes[today] = day;
+      s.phrases[en] = { th: 'quote', tip: vi, t: Date.now() };
+      G.game.addXp(xp); G.game.hearts(G.game.player.x, G.game.player.y - 20, 8);
+      G.audio.sfx('good');
+    };
+    this.on(p, '[data-dt]', (x) => this.dictionary(null, x.dataset.dt));
+    this.on(p, '#qsay', () => this.speakPractice(en, this.el('qres'), (sc) => { if (sc >= 0.7) { learn(10); this.el('qres').insertAdjacentHTML('beforeend', '<div class="res good">🎉 Đã lưu vào Sổ tay mẫu câu!</div>'); } }));
+    this.on(p, '#qok', () => { learn(5); this.quotes(tabs); });
+    setTimeout(() => G.tts.speak(en), 250);
   },
   quests() {
     const s = G.state, g = G.game;

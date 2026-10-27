@@ -8,8 +8,11 @@ Game nhập vai 2D (nhìn từ trên xuống) để **học tiếng Anh** và **
 
 Bạn **tự đặt tên và chọn nhân vật nam/nữ** (màu da, tóc, áo); thú cưng phải tự mua ở Tiệm Thú Cưng bằng tiếng Anh — một kỹ thuật viên trẻ vừa nhận việc ở Trung Tâm Bảo Hành. Game chạy theo **giờ thực** của điện thoại: sáng/chiều/tối, ngày mới, thời tiết (nắng, mây, mưa đổi mỗi 2 giờ) đều theo đời thật.
 
+**Kho từ:** khoảng 450 từ và cụm từ trong 20 nhóm — đời sống, nhà cửa, ăn uống, thành phố, thiên nhiên, du lịch, công việc, điện lạnh, điện tử, dụng cụ, chăm sóc khách hàng, nhà máy, nông trại, quần áo, **cảm xúc & tính cách, sức khoẻ, tiền bạc**, và 3 nhóm **cụm từ** (cụm danh từ, cụm động từ: *make a decision, customer complaint, error code, indoor unit, as soon as possible*…). Thêm từ vào `js/data/words.js` hoặc `js/data/words_more.js`.
+
 | Hoạt động | Mô tả |
 |---|---|
+| 💡 **Câu hay mỗi ngày** | 60 câu tục ngữ, châm ngôn và câu chăm sóc khách hàng (*Practice makes perfect*, *Better safe than sorry*, *Thank you for your patience*…), mỗi ngày thật mở 1 câu, có nghĩa tiếng Việt và ghi chú. Nghe, đọc to bằng micro (đúng ≥ 70% được +10 XP) để lưu vào Sổ tay. Xem ở 📖 → 💡 Câu hay, trong nhà, hoặc bảng “Chào mừng trở lại”. |
 | 🟡 **Quả cầu chữ** | Chạm vào để gặp từ tiếng Anh mới. Trả lời đúng câu đố (chọn nghĩa, nghe phát âm, điền vào câu) để đưa từ vào **Từ điển**. Càng gặp lại, độ thuộc (★) càng tăng. |
 | 🔩 **Linh kiện** | Điện trở, tụ, điốt, MOSFET, IGBT, vi điều khiển, rơ-le PTC, cảm biến NTC, van cấp nước... mỗi loại có thẻ: chức năng, **cách đo kiểm**, thiết bị thường gặp. |
 | 🌱 **Trồng trọt** | Ruộng cạnh nhà (Làng Ven Sông) và ở Công Viên. Mua hạt ở 🌱 Tiệm Nông Sản, gieo → 💧 tưới → 🧺 thu hoạch. **Cây lớn theo thời gian thực, kể cả khi tắt game** (mỗi lần tưới giữ ẩm 12 giờ — tưới buổi sáng là đủ tới tối, trời mưa tự tưới). 10 loại cây, mỗi lần làm nông đều học một câu tiếng Anh. |

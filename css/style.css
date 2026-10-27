@@ -428,6 +428,12 @@ ol.steps small { display: block; color: var(--muted); }
 b.verb { color: #c2255c; background: #ffe3ee; border-radius: 6px; padding: 0 3px; }
 img.petbig { width: 96px; height: 96px; }
 
+/* ---------- Câu hay mỗi ngày ---------- */
+.qcard { background: linear-gradient(135deg, #fff3b0, #ffe3ee 60%, #efe7ff); border: 2px solid #fff; border-radius: 20px; padding: 12px 14px; margin: 8px 0; box-shadow: 0 3px 10px rgba(160,80,130,.15); }
+.qcard small { color: #a07a24; font-weight: 800; letter-spacing: .5px; }
+.qen { font-size: 19px; font-weight: 900; color: #6b3d5a; margin: 6px 0 4px; line-height: 1.35; }
+.qvi { font-size: 14.5px; font-weight: 700; color: #c2255c; margin-bottom: 4px; }
+
 /* ---------- Màn hình tiêu đề ---------- */
 #title {
   position: fixed; inset: 0; z-index: 40; display: flex; padding: 16px;
