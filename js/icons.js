@@ -383,7 +383,7 @@ G.partImg = function (id, size = 48) {
 };
 
 // ---------- Đèn đường ----------
-G.drawLamp = function (ctx, x, y, on, t) {
+G.drawLampVec = function (ctx, x, y, on, t) {
   const OL = 'rgba(120,70,100,.55)';
   ctx.fillStyle = 'rgba(120,70,110,.16)'; ctx.beginPath(); ctx.ellipse(x + 3, y + 1, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = '#f7c6d9'; rr(ctx, x - 4.5, y - 5, 9, 6, 3); ctx.fill();
@@ -554,7 +554,7 @@ G.drawCharVec = function (ctx, x, y, dir, frame, look, scale = 1) {
     if (look.glasses === 'sun') { ctx.fillStyle = 'rgba(60,30,60,.88)'; rr(ctx, gx, HY - 0.8, gw, 4.2, 2); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.fillRect(gx + 0.9, HY - 0.1, 1.3, 1); }
     else { ctx.strokeStyle = '#7b4b6a'; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.arc(gx + gw / 2, HY + 1.3, gw / 2, 0, Math.PI * 2); ctx.stroke(); ctx.strokeStyle = OL; ctx.lineWidth = 1.3; }
   };
-  if (dir === 0) {
+  if (G._pixFace) { /* mặt sẽ được vẽ từng điểm ảnh sau (G.pix.face) */ } else if (dir === 0) {
     eye(-4.2, HY + 1.3); eye(4.2, HY + 1.3);
     if (look.long) { ctx.strokeStyle = '#4a2c3a'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(-6.4, HY - 0.6); ctx.lineTo(-7.4, HY - 1.6); ctx.moveTo(6.4, HY - 0.6); ctx.lineTo(7.4, HY - 1.6); ctx.stroke(); ctx.strokeStyle = OL; ctx.lineWidth = 1.3; }
     ctx.fillStyle = 'rgba(255,120,150,.45)'; ctx.beginPath(); ctx.ellipse(-6.6, HY + 4.6, 2.1, 1.3, 0, 0, Math.PI * 2); ctx.ellipse(6.6, HY + 4.6, 2.1, 1.3, 0, 0, Math.PI * 2); ctx.fill();
@@ -717,7 +717,8 @@ G.drawChar = function (ctx, x, y, dir, frame, look, scale = 1) {
   // gom bước chân thành 4 khung hình để dùng lại sprite đã vẽ
   const fq = frame ? (Math.round(frame / (Math.PI / 2)) % 4 + 4) % 4 * (Math.PI / 2) + 0.0001 : 0;
   const key = 'c' + dir + ':' + fq.toFixed(2) + ':' + JSON.stringify(look);
-  const spr = G.pix.sprite(key, 36, 58, 18, 52, (c) => G.drawCharVec(c, 0, 0, dir, fq, look, 1));
+  const bobPx = frame && Math.abs(Math.sin(fq)) > 0.5 ? 1 : 0;
+  const spr = G.pix.sprite(key, 36, 58, 18, 52, (c) => { G._pixFace = true; G.drawCharVec(c, 0, 0, dir, fq, look, 1); G._pixFace = false; }, (px) => G.pix.face(px, dir, look, bobPx));
   ctx.fillStyle = 'rgba(60,40,60,.22)'; ctx.beginPath(); ctx.ellipse(x, y + 1 * scale, 9 * scale, 3.4 * scale, 0, 0, Math.PI * 2); ctx.fill();
   G.pix.blit(ctx, spr, x, y, scale);
 };
@@ -727,4 +728,9 @@ G.drawPet = function (ctx, x, y, kind, dir, t, moving) {
   const spr = G.pix.sprite('p' + kind + dir, 30, 36, 15, 32, (c) => G.drawPetVec(c, 0, 0, kind, dir, 0, false));
   ctx.fillStyle = 'rgba(60,40,60,.2)'; ctx.beginPath(); ctx.ellipse(x, y + 1, 7, 2.6, 0, 0, Math.PI * 2); ctx.fill();
   G.pix.blit(ctx, spr, x, y - hop, 1);
+};
+G.drawLamp = function (ctx, x, y, on, t) {
+  if (!G.pix || !G.pix.on()) return G.drawLampVec(ctx, x, y, on, t);
+  G.pix.blit(ctx, G.pix.sprite('lamp' + (on ? 1 : 0), 24, 56, 12, 52, (c) => G.drawLampVec(c, 0, 0, on, 0)), x, y);
+  if (on) { ctx.fillStyle = 'rgba(255,236,170,.35)'; ctx.beginPath(); ctx.arc(x, y - 41, 11 + Math.sin(t * 3) * 0.8, 0, Math.PI * 2); ctx.fill(); }
 };

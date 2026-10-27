@@ -1049,7 +1049,7 @@ G.game = {
   },
 
   drawWaterShimmer(ctx, cam) {
-    const S = G.TS;
+    const S = G.TS, pix = G.pix.on();
     const x0 = Math.max(0, Math.floor(cam.x / S)), y0 = Math.max(0, Math.floor(cam.y / S));
     const x1 = Math.min(G.world.w - 1, Math.floor((cam.x + cam.w) / S)), y1 = Math.min(G.world.h - 1, Math.floor((cam.y + cam.h) / S));
     ctx.fillStyle = 'rgba(255,255,255,.45)';
@@ -1057,7 +1057,9 @@ G.game = {
       if (G.world.get(x, y) !== G.T.WATER) continue;
       const h = G.hash2(x, y);
       const ph = (this.t * 0.8 + h * 6) % 3;
-      if (ph < 0.8) ctx.fillRect(x * S + 6 + h * 14, y * S + 10 + ((h * 97) % 1) * 12, 9 * (1 - ph / 0.8), 1.6);
+      if (ph >= 0.8) continue;
+      if (pix) ctx.fillRect(x * S + 6 + Math.round(h * 7) * 2, y * S + 10 + Math.round(((h * 97) % 1) * 6) * 2, Math.max(2, Math.round(5 * (1 - ph / 0.8)) * 2), 2);
+      else ctx.fillRect(x * S + 6 + h * 14, y * S + 10 + ((h * 97) % 1) * 12, 9 * (1 - ph / 0.8), 1.6);
     }
   },
 
