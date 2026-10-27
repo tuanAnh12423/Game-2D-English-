@@ -401,7 +401,7 @@ G.drawLamp = function (ctx, x, y, on, t) {
 // look: {skin, hair, shirt, pants, shoes, cap, long, glasses, logo, belt, tool,
 //        top: tee|polo|shirt|hoodie|jacket|dress, bottom: pants|shorts|skirt,
 //        shoeType: shoe|boot|sandal, hat: cap|sun|beanie, glasses: true|'sun', bag: màu ba lô}
-G.drawChar = function (ctx, x, y, dir, frame, look, scale = 1) {
+G.drawCharVec = function (ctx, x, y, dir, frame, look, scale = 1) {
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y));
   ctx.scale(scale, scale);
@@ -628,7 +628,7 @@ G.petFollow = function (owner, x, y, dir, dt) {
   if (pt.mv) pt.dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 2) : (dy < 0 ? 3 : 0);
   return pt;
 };
-G.drawPet = function (ctx, x, y, kind, dir, t, moving) {
+G.drawPetVec = function (ctx, x, y, kind, dir, t, moving) {
   const P = PET_SHAPE[kind];
   if (!P) return;
   const hop = moving ? Math.abs(Math.sin(t * 10)) * 3 : Math.abs(Math.sin(t * 2.5)) * 0.8;
@@ -709,4 +709,22 @@ G.playerLook = function (pf) {
   const shirt = o.shirt[p.shirt || 0];
   const look = Object.assign({}, G.PLAYER_LOOK, { skin: o.skin[p.skin || 0], hair: o.hair[p.hair || 0], shirt, belt: G.shade(shirt, -0.3), long: p.gender === 'f' });
   return G.applyOutfit ? G.applyOutfit(look, p.wear || {}) : look;
+};
+
+// Ở chế độ đồ hoạ pixel: nhân vật & thú cưng vẽ thành sprite điểm ảnh (xem G.pix.sprite)
+G.drawChar = function (ctx, x, y, dir, frame, look, scale = 1) {
+  if (!G.pix || !G.pix.on()) return G.drawCharVec(ctx, x, y, dir, frame, look, scale);
+  // gom bước chân thành 4 khung hình để dùng lại sprite đã vẽ
+  const fq = frame ? (Math.round(frame / (Math.PI / 2)) % 4 + 4) % 4 * (Math.PI / 2) + 0.0001 : 0;
+  const key = 'c' + dir + ':' + fq.toFixed(2) + ':' + JSON.stringify(look);
+  const spr = G.pix.sprite(key, 36, 58, 18, 52, (c) => G.drawCharVec(c, 0, 0, dir, fq, look, 1));
+  ctx.fillStyle = 'rgba(60,40,60,.22)'; ctx.beginPath(); ctx.ellipse(x, y + 1 * scale, 9 * scale, 3.4 * scale, 0, 0, Math.PI * 2); ctx.fill();
+  G.pix.blit(ctx, spr, x, y, scale);
+};
+G.drawPet = function (ctx, x, y, kind, dir, t, moving) {
+  if (!G.pix || !G.pix.on()) return G.drawPetVec(ctx, x, y, kind, dir, t, moving);
+  const hop = Math.round((moving ? Math.abs(Math.sin(t * 10)) * 3 : Math.abs(Math.sin(t * 2.5)) * 0.8) / 2) * 2;
+  const spr = G.pix.sprite('p' + kind + dir, 30, 36, 15, 32, (c) => G.drawPetVec(c, 0, 0, kind, dir, 0, false));
+  ctx.fillStyle = 'rgba(60,40,60,.2)'; ctx.beginPath(); ctx.ellipse(x, y + 1, 7, 2.6, 0, 0, Math.PI * 2); ctx.fill();
+  G.pix.blit(ctx, spr, x, y - hop, 1);
 };

@@ -182,5 +182,42 @@ G.pix = {
     ctx.restore();
     return true;
   },
-  reset() { this.cache = {}; if (G.world.chunks) G.world.chunks.clear(); },
+  // ---------- Sprite điểm ảnh từ hình vẽ vector ----------
+  // Vẽ fn ở nửa độ phân giải (1 điểm ảnh = 2 đơn vị game, đúng cỡ điểm ảnh Kenney ×2),
+  // làm sắc mép (bỏ điểm mờ) rồi thêm viền tối 1 điểm ảnh như hình Kenney.
+  sprites: new Map(),
+  OUTLINE: [63, 40, 50],
+  sprite(key, W, H, ax, ay, fn) {
+    let c = this.sprites.get(key);
+    if (c) return c;
+    const w = W / 2, h = H / 2;
+    c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d');
+    x.scale(0.5, 0.5); x.translate(ax, ay);
+    fn(x);
+    const d = x.getImageData(0, 0, w, h), p = d.data, solid = new Uint8Array(w * h);
+    for (let i = 0; i < w * h; i++) {
+      if (p[i * 4 + 3] >= 110) { p[i * 4 + 3] = 255; solid[i] = 1; } else p[i * 4 + 3] = 0;
+    }
+    const [r, g, b] = this.OUTLINE;
+    for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) {
+      const i = yy * w + xx;
+      if (solid[i]) continue;
+      if ((xx > 0 && solid[i - 1]) || (xx < w - 1 && solid[i + 1]) || (yy > 0 && solid[i - w]) || (yy < h - 1 && solid[i + w])) {
+        p[i * 4] = r; p[i * 4 + 1] = g; p[i * 4 + 2] = b; p[i * 4 + 3] = 255;
+      }
+    }
+    x.putImageData(d, 0, 0);
+    c.ax = ax; c.ay = ay; c.W = W; c.H = H;
+    this.sprites.set(key, c);
+    if (this.sprites.size > 400) this.sprites.delete(this.sprites.keys().next().value);
+    return c;
+  },
+  blit(ctx, c, x, y, s = 1) {
+    const sm = ctx.imageSmoothingEnabled;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(c, Math.round(x - c.ax * s), Math.round(y - c.ay * s), c.W * s, c.H * s);
+    ctx.imageSmoothingEnabled = sm;
+  },
+  reset() { this.cache = {}; this.sprites.clear(); G.icons.cache = {}; if (G.world.chunks) G.world.chunks.clear(); },
 };
