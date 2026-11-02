@@ -7,6 +7,7 @@
   G.indexData();
   G.tts.init();
   G.world.build();
+  if (G.r3d && G.r3d.init) G.r3d.init(); // đồ hoạ 3D (máy không hỗ trợ WebGL thì tự dùng bản 2D)
   G.input.init();
   G.game.resize();
   window.addEventListener('resize', () => G.game.resize());

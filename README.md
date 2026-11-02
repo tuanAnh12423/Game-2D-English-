@@ -151,7 +151,9 @@ Chạy thử trên máy tính: `python3 -m http.server` trong thư mục game r�
 ## Ghi công đồ hoạ
 - Tiny Town, Tiny Farm — Kenney (www.kenney.nl), CC0 1.0. Không bắt buộc ghi công, nhưng cảm ơn Kenney!
 
-## 🧊 Bản thử 3D
-Mở `3d.html` (hoặc Cài đặt → Đồ hoạ → 🧊 3D). Dựng lại bản đồ thật của game bằng Three.js (MIT, `js/lib/three.min.js`):
-chạm để đi, chạm quả cầu chữ để học từ và nghe phát âm, nút ☀️/🌇/🌙 đổi ngày đêm, ＋/－ phóng to, ↻ xoay camera.
-Bản thử chưa có vào nhà, nhiệm vụ, lưu tiến độ — các phần đó vẫn chơi ở bản 2D.
+## 🧊 Đồ hoạ 3D
+Game vẽ bằng 3D (Three.js, giấy phép MIT, `js/lib/three.min.js`; code dựng cảnh ở `js/r3d.js`).
+Logic game (nhiệm vụ, từ vựng, trại, sự kiện…) giữ nguyên, chỉ thay phần vẽ. Máy không hỗ trợ WebGL tự chuyển về bản 2D cũ.
+- ⚙️ Cài đặt → **Góc nhìn 3D** (Gần/Vừa/Xa) và **Chất lượng** (Tự động/Đẹp/Vừa/Mượt nhất).
+- Chế độ Tự động: máy chậm thì tự giảm độ nét, rồi tắt bóng đổ để chơi mượt.
+- Tối ưu: mặt đất gộp 1 khối mỗi vùng, cây/hoa vẽ hàng loạt (instancing), bóng đổ tĩnh chỉ vẽ lại khi đi xa, không dùng đèn điểm, vẽ thưa khi đang mở bảng.

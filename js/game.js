@@ -798,9 +798,11 @@ G.game = {
     this.lc = this.lc || document.createElement('canvas');
     this.lc.width = Math.ceil(cv.width / 2); this.lc.height = Math.ceil(cv.height / 2);
     this.lcx = this.lc.getContext('2d');
+    if (G.r3d && G.r3d.ok) G.r3d.resize();
   },
 
   render() {
+    if (G.r3d && G.r3d.ok) return G.r3d.render(this);
     const cv = document.getElementById('game');
     const ctx = cv.getContext('2d');
     const p = this.player, sc = this.scale * this.dpr, S = G.TS;
