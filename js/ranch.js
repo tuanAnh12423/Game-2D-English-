@@ -17,7 +17,7 @@ G.tutorial = function (key, onDone) {
   ui.on(p, '#tutvi', () => { p.querySelectorAll('.say-vi').forEach((e) => e.classList.remove('hide')); p.querySelector('#tutvi').remove(); });
   ui.on(p, '#tutall', () => {
     let i = 0;
-    const next = () => { if (i >= t.lines.length || !ui.isOpen()) return; const u = G.tts.utter(t.lines[i++][0]); if (u) u.onend = () => setTimeout(next, 250); else setTimeout(next, 3500); };
+    const next = () => { if (i >= t.lines.length || !ui.isOpen()) return; G.tts.say(t.lines[i++][0], {}, () => setTimeout(next, 250)); };
     G.tts.stop(); next();
   });
   ui.on(p, '#tutok', () => { G.tts.stop(); ui.close(); });

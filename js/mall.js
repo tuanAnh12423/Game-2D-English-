@@ -51,8 +51,12 @@ G.mall = {
     const x = c.getContext('2d');
     x.scale(d, d);
     const look = G.playerLook(pf);
-    dirs.forEach((dir, i) => G.drawChar(x, size * 0.4 + i * size * 0.8, size - 4, dir, 0, look, size / 52));
-    const url = c.toDataURL();
+    let url = null;
+    if (G.r3d && G.r3d.ok) { try { url = G.r3d.portrait(look, dirs, size); } catch (e) { url = null; } }
+    if (!url) {
+      dirs.forEach((dir, i) => G.drawChar(x, size * 0.4 + i * size * 0.8, size - 4, dir, 0, look, size / 52));
+      url = c.toDataURL();
+    }
     this.imgCache[key] = url;
     return url;
   },

@@ -19,6 +19,8 @@
   menu('mQuest', () => G.ui.quests());
   menu('mMap', () => G.ui.map());
   menu('mSet', () => G.ui.settings());
+  menu('mStyle', () => G.mall.wardrobe(true));
+  G.emote.init();
   menu('mNet', () => G.online.panel());
   document.getElementById('mini').addEventListener('click', () => { G.audio.unlock(); G.ui.map(); });
   document.getElementById('hQuest').addEventListener('click', () => { G.audio.unlock(); G.ui.quests(); });

@@ -142,10 +142,65 @@ G.tts = {
     u.pitch = opts.pitch || st.pitch || 1.05;
     return u;
   },
+  // ---- Giọng diễn cảm: tách câu thành từng cụm, lên giọng / xuống giọng như người thật ----
+  // • cụm trước dấu phẩy: hơi lên giọng (chưa nói hết ý)
+  // • câu hỏi Yes/No: lên giọng ở cuối  • câu hỏi Wh-: hơi lên rồi hạ
+  // • câu cảm thán (!), lời chào, khen: cao và nhanh hơn, vui tươi
+  // • câu kể cuối cùng: xuống giọng để kết thúc
+  YESNO: /^(do|does|did|is|are|was|were|am|can|could|would|will|shall|should|may|might|have|has|had|must|isn't|aren't|don't|doesn't|didn't|won't|can't)\b/i,
+  WH: /^(what|where|when|why|who|whom|whose|which|how)\b/i,
+  BRIGHT: /^(hello|hi|hey|wow|great|welcome|thank|thanks|congratulations|good job|well done|awesome|yay|nice|amazing|excellent|perfect|let's|lets)\b/i,
+  prosody(text) {
+    const st = G.state ? G.state.settings : {};
+    const P = st.pitch || 1.05, R = st.rate || 0.9;
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const clean = String(text).replace(/\s+/g, ' ').trim();
+    if (!clean) return [];
+    const words = clean.split(' ').length;
+    if (words <= 3 && !/[.,!?;]/.test(clean.slice(0, -1))) { // một từ / cụm ngắn: đọc tươi, rõ
+      const q = /\?$/.test(clean), ex = /!$/.test(clean);
+      return [{ t: clean, pitch: clamp(P + (q ? 0.28 : ex ? 0.2 : 0.12), 0.6, 1.7), rate: R * (ex ? 1.04 : 0.96) }];
+    }
+    const sents = clean.match(/[^.!?]+[.!?]*["”’)]*\s*/g) || [clean];
+    const out = [];
+    sents.forEach((sRaw, si) => {
+      const s = sRaw.trim(); if (!s) return;
+      const end = /\?["”’)]*$/.test(s) ? 'q' : /!["”’)]*$/.test(s) ? 'ex' : 'st';
+      const last = si === sents.length - 1;
+      const parts = s.split(/(?<=[,;:—–])\s+/).filter(Boolean);
+      parts.forEach((ph, pi) => {
+        const fin = pi === parts.length - 1;
+        let pitch = P, rate = R;
+        if (this.BRIGHT.test(ph)) { pitch += 0.14; rate *= 1.04; }
+        if (!fin) pitch += 0.1;                       // còn tiếp → lên giọng nhẹ
+        else if (end === 'q') pitch += this.WH.test(ph) ? 0.08 : this.YESNO.test(ph) || this.YESNO.test(s) ? 0.3 : 0.22;
+        else if (end === 'ex') { pitch += 0.2; rate *= 1.06; }
+        else pitch += last ? -0.07 : (si % 2 ? 0.05 : -0.02); // câu kể: kết thúc thì hạ giọng
+        out.push({ t: ph, pitch: clamp(pitch, 0.6, 1.7), rate: clamp(rate, 0.5, 1.5) });
+      });
+    });
+    return out;
+  },
+  // đọc có ngữ điệu; onEnd gọi khi đọc xong cụm cuối
+  say(text, opts = {}, onEnd) {
+    if (!('speechSynthesis' in window) || !G.state || !G.state.settings.tts) { if (onEnd) setTimeout(onEnd, 1500); return; }
+    try {
+      if (!this.voice) this.choose();
+      if (!opts.queue) speechSynthesis.cancel();
+      const st = G.state.settings;
+      const chunks = st.expr === false ? [{ t: text, pitch: st.pitch || 1.05, rate: st.rate || 0.9 }] : this.prosody(text);
+      chunks.forEach((c, i) => {
+        const u = this.utter(c.t, { rate: opts.rate ? c.rate * opts.rate / (st.rate || 0.9) : c.rate, pitch: c.pitch, voice: opts.voice });
+        if (i === chunks.length - 1 && onEnd) u.onend = onEnd;
+        speechSynthesis.speak(u);
+      });
+    } catch (e) { if (onEnd) onEnd(); }
+  },
   speak(text, rate) {
     if (!('speechSynthesis' in window) || !G.state || !G.state.settings.tts) return;
     try {
       if (!this.voice) this.choose();
+      if (G.state.settings.expr !== false) return this.say(text, { rate });
       speechSynthesis.cancel();
       speechSynthesis.speak(this.utter(text, { rate }));
     } catch (e) { /* bỏ qua */ }

@@ -1107,6 +1107,7 @@ G.ui = {
     const s = G.state.settings;
     const p = this.open(`<h2>⚙️ Cài đặt</h2>
       <label class="set"><input type="checkbox" id="s-tts" ${s.tts ? 'checked' : ''}> 🔊 Đọc phát âm tiếng Anh</label>
+      <label class="set"><input type="checkbox" id="s-expr" ${s.expr !== false ? 'checked' : ''}> 🎭 Giọng diễn cảm (lên giọng khi hỏi, vui khi chào, hạ giọng cuối câu)</label>
       <label class="set">🐢 Tốc độ đọc <input type="range" id="s-rate" min="0.5" max="1.2" step="0.1" value="${s.rate}"> <span id="s-rv">${s.rate}</span></label>
       <div class="set">🗣️ Giọng <button class="tchip ${(s.vpref || 'f') === 'f' ? 'on' : ''}" data-vp="f">👩 Nữ</button><button class="tchip ${s.vpref === 'm' ? 'on' : ''}" data-vp="m">👨 Nam</button></div>
       <label class="set">🎙️ Chọn giọng <select id="s-voice">${G.tts.ranked(s.vpref).filter((x) => x.s > -100).map((x) => `<option value="${G.esc(x.v.name)}" ${G.tts.voice && G.tts.voice.name === x.v.name ? 'selected' : ''}>${G.esc(x.v.name)} (${G.esc(x.v.lang)})${x.s >= 50 ? ' ⭐' : ''}</option>`).join('') || '<option>Máy chưa có giọng tiếng Anh</option>'}</select></label>
@@ -1134,6 +1135,7 @@ G.ui = {
     this.on(p, '#s-test', () => G.tts.speak(G.clock.greet() + ', technician! Let us learn English and electronics together.'));
     this.on(p, '#s-mic', () => this.speakPractice('Hello, how can I help you?', this.el('s-micres')));
     p.querySelector('#s-tts').addEventListener('change', (e) => { s.tts = e.target.checked; });
+    p.querySelector('#s-expr').addEventListener('change', (e) => { s.expr = e.target.checked; G.tts.speak('Hello! How are you today? I am so happy to see you!'); });
     p.querySelector('#s-sfx').addEventListener('change', (e) => { s.sfx = e.target.checked; });
     p.querySelector('#s-vi').addEventListener('change', (e) => { s.vi = e.target.checked; });
     p.querySelector('#s-calls').addEventListener('change', (e) => { s.calls = e.target.checked; });

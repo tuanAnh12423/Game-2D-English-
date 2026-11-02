@@ -458,7 +458,7 @@ img.petbig { width: 96px; height: 96px; }
 @media (max-width: 520px) {
   .hbox { min-width: 0; padding: 5px 8px 5px 5px; }
   .hmenu button { width: 36px; height: 36px; font-size: 18px; border-radius: 10px; }
-  .hmenu { gap: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: 120px; }
+  .hmenu { gap: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: 156px; }
   #mini { top: calc(90px + var(--sat)); width: 96px; height: 72px; }
   #hQuest { max-width: calc(100vw - 120px); font-size: 11.5px; }
   #hEvent { max-width: calc(100vw - 120px); font-size: 11px; top: calc(96px + var(--sat)); }
@@ -478,4 +478,42 @@ img.petbig { width: 96px; height: 96px; }
   #hEvent { top: calc(92px + var(--sat)); }
   #mini { top: calc(52px + var(--sat)); }
   #banner .bn { font-size: 24px; }
+}
+
+/* ---------- Nhảy múa ---------- */
+#btnEmo {
+  position: fixed; right: calc(22px + var(--sar)); bottom: calc(122px + var(--sab)); width: 56px; height: 56px; border-radius: 50%; z-index: 5;
+  border: 3px solid #fff; background: radial-gradient(circle at 35% 28%, #fff1b8, #ffb347 75%); font-size: 26px; line-height: 1;
+  box-shadow: 0 3px 0 #e08a1e, 0 5px 12px rgba(160,90,20,.35); touch-action: manipulation;
+}
+#btnEmo:active { transform: scale(.92); }
+#emoPop {
+  position: fixed; right: calc(10px + var(--sar)); bottom: calc(186px + var(--sab)); width: min(340px, calc(100vw - 20px)); z-index: 15;
+  background: #fffafc; border-radius: 20px; padding: 10px; box-shadow: 0 5px 0 #ffc4dc, 0 10px 30px rgba(120,40,90,.3); display: none; color: #6b3d5a;
+}
+#emoPop.on { display: block; animation: pop .18s ease-out; }
+#emoPop .emh { font-weight: 900; margin: 2px 4px 8px; }
+#emoPop .emh small { font-weight: 600; color: #a06b86; margin-left: 4px; }
+#emoPop .emg { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+#emoPop .emg4 { grid-template-columns: repeat(2, 1fr); }
+#emoPop .emg button { border: 0; background: #fff0f6; border-radius: 14px; padding: 6px 2px; display: flex; flex-direction: column; align-items: center; color: #6b3d5a; font-family: inherit; }
+#emoPop .emg button b { font-size: 24px; line-height: 1.1; }
+#emoPop .emg button span { font-size: 11px; font-weight: 800; }
+#emoPop .emg button i { font-size: 9.5px; color: #a06b86; font-style: normal; }
+#emoPop .emg4 button { padding: 10px 4px; } #emoPop .emg4 button b { font-size: 30px; } #emoPop .emg4 button span { font-size: 14px; }
+#emoPop .emg button:active { transform: scale(.93); }
+#emoPop .emg button.ok { background: #c8f2d6; } #emoPop .emg button.no { background: #ffd0d8; }
+#emoPop .emgame { width: 100%; margin-top: 8px; }
+#emoPop .emcmd { font-weight: 800; font-size: 16px; margin: 2px 2px 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+#emoPop .embar { height: 6px; background: #ffe0ec; border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+#emoPop .embar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #ff6f9f, #ffb347); }
+#emoPop .emres { text-align: center; font-size: 22px; margin: 6px 0 10px; } #emoPop .emres b { font-size: 26px; color: #e0608e; } #emoPop .emres small { font-size: 13px; color: #a06b86; }
+@keyframes pop { from { transform: scale(.9); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (max-width: 520px) {
+  #btnEmo { right: calc(108px + var(--sar)); bottom: calc(86px + var(--sab)); width: 52px; height: 52px; font-size: 24px; }
+  #emoPop { bottom: calc(160px + var(--sab)); }
+}
+@media (max-height: 430px) {
+  #btnEmo { bottom: calc(96px + var(--sab)); width: 50px; height: 50px; font-size: 22px; }
+  #emoPop { bottom: calc(10px + var(--sab)); right: calc(84px + var(--sar)); max-height: calc(100vh - 20px); overflow: auto; }
 }

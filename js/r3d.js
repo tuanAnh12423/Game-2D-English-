@@ -106,21 +106,45 @@
   function chibi(look) {
     look = look || {};
     const g = new THREE.Group(), root = new THREE.Group(); g.add(root);
-    const skin = tm(look.skin || '#ffe0c7'), hairM = tm(look.hair || '#5d3a2e'), shirt = tm(look.shirt || '#7ec8f0'), pants = tm(look.pants || '#5c6b9a'), shoes = tm(look.shoes || '#8d6e63');
+    const skin = tm(look.skin || '#ffe0c7'), hairM = tm(look.hair || '#5d3a2e'), shirt = tm(look.shirt || '#7ec8f0'), pants = tm(look.pants || '#5c6b9a');
+    const shoes = tm(look.shoes || '#8d6e63');
+    const dress = look.top === 'dress', skirt = look.bottom === 'skirt', shorts = look.bottom === 'shorts';
+    const legMat = dress || skirt ? skin : pants;
+    // thân + áo
     const body = new THREE.Mesh(gget('body', () => new THREE.CylinderGeometry(0.17, 0.23, 0.4, 10)), shirt); body.position.y = 0.43; root.add(body);
-    if (look.belt) { const bl = new THREE.Mesh(gget('belt', () => new THREE.CylinderGeometry(0.205, 0.215, 0.05, 10)), tm(look.belt)); bl.position.y = 0.3; root.add(bl); }
+    if (dress) { const sk = new THREE.Mesh(gget('dress', () => new THREE.CylinderGeometry(0.2, 0.36, 0.3, 14)), shirt); sk.position.y = 0.24; root.add(sk); }
+    else if (skirt) { const sk = new THREE.Mesh(gget('skirt', () => new THREE.CylinderGeometry(0.22, 0.32, 0.2, 14)), pants); sk.position.y = 0.26; root.add(sk); }
+    if (!look.top) { // đồng phục kỹ thuật viên: logo + thắt lưng
+      if (look.belt) { const bl = new THREE.Mesh(gget('belt', () => new THREE.CylinderGeometry(0.205, 0.215, 0.05, 10)), tm(look.belt)); bl.position.y = 0.3; root.add(bl); }
+      const logo = new THREE.Mesh(gget('logo', () => new THREE.CircleGeometry(0.045, 10)), basic('#ffffff')); logo.position.set(0.08, 0.5, 0.2); logo.rotation.x = -0.15; root.add(logo);
+    } else if (look.top === 'shirt' || look.top === 'polo') {
+      const col = new THREE.Mesh(gget('collar', () => new THREE.TorusGeometry(0.13, 0.03, 5, 14)), look.top === 'shirt' ? tm('#ffffff') : shirt); col.rotation.x = Math.PI / 2; col.position.y = 0.63; root.add(col);
+    } else if (look.top === 'hoodie') {
+      const hood = new THREE.Mesh(gget('hood', () => new THREE.TorusGeometry(0.15, 0.06, 6, 14)), shirt); hood.rotation.x = Math.PI / 2 - 0.5; hood.position.set(0, 0.64, -0.06); root.add(hood);
+      const pk = new THREE.Mesh(gget('pocket', () => new THREE.BoxGeometry(0.2, 0.08, 0.02)), tm(G.shade ? G.shade(look.shirt, -0.12) : look.shirt)); pk.position.set(0, 0.36, 0.215); root.add(pk);
+    } else if (look.top === 'jacket') {
+      const inner = new THREE.Mesh(gget('inner', () => new THREE.BoxGeometry(0.1, 0.36, 0.02)), tm('#ffffff')); inner.position.set(0, 0.44, 0.205); inner.rotation.x = -0.15; root.add(inner);
+    }
+    if (look.bag) { const bp = new THREE.Mesh(gget('bag', () => new THREE.BoxGeometry(0.28, 0.3, 0.13)), tm(look.bag)); bp.position.set(0, 0.47, -0.25); root.add(bp); }
+    // chân
     const legs = [-1, 1].map((s) => {
       const l = new THREE.Group(); l.position.set(s * 0.085, 0.25, 0); root.add(l);
-      const lg = new THREE.Mesh(gget('leg', () => new THREE.CapsuleGeometry(0.065, 0.12, 3, 8)), pants); lg.position.y = -0.1; l.add(lg);
-      const sh = new THREE.Mesh(gget('shoe', () => new THREE.SphereGeometry(0.075, 8, 6)), shoes); sh.scale.set(1, 0.7, 1.3); sh.position.set(0, -0.2, 0.02); l.add(sh);
+      const lg = new THREE.Mesh(gget('leg', () => new THREE.CapsuleGeometry(0.065, 0.12, 3, 8)), shorts ? skin : legMat); lg.position.y = -0.1; l.add(lg);
+      if (shorts) { const sp = new THREE.Mesh(gget('short', () => new THREE.CylinderGeometry(0.08, 0.08, 0.1, 8)), pants); sp.position.y = -0.02; l.add(sp); }
+      const st = look.shoeType;
+      const sh = new THREE.Mesh(st === 'boot' ? gget('boot', () => new THREE.CylinderGeometry(0.075, 0.08, 0.16, 8)) : gget('shoe', () => new THREE.SphereGeometry(0.075, 8, 6)), shoes);
+      if (st === 'boot') sh.position.set(0, -0.16, 0.01); else { sh.scale.set(1, st === 'sandal' ? 0.4 : 0.7, 1.3); sh.position.set(0, -0.2, 0.02); }
+      l.add(sh);
       return l;
     });
     const arms = [-1, 1].map((s) => {
       const a = new THREE.Group(); a.position.set(s * 0.22, 0.58, 0); a.rotation.z = s * 0.28; root.add(a);
-      const am = new THREE.Mesh(gget('arm', () => new THREE.CapsuleGeometry(0.052, 0.15, 3, 8)), shirt); am.position.y = -0.1; a.add(am);
+      const am = new THREE.Mesh(gget('arm', () => new THREE.CapsuleGeometry(0.052, 0.15, 3, 8)), look.top === 'tee' || look.top === 'polo' || dress ? skin : shirt); am.position.y = -0.1; a.add(am);
+      if (look.top === 'tee' || look.top === 'polo' || dress) { const sl = new THREE.Mesh(gget('sleeve', () => new THREE.SphereGeometry(0.068, 8, 6)), shirt); sl.position.y = -0.01; a.add(sl); }
       const hd = new THREE.Mesh(gget('hand', () => new THREE.SphereGeometry(0.055, 8, 6)), skin); hd.position.y = -0.22; a.add(hd);
       return a;
     });
+    // đầu
     const head = new THREE.Group(); head.position.y = 0.9; root.add(head);
     const hd = new THREE.Mesh(gget('head', () => new THREE.SphereGeometry(0.31, 18, 14)), skin); hd.scale.set(1.06, 0.96, 1); head.add(hd);
     const hair = new THREE.Mesh(gget('hairtop', () => new THREE.SphereGeometry(0.335, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.52)), hairM);
@@ -129,31 +153,72 @@
     if (look.long) {
       const lh = new THREE.Mesh(gget('hairlong', () => new THREE.CapsuleGeometry(0.2, 0.25, 4, 10)), hairM); lh.position.set(0, -0.25, -0.16); lh.scale.set(1.25, 1, 0.7); head.add(lh);
       [-1, 1].forEach((s) => { const bun = new THREE.Mesh(gget('bun', () => new THREE.SphereGeometry(0.1, 10, 8)), hairM); bun.position.set(s * 0.29, 0.1, -0.06); head.add(bun); });
-      const bow = new THREE.Mesh(gget('bow', () => new THREE.TorusGeometry(0.06, 0.03, 6, 12)), tm(look.bowCol || '#ff6f9f')); bow.position.set(0.19, 0.27, 0.06); bow.rotation.y = 0.5; head.add(bow);
+      if (!look.hat) { const bow = new THREE.Mesh(gget('bow', () => new THREE.TorusGeometry(0.06, 0.03, 6, 12)), tm(look.bowCol || '#ff6f9f')); bow.position.set(0.19, 0.27, 0.06); bow.rotation.y = 0.5; head.add(bow); }
     }
-    if (look.cap) {
-      const cap = new THREE.Mesh(gget('cap', () => new THREE.SphereGeometry(0.345, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.36)), tm(look.cap)); cap.position.y = 0.04; cap.rotation.x = -0.2; head.add(cap);
-      const brim = new THREE.Mesh(gget('brim', () => new THREE.CylinderGeometry(0.2, 0.2, 0.03, 12, 1, false, -Math.PI / 2, Math.PI)), tm(look.cap)); brim.position.set(0, 0.17, 0.2); brim.rotation.x = 0.15; head.add(brim);
+    const hatT = look.hat || (look.cap ? 'cap' : null);
+    if (hatT && look.cap) {
+      const hm = tm(look.cap);
+      if (hatT === 'sun') {
+        const brim = new THREE.Mesh(gget('sunbrim', () => new THREE.CylinderGeometry(0.42, 0.42, 0.025, 20)), hm); brim.position.y = 0.19; brim.rotation.x = -0.3; head.add(brim);
+        const crown = new THREE.Mesh(gget('suncrown', () => new THREE.SphereGeometry(0.3, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2)), hm); crown.position.y = 0.15; crown.rotation.x = -0.12; head.add(crown);
+        const band = new THREE.Mesh(gget('band', () => new THREE.TorusGeometry(0.29, 0.022, 5, 18)), tm('#ffffff')); band.rotation.x = Math.PI / 2 - 0.12; band.position.y = 0.19; head.add(band);
+      } else if (hatT === 'beanie') {
+        const bn = new THREE.Mesh(gget('beanie', () => new THREE.SphereGeometry(0.345, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.42)), hm); bn.position.y = 0.03; bn.rotation.x = -0.15; head.add(bn);
+        const pom = new THREE.Mesh(gget('pom', () => new THREE.SphereGeometry(0.07, 8, 6)), tm('#ffffff')); pom.position.set(0, 0.38, -0.05); head.add(pom);
+      } else {
+        const cap = new THREE.Mesh(gget('cap', () => new THREE.SphereGeometry(0.345, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.36)), hm); cap.position.y = 0.04; cap.rotation.x = -0.2; head.add(cap);
+        const brim = new THREE.Mesh(gget('brim', () => new THREE.CylinderGeometry(0.2, 0.2, 0.03, 12, 1, false, -Math.PI / 2, Math.PI)), hm); brim.position.set(0, 0.17, 0.2); brim.rotation.x = 0.15; head.add(brim);
+      }
     }
+    // khuôn mặt
     [-1, 1].forEach((s) => {
       const e = new THREE.Mesh(gget('eye', () => new THREE.SphereGeometry(0.056, 10, 8)), EYE); e.scale.set(0.85, 1.2, 0.45); e.position.set(s * 0.115, -0.03, 0.285); head.add(e);
       const h = new THREE.Mesh(gget('hi', () => new THREE.SphereGeometry(0.019, 6, 5)), HI); h.position.set(s * 0.115 + 0.02, 0.0, 0.31); head.add(h);
       const bl = new THREE.Mesh(gget('blush', () => new THREE.CircleGeometry(0.05, 12)), BLUSH); bl.position.set(s * 0.2, -0.11, 0.255); bl.rotation.y = s * 0.6; bl.scale.y = 0.6; head.add(bl);
-      if (look.glasses) { const gl = new THREE.Mesh(gget('glass', () => new THREE.TorusGeometry(0.07, 0.012, 5, 14)), EYE); gl.position.set(s * 0.115, -0.03, 0.3); head.add(gl); }
+      if (look.glasses === 'sun') { const gl = new THREE.Mesh(gget('lens', () => new THREE.CircleGeometry(0.075, 14)), basic('#2a2230')); gl.position.set(s * 0.115, -0.02, 0.315); head.add(gl); }
+      else if (look.glasses) { const gl = new THREE.Mesh(gget('glass', () => new THREE.TorusGeometry(0.07, 0.012, 5, 14)), EYE); gl.position.set(s * 0.115, -0.03, 0.3); head.add(gl); }
     });
+    if (look.glasses) { const br = new THREE.Mesh(gget('bridge', () => new THREE.BoxGeometry(0.07, 0.012, 0.012)), EYE); br.position.set(0, -0.02, 0.31); head.add(br); }
     const mouth = new THREE.Mesh(gget('mouth', () => new THREE.TorusGeometry(0.03, 0.01, 5, 10, Math.PI)), EYE); mouth.position.set(0, -0.12, 0.29); mouth.rotation.z = Math.PI; head.add(mouth);
     g.add(blob(0.3));
     g.scale.setScalar(1.15);
     let ph = Math.random() * 6;
+    const ease = (t, d) => Math.min(1, t / 0.25, (d - t) / 0.3);
     return {
       g,
-      anim(dt, moving) {
+      // emo = { id, t, dur } khi đang làm động tác
+      anim(dt, moving, emo) {
         ph += dt * (moving ? 11 : 2);
+        // tư thế gốc
+        root.rotation.set(0, 0, 0); root.position.y = 0; head.rotation.set(0, 0, 0);
+        arms.forEach((a, i) => { a.rotation.set(0, 0, (i ? 1 : -1) * 0.28); });
+        legs.forEach((l) => l.rotation.set(0, 0, 0));
+        if (emo && !moving) {
+          const t = emo.t, k = Math.max(0, ease(t, emo.dur)), S2 = (i) => (i ? 1 : -1);
+          switch (emo.id) {
+            case 'dance': {
+              const b = t * 8;
+              root.position.y = Math.abs(Math.sin(b)) * 0.08 * k; root.rotation.y = Math.sin(b / 2) * 0.6 * k; root.rotation.z = Math.sin(b) * 0.08 * k;
+              arms.forEach((a, i) => { a.rotation.z = S2(i) * (0.28 + k * (1.6 + Math.sin(b + i * Math.PI) * 0.9)); });
+              legs.forEach((l, i) => { l.rotation.x = Math.sin(b + i * Math.PI) * 0.45 * k; });
+              head.rotation.z = Math.sin(b) * 0.18 * k; break;
+            }
+            case 'wave': arms[1].rotation.z = 0.28 + k * (2.4 + Math.sin(t * 14) * 0.35); head.rotation.z = -0.1 * k; root.rotation.z = Math.sin(t * 7) * 0.03; break;
+            case 'jump': { const j = Math.abs(Math.sin(t * Math.PI * 1.4)); root.position.y = j * 0.5 * k; arms.forEach((a, i) => { a.rotation.z = S2(i) * (0.28 + j * 2.2 * k); }); legs.forEach((l, i) => { l.rotation.x = -j * 0.5 * k * (i ? 1 : 0.6); }); break; }
+            case 'spin': { const u = Math.min(1, t / (emo.dur * 0.85)); root.rotation.y = (1 - Math.cos(u * Math.PI)) * Math.PI * 2; arms.forEach((a, i) => { a.rotation.z = S2(i) * (0.28 + 1.2 * k); }); root.position.y = Math.sin(u * Math.PI) * 0.1; break; }
+            case 'clap': arms.forEach((a, i) => { a.rotation.x = -1.35 * k; a.rotation.z = -S2(i) * (0.05 + Math.abs(Math.sin(t * 9)) * 0.3) * k; }); root.position.y = Math.abs(Math.sin(t * 9)) * 0.02; break;
+            case 'cheer': { const j = Math.abs(Math.sin(t * 6)); root.position.y = j * 0.15 * k; arms.forEach((a, i) => { a.rotation.z = S2(i) * (0.28 + 2.5 * k) + Math.sin(t * 12 + i) * 0.15; }); break; }
+            case 'bow': root.rotation.x = 0.55 * k; arms.forEach((a, i) => { a.rotation.z = S2(i) * 0.1; }); break;
+            case 'heart': arms.forEach((a, i) => { a.rotation.z = S2(i) * (0.28 + 2.55 * k); a.rotation.x = -0.25 * k; }); head.rotation.z = Math.sin(t * 3) * 0.1; root.position.y = Math.abs(Math.sin(t * 3)) * 0.03; break;
+            case 'sit': root.position.y = -0.2 * k; legs.forEach((l) => { l.rotation.x = -1.45 * k; }); arms.forEach((a, i) => { a.rotation.x = -0.6 * k; }); head.rotation.z = Math.sin(t * 1.5) * 0.06; break;
+            case 'sleep': head.rotation.z = 0.35 * k; head.rotation.x = 0.2 * k; root.rotation.z = Math.sin(t * 1.6) * 0.05 * k; arms.forEach((a, i) => { a.rotation.z = S2(i) * 0.12; }); break;
+          }
+          return;
+        }
         const s = moving ? Math.sin(ph) : 0;
         legs[0].rotation.x = s * 0.75; legs[1].rotation.x = -s * 0.75;
         arms[0].rotation.x = -s * 0.8; arms[1].rotation.x = s * 0.8;
-        const b = moving ? Math.abs(Math.sin(ph)) * 0.05 : Math.sin(ph) * 0.01;
-        root.position.y = b;
+        root.position.y = moving ? Math.abs(Math.sin(ph)) * 0.05 : Math.sin(ph) * 0.01;
         head.rotation.z = moving ? 0 : Math.sin(ph * 0.5) * 0.05;
       },
     };
@@ -603,6 +668,38 @@
     return true;
   };
 
+  // ảnh chân dung 3D (dùng cho tủ đồ / cửa hàng quần áo): dirs 0 trước, 1 trái, 2 phải, 3 sau
+  R3.portrait = function (look, dirs, size) {
+    const n = dirs.length, w = Math.round(size * 0.8), h = size, sc = 2;
+    const rt = new THREE.WebGLRenderTarget(w * n * sc, h * sc, { samples: 4 });
+    const sc2 = new THREE.Scene();
+    sc2.add(new THREE.HemisphereLight('#ffffff', '#e8d6e8', 1.25));
+    const dl = new THREE.DirectionalLight('#ffffff', 1.4); dl.position.set(2, 4, 5); sc2.add(dl);
+    dirs.forEach((d, i) => {
+      const c = chibi(look); c.anim(0, false);
+      c.g.position.set((i - (n - 1) / 2) * 1.2, 0, 0);
+      c.g.rotation.y = [0, -Math.PI / 2, Math.PI / 2, Math.PI][d] || 0;
+      c.g.children[c.g.children.length - 1].visible = false;
+      sc2.add(c.g);
+    });
+    const cam = new THREE.OrthographicCamera(-n * 0.6, n * 0.6, 1.5, 0, 0.1, 20);
+    cam.position.set(0, 0.85, 6); cam.lookAt(0, 0.75, 0); cam.top = 0.78; cam.bottom = -0.72; cam.updateProjectionMatrix();
+    const prev = renderer.getRenderTarget();
+    renderer.setRenderTarget(rt); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(sc2, cam);
+    const px = new Uint8Array(w * n * sc * h * sc * 4);
+    renderer.readRenderTargetPixels(rt, 0, 0, w * n * sc, h * sc, px);
+    renderer.setRenderTarget(prev); renderer.setClearColor(0x000000, 1);
+    rt.dispose();
+    const cv = document.createElement('canvas'); cv.width = w * n * sc; cv.height = h * sc;
+    const ctx = cv.getContext('2d'), img = ctx.createImageData(cv.width, cv.height), row = cv.width * 4;
+    const lut = new Uint8Array(256); // ảnh render ra là màu tuyến tính → đổi sang sRGB cho đúng màu
+    for (let i = 0; i < 256; i++) { const v = i / 255; lut[i] = Math.round(255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055)); }
+    for (let i = 0; i < px.length; i += 4) { px[i] = lut[px[i]]; px[i + 1] = lut[px[i + 1]]; px[i + 2] = lut[px[i + 2]]; }
+    for (let y = 0; y < cv.height; y++) img.data.set(px.subarray((cv.height - 1 - y) * row, (cv.height - y) * row), y * row);
+    ctx.putImageData(img, 0, 0);
+    return cv.toDataURL();
+  };
+  R3.emote = function (id, dur) { R3.emo = { id, t: 0, dur: dur || 2.5 }; };
   R3.setQuality = function (q) {
     R3.quality = q;
     const dpr = window.devicePixelRatio || 1;
@@ -631,7 +728,7 @@
     e.seen = R3.frame;
     return e;
   }
-  function placeWalker(e, x, y, dt, faceDir) {
+  function placeWalker(e, x, y, dt, faceDir, emo) {
     const g = e.obj.g;
     const nx = x / S, nz = y / S;
     const dx = nx - g.position.x, dz = nz - g.position.z, d = Math.hypot(dx, dz);
@@ -641,7 +738,7 @@
     g.position.set(nx, 0, nz);
     if (e.ang !== undefined) { let dr = e.ang - g.rotation.y; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); g.rotation.y += dr * Math.min(1, dt * 12); }
     e.mvT = moving ? 0.12 : Math.max(0, (e.mvT || 0) - dt);
-    e.obj.anim(dt, e.mvT > 0);
+    e.obj.anim(dt, e.mvT > 0 && !(emo && emo.pet), emo && !emo.pet ? emo : undefined);
   }
   const lookKey = (l) => JSON.stringify(l);
 
@@ -654,19 +751,26 @@
     if (me && me.lk !== lk) { scene.remove(me.obj.g); R3.ents.delete('me'); me = null; }
     me = ent('me', () => ({ obj: chibi(look), lk }));
     if (me.ang === undefined) me.obj.g.position.set(p.x / S, 0, p.y / S);
-    placeWalker(me, p.x, p.y, dt, p.dir);
+    const emo = R3.emo;
+    if (emo) { emo.t += dt; if (emo.t > emo.dur || p.moving) R3.emo = null; }
+    placeWalker(me, p.x, p.y, dt, p.dir, R3.emo);
+    if (R3.emo && (R3.emo.id === 'heart' || R3.emo.id === 'dance') && (R3.emo.hz = (R3.emo.hz || 0) - dt) <= 0) { R3.emo.hz = 0.45; game.hearts(p.x, p.y - 44, 2); }
+    if (R3.emo && R3.emo.id === 'sleep' && (R3.emo.hz = (R3.emo.hz || 0) - dt) <= 0) { R3.emo.hz = 1.1; game.float('💤', p.x + 12, p.y - 50, '#ffffff'); }
     // thú cưng
     const pk = s.profile.pet;
     if (pk && G.PETS[pk]) {
       const pt = G.petFollow(game, p.x, p.y, p.dir, dt);
       const e = ent('pet:' + pk, () => ({ obj: pet3d(pk) }));
       placeWalker(e, pt.x, pt.y, dt, pt.dir);
+      if (R3.emo) { e.obj.anim(dt, true); e.obj.g.rotation.y = Math.atan2(p.x / S - e.obj.g.position.x, p.y / S - e.obj.g.position.z); }
     }
     // NPC (chỉ những ai ở gần)
     game.npcs.forEach((n, i) => {
       if (Math.abs(n.x - p.x) > 30 * S || Math.abs(n.y - p.y) > 24 * S) return;
       const e = ent('npc:' + i + ':' + (n.name || ''), () => ({ obj: chibi(n.look) }));
-      placeWalker(e, n.x, n.y, dt, n.dir);
+      // người chơi nhảy ở gần → NPC nhảy theo
+      const near = R3.emo && (R3.emo.id === 'dance' || R3.emo.id === 'cheer' || R3.emo.id === 'clap') && Math.hypot(n.x - p.x, n.y - p.y) < 4 * S;
+      placeWalker(e, n.x, n.y, dt, n.dir, near ? { id: R3.emo.id, t: R3.emo.t + i * 0.13, dur: R3.emo.dur } : undefined);
     });
     // người chơi online
     if (G.online && G.online.peers) Object.entries(G.online.peers).forEach(([id, pr]) => {

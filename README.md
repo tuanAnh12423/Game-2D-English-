@@ -157,3 +157,9 @@ Logic game (nhiệm vụ, từ vựng, trại, sự kiện…) giữ nguyên, ch
 - ⚙️ Cài đặt → **Góc nhìn 3D** (Gần/Vừa/Xa) và **Chất lượng** (Tự động/Đẹp/Vừa/Mượt nhất).
 - Chế độ Tự động: máy chậm thì tự giảm độ nét, rồi tắt bóng đổ để chơi mượt.
 - Tối ưu: mặt đất gộp 1 khối mỗi vùng, cây/hoa vẽ hàng loạt (instancing), bóng đổ tĩnh chỉ vẽ lại khi đi xa, không dùng đèn điểm, vẽ thưa khi đang mở bảng.
+
+## 🎭 Giọng diễn cảm, 💃 nhảy múa, 👗 thay đồ
+- **Giọng diễn cảm** (`G.tts.say` trong `js/util.js`): tách câu thành cụm, lên giọng khi hỏi Yes/No, hơi lên ở dấu phẩy, vui tươi khi chào/khen/cảm thán, hạ giọng cuối câu kể. Tắt/bật ở ⚙️ Cài đặt → 🎭.
+- **Nút 💃** (`js/emote.js`): 10 động tác 3D (dance, wave, jump, spin, clap, cheer, bow, heart, sit down, sleepy), mỗi động tác dạy 1 từ + 1 câu (+3 XP lần đầu mỗi ngày). NPC đứng gần nhảy theo, thú cưng nhảy quanh.
+  Trò chơi **Nhảy theo lệnh**: nghe lệnh tiếng Anh (“Clap your hands!”) → bấm đúng động tác, 8 vòng, nhanh dần; thưởng XP + xu 3 lần/ngày.
+- **Nút 👗**: mở tủ đồ ở bất cứ đâu, ảnh xem trước 3D. Người chơi được tặng sẵn 12 món (áo thun, hoodie, váy, chân váy, quần short, jean, giày, mũ rộng vành, mũ len, kính, ba lô). Mua thêm ở Trung Tâm Thương Mại.

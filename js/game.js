@@ -42,6 +42,7 @@ G.game = {
     // bản lưu cũ chưa có xpv thì phải đổi XP sang đường cong mới (newState đã gán sẵn xpv: 2)
     if (saved && saved.xpv !== 2) this.state.xpv = 0;
     this.migrate(this.state);
+    if (this.giftMsg) { this.giftMsg = false; setTimeout(() => G.ui.toast('🎁 Quà tặng 12 món quần áo! Bấm 👗 để thay đồ, bấm 💃 để nhảy múa.'), 5000); }
     const s = this.state;
     s.profile = Object.assign({ name: 'Minh', gender: 'm', skin: 0, hair: 0, shirt: 0 }, s.profile || {});
     G.work.cfg();
@@ -81,6 +82,14 @@ G.game = {
   },
   // chuyển file lưu bản cũ sang bản mới
   migrate(s) {
+    // quà tặng tủ đồ: ai cũng có vài bộ để thay ngay từ đầu
+    s.wardrobe = s.wardrobe || {}; s.wardrobe.owned = s.wardrobe.owned || []; s.wardrobe.wear = s.wardrobe.wear || {};
+    if (!s.wardrobe.gift) {
+      s.wardrobe.gift = 1;
+      [['tee', 'white'], ['tee', 'pink'], ['hoodie', 'purple'], ['dress', 'yellow'], ['shorts', 'beige'], ['skirt', 'pink'], ['jeans', 'blue'], ['sneakers', 'white'], ['sunhat', 'pink'], ['beanie', 'yellow'], ['glasses', 'black'], ['backpack', 'pink']]
+        .forEach(([id, c]) => { if (!s.wardrobe.owned.some((o) => o.id === id && o.c === c)) s.wardrobe.owned.push({ id, c }); });
+      this.giftMsg = true;
+    }
     if (s.xpv !== 2) {
       const oldFor = (L) => 40 * L * (L - 1);
       let L = 1; while ((s.xp || 0) >= oldFor(L + 1)) L++;
