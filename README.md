@@ -150,3 +150,8 @@ Chạy thử trên máy tính: `python3 -m http.server` trong thư mục game r�
 
 ## Ghi công đồ hoạ
 - Tiny Town, Tiny Farm — Kenney (www.kenney.nl), CC0 1.0. Không bắt buộc ghi công, nhưng cảm ơn Kenney!
+
+## 🧊 Bản thử 3D
+Mở `3d.html` (hoặc Cài đặt → Đồ hoạ → 🧊 3D). Dựng lại bản đồ thật của game bằng Three.js (MIT, `js/lib/three.min.js`):
+chạm để đi, chạm quả cầu chữ để học từ và nghe phát âm, nút ☀️/🌇/🌙 đổi ngày đêm, ＋/－ phóng to, ↻ xoay camera.
+Bản thử chưa có vào nhà, nhiệm vụ, lưu tiến độ — các phần đó vẫn chơi ở bản 2D.

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Tech English 3D (bản thử)</title>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #bfe9ff; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; touch-action: none; -webkit-user-select: none; user-select: none; }
+    #app canvas { display: block; }
+    .hud { position: fixed; z-index: 5; }
+    #region { top: calc(10px + env(safe-area-inset-top)); left: 10px; background: #fffffff0; color: #7a3b5c; padding: 7px 13px; border-radius: 16px; font-weight: 700; font-size: 14px; box-shadow: 0 3px 0 #f3c3d6; }
+    #region small { display: block; font-weight: 500; color: #a06b86; font-size: 12px; }
+    #btns { top: calc(10px + env(safe-area-inset-top)); right: 10px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; max-width: 60vw; }
+    .b { border: 0; background: #fff; color: #7a3b5c; font-size: 17px; font-weight: 700; min-width: 42px; height: 42px; border-radius: 14px; box-shadow: 0 3px 0 #f3c3d6; padding: 0 10px; cursor: pointer; }
+    .b:active { transform: translateY(2px); box-shadow: 0 1px 0 #f3c3d6; }
+    #hint { bottom: calc(14px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: #fffffff0; color: #7a3b5c; padding: 8px 14px; border-radius: 16px; font-size: 13px; white-space: nowrap; box-shadow: 0 3px 0 #f3c3d6; }
+    #card { left: 50%; bottom: calc(64px + env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(340px, calc(100vw - 32px)); background: #fff; border-radius: 22px; padding: 16px 18px; box-shadow: 0 6px 0 #f3c3d6, 0 10px 30px #0002; display: none; color: #5b3348; }
+    #card .en { font-size: 26px; font-weight: 800; color: #e0608e; }
+    #card .ipa { color: #a06b86; font-size: 14px; margin-left: 6px; }
+    #card .vi { font-size: 17px; margin: 4px 0 8px; }
+    #card .ex { font-style: italic; background: #fff3f8; border-radius: 12px; padding: 8px 10px; font-size: 14px; }
+    #card .row { display: flex; gap: 8px; margin-top: 12px; }
+    #card .row .b { flex: 1; font-size: 15px; }
+    #card .cat { font-size: 12px; color: #a06b86; }
+    #toast { top: 30%; left: 50%; transform: translateX(-50%); background: #7a3b5ce8; color: #fff; padding: 9px 16px; border-radius: 16px; font-size: 14px; display: none; text-align: center; max-width: 80vw; }
+    #load { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #ffe9f2; color: #7a3b5c; font-weight: 700; z-index: 9; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <div id="load">Đang dựng thế giới 3D… 🌸</div>
+  <div id="app"></div>
+  <div id="region" class="hud">…</div>
+  <div id="btns" class="hud">
+    <button class="b" id="bTime" title="Ngày / đêm">☀️</button>
+    <button class="b" id="bIn" title="Phóng to">＋</button>
+    <button class="b" id="bOut" title="Thu nhỏ">－</button>
+    <button class="b" id="bRot" title="Xoay camera">↻</button>
+    <button class="b" id="bBack" title="Về bản 2D">2D</button>
+  </div>
+  <div id="hint" class="hud">👆 Chạm mặt đất để đi · chạm ✨ quả cầu chữ để học</div>
+  <div id="card" class="hud"></div>
+  <div id="toast" class="hud"></div>
+
+  <script src="js/util.js"></script>
+  <script src="js/data/words.js"></script>
+  <script src="js/data/words_more.js"></script>
+  <script src="js/data/regions.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/lib/three.min.js"></script>
+  <script src="js/view3d.js"></script>
+</body>
+</html>
