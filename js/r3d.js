@@ -821,6 +821,10 @@
       R3.ents.forEach((e) => scene.remove(e.obj.g)); R3.ents.clear();
       if (G.mall) G.mall.imgCache = {};
     });
+    if (REAL && G.people) G.people.onChange = () => { // tải xong 1 bộ hoá trang → dựng lại nhân vật, ảnh tủ đồ
+      R3.ents.forEach((e) => scene.remove(e.obj.g)); R3.ents.clear();
+      if (G.mall) { G.mall.imgCache = {}; const pv = document.querySelector('#panel .bigprev'); if (pv && G.ui.isOpen()) { G.mall.keepW = true; G.mall.wardrobe(!document.querySelector('#panel [data-mt]')); } }
+    };
     const BASE = BASE_OF();
     W.regions.forEach((r) => { buildGround(r, BASE); buildRegionProps(r); });
     buildBuildings();

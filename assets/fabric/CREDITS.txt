@@ -1,0 +1,11 @@
+Vân vải từ Poly Haven — CC0
+denim: denim_fabric (https://polyhaven.com/a/denim_fabric)
+jersey: cotton_jersey (https://polyhaven.com/a/cotton_jersey)
+knit: knitted_fleece (https://polyhaven.com/a/knitted_fleece)
+leather: brown_leather (https://polyhaven.com/a/brown_leather)
+linen: rough_linen (https://polyhaven.com/a/rough_linen)
+velvet: velour_velvet (https://polyhaven.com/a/velour_velvet)
+wool: poly_wool_herringbone (https://polyhaven.com/a/poly_wool_herringbone)
+boucle: wool_boucle (https://polyhaven.com/a/wool_boucle)
+gingham: gingham_check (https://polyhaven.com/a/gingham_check)
+jacquard: quatrefoil_jacquard_fabric (https://polyhaven.com/a/quatrefoil_jacquard_fabric)

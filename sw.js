@@ -1,5 +1,5 @@
 // Bộ nhớ đệm để chơi offline. Mỗi lần cập nhật game, tăng số phiên bản.
-const CACHE = 'tech-english-v20';
+const CACHE = 'tech-english-v21';
 const FILES = [
   './', './index.html', './css/style.css', './manifest.json',
   './js/util.js', './js/icons.js', './js/world.js', './js/input.js', './js/game.js', './js/ui.js', './js/main.js',

@@ -52,81 +52,248 @@
     const footY = Math.min(U('ball_l'), U('foot_l')) - (U('foot_l') - U('ball_l')) * 0.6;
     const headTop = U('Head') + (U('Head') - U('neck_01')) * 2.2;
     const meshH = headTop - footY;
+    // hướng mặt: từ xương đầu tới tâm hai mắt
+    let eyes = null; scene.traverse((o) => { if (o.isMesh && /Eye/i.test(o.name) && !/brow/i.test(o.name)) eyes = o; });
+    const fwd = new THREE.Vector3().crossVectors(up, side);
+    if (eyes) {
+      eyes.geometry.computeBoundingBox(); const ec = new THREE.Vector3(); eyes.geometry.boundingBox.getCenter(ec);
+      const df = ec.sub(bp.Head); if (df.dot(fwd) < 0) fwd.negate();
+    }
+    fwd.normalize();
     tpl[sex] = {
-      gltf, scale: TARGET_H / h, up, side,
-      J: { foot: footY, ankle: U('foot_l'), knee: U('calf_l'), hip: U('thigh_l'), neck: U('neck_01'), head: U('Head'), sh: X('upperarm_l'), el: X('lowerarm_l'), wr: X('hand_l'), H: meshH, cx: bp.pelvis.dot(side) },
+      gltf, scale: TARGET_H / h, up, side, fwd, bp,
+      J: { foot: footY, ankle: U('foot_l'), knee: U('calf_l'), hip: U('thigh_l'), neck: U('neck_01'), head: U('Head'), sh: X('upperarm_l'), el: X('lowerarm_l'), wr: X('hand_l'), H: meshH,
+        cx: bp.pelvis.dot(side), f0: bp.pelvis.dot(fwd), hw: Math.abs(bp.thigh_l.dot(side) - bp.thigh_r.dot(side)) / 2 },
     };
   }
 
-  // ---------- shader quần áo ----------
+  // ---------- shader quần áo (thời trang) ----------
+  const FAB = { denim: 0, jersey: 1, knit: 2, leather: 3, linen: 4, velvet: 5, wool: 6, boucle: 7, gingham: 8, jacquard: 9 };
+  const PAT = { stripes: 1, dots: 2, plaid: 3, floral: 4, sport: 5 };
+  const NECK = { round: 0, V: 1, collar: 2, turtle: 3, mandarin: 4 };
+  let fabTex = null;
+  const fabric = () => fabTex || (fabTex = (() => { const t = new THREE.TextureLoader().load('assets/fabric/atlas.jpg'); t.colorSpace = THREE.NoColorSpace; t.anisotropy = 4; return t; })());
+
   function clothe(mat, t) {
     const J = t.J;
+    const v4 = () => new THREE.Vector4(), c = () => new THREE.Color();
     const u = {
-      uUp: { value: t.up }, uSide: { value: t.side },
+      uUp: { value: t.up }, uSide: { value: t.side }, uFwd: { value: t.fwd }, uFab: { value: fabric() },
       uJ: { value: new THREE.Vector4(J.hip, J.knee, J.ankle, J.neck) },
       uJ2: { value: new THREE.Vector4(J.sh, J.el, J.wr, J.H) },
-      uJ3: { value: new THREE.Vector4(J.foot, J.cx, J.head, 0) },
-      uShirt: { value: new THREE.Color() }, uPants: { value: new THREE.Color() }, uShoes: { value: new THREE.Color() }, uBelt: { value: new THREE.Color() },
-      uSkin: { value: new THREE.Color(1, 1, 1) },
-      uMode: { value: new THREE.Vector4(2, 0, 0, 0) }, // tay áo (0 không,1 ngắn,2 dài), quần (0 dài,1 short,2 váy), váy liền, thắt lưng
+      uJ3: { value: new THREE.Vector4(J.foot, J.cx, J.hw, J.f0) },
+      uShirt: { value: c() }, uShirt2: { value: c() }, uPants: { value: c() }, uPants2: { value: c() },
+      uShoes: { value: c() }, uSole: { value: c() }, uBelt: { value: c() }, uTie: { value: c() }, uSkin: { value: new THREE.Color(1, 1, 1) },
+      uT: { value: v4() }, uT2: { value: v4() }, uB: { value: v4() }, uX: { value: v4() },
     };
     mat.userData.u = u;
     mat.onBeforeCompile = (sh) => {
       Object.assign(sh.uniforms, u);
       sh.vertexShader = 'varying vec3 vBP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vBP = position;');
-      sh.fragmentShader = 'varying vec3 vBP;\nuniform vec3 uUp; uniform vec3 uSide; uniform vec4 uJ; uniform vec4 uJ2; uniform vec4 uJ3; uniform vec3 uShirt; uniform vec3 uPants; uniform vec3 uShoes; uniform vec3 uBelt; uniform vec3 uSkin; uniform vec4 uMode; float clothK;\n'
-        + sh.fragmentShader
-          .replace('#include <map_fragment>', `#include <map_fragment>
+      sh.fragmentShader = `varying vec3 vBP;
+uniform vec3 uUp, uSide, uFwd; uniform sampler2D uFab;
+uniform vec4 uJ, uJ2, uJ3, uT, uT2, uB, uX;
+uniform vec3 uShirt, uShirt2, uPants, uPants2, uShoes, uSole, uBelt, uTie, uSkin;
+float clothK; float clothR;
+float hsh(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453); }
+vec3 fabK(float idx, vec2 uv) {
+  if (idx < -0.5) return vec3(1.0);
+  vec2 tl = vec2(mod(idx, 4.0), floor(idx / 4.0));
+  vec2 f = fract(uv * 7.0);
+  vec2 a = vec2((tl.x + 0.03 + f.x * 0.94) / 4.0, 1.0 - (tl.y + 0.03 + f.y * 0.94) / 3.0);
+  return vec3(texture2D(uFab, a).r / 0.78);
+}
+vec3 patt(float p, vec2 uv, vec3 c1, vec3 c2) {
+  if (p > 0.5 && p < 1.5) return mix(c1, c2, step(0.5, fract(uv.y * 34.0)));
+  if (p > 1.5 && p < 2.5) return length(fract(uv * 46.0) - 0.5) < 0.2 ? c2 : c1;
+  if (p > 2.5 && p < 3.5) { float a = step(0.72, fract(uv.x * 16.0)), b = step(0.72, fract(uv.y * 16.0)); float th = step(0.93, fract(uv.x * 48.0)) + step(0.93, fract(uv.y * 48.0)); return mix(mix(c1, c2, max(a, b) * 0.55), c1 * 0.55, a * b * 0.6) * (1.0 - 0.12 * min(th, 1.0)); }
+  if (p > 3.5 && p < 4.5) { vec2 g = fract(uv * 30.0) - 0.5; float r = length(g); float ang = atan(g.y, g.x); float pet = 0.17 + 0.07 * cos(ang * 5.0); return r < 0.06 ? vec3(1.0, 0.85, 0.35) : r < pet ? c2 : c1; }
+  return c1;
+}
+` + sh.fragmentShader
+        .replace('#include <map_fragment>', `#include <map_fragment>
   {
-    float y = dot(vBP, uUp), H = uJ2.w, ax = abs(dot(vBP, uSide) - uJ3.y);
-    float hip = uJ.x, knee = uJ.y, ankle = uJ.z, neck = uJ.w;
+    float y = dot(vBP, uUp), H = uJ2.w, sx = dot(vBP, uSide) - uJ3.y, ax = abs(sx), f = dot(vBP, uFwd) - uJ3.w;
+    float hip = uJ.x, knee = uJ.y, ankle = uJ.z, neck = uJ.w, foot = uJ3.x, hw = uJ3.z;
+    bool front = f > 0.0;
     bool arm = ax > uJ2.x * 0.92 && y > hip - 0.02 * H;
-    vec3 c = vec3(-1.0);
-    // áo / tay áo
-    float topY = ax > uJ2.x * 0.45 ? neck + 0.03 * H : neck - 0.012 * H; // vai cao hơn cổ áo
+    vec2 uv = vMapUv;
+    vec3 c = vec3(-1.0); float region = 0.0; clothR = 0.88;
+    float neckT = uT.y;
+    // ---- áo ----
+    float topY = ax > uJ2.x * 0.45 ? neck + 0.03 * H : neck - 0.012 * H;
+    if (neckT > 1.5 && neckT < 2.5 && ax < 0.075 * H) topY = neck + 0.012 * H;            // cổ sơ mi
+    if (neckT > 2.5 && ax < 0.075 * H) topY = neck + (neckT > 3.5 ? 0.028 : 0.05) * H;     // cổ lọ / cổ áo dài
     if (y > hip - 0.015 * H && y < topY) {
-      if (!arm) c = uShirt;
-      else if (uMode.x > 1.5 ? ax < uJ2.z * 0.97 : uMode.x > 0.5 ? ax < uJ2.x + (uJ2.y - uJ2.x) * 0.45 : false) c = uShirt;
+      bool cov = !arm || (uT.x > 1.5 ? ax < uJ2.z * 0.97 : uT.x > 0.5 ? ax < uJ2.x + (uJ2.y - uJ2.x) * 0.45 : ax < uJ2.x * 1.02);
+      if (cov) { c = uShirt; region = 1.0; }
+      if (neckT > 0.5 && neckT < 1.5 && front && !arm && (neck + 0.012 * H - y) < (0.085 * H - ax * 1.4)) { c = vec3(-1.0); region = 0.0; } // cổ tim
+      if (uT2.y > 0.5 && !arm && y < hip + 0.11 * H) { c = vec3(-1.0); region = 0.0; }                                // croptop
     }
-    // thắt lưng (đồng phục)
-    if (uMode.w > 0.5 && !arm && y > hip - 0.005 * H && y < hip + 0.018 * H) c = uBelt;
-    // phần dưới
+    if (region > 0.5) {
+      c = patt(uT.z, uv, uShirt, uShirt2);
+      if (uT.z > 4.5 && abs(f) < 0.009 * H && (arm || ax > hw * 0.9)) c = uShirt2;                                    // sọc thể thao
+      if (neckT > 1.5 && neckT < 2.5 && y > neck - 0.03 * H && ax < 0.075 * H && !arm) c = uT2.x > 0.5 ? uShirt * 0.85 : mix(uShirt, vec3(1.0), 0.15); // cổ áo
+      if (uT2.x > 0.5 && front && !arm && ax < 0.038 * H) { c = uShirt2; region = 3.0; if (neckT > 0.5 && neckT < 1.5 && (neck + 0.012 * H - y) < (0.085 * H - ax * 1.4)) region = 4.0; } // vạt mở → áo trong
+      if (uT2.x > 0.5 && front && !arm && ax > 0.038 * H && ax < 0.044 * H) c = uShirt * 0.7;                         // mép ve áo
+      if (uT2.z > 0.5 && front && !arm && abs(ax - (uT2.x > 0.5 ? 0.047 * H : 0.0)) < 0.0045 * H && fract((neck - y) / (0.05 * H)) < 0.2 && y < neck - 0.04 * H) c = vec3(0.12); // hàng cúc
+      if (uX.y > 0.5 && front && !arm && y > hip + 0.06 * H && y < neck - 0.008 * H && ax < 0.008 * H + (neck - y) * 0.06) { c = uTie; region = 5.0; } // cà vạt
+      c *= region < 2.5 ? fabK(uT.w, uv) : vec3(1.0);
+      if (uT.w > 2.5 && uT.w < 3.5) clothR = 0.45;   // da
+      if (uT.w > 4.5 && uT.w < 5.5) clothR = 0.98;   // nhung
+    }
+    if (uX.x > 0.5 && !arm && y > hip - 0.005 * H && y < hip + 0.018 * H) { c = uBelt; region = 6.0; }   // thắt lưng đồng phục
+    // ---- phần dưới ----
     if (y <= hip - 0.015 * H) {
-      if (uMode.z > 0.5) { if (y > knee + 0.02 * H) c = uShirt; }                   // váy liền
-      else if (uMode.y > 1.5) { if (y > knee + 0.05 * H) c = uPants; }             // chân váy
-      else if (uMode.y > 0.5) { if (y > knee + 0.035 * H) c = uPants; }            // quần short
-      else if (y > ankle + 0.012 * H) c = uPants;                                   // quần dài
+      bool cov = false;
+      if (uT2.w > 0.5 && uT2.w < 1.5) cov = y > knee + 0.02 * H;                 // váy liền
+      else if (uB.x > 1.5) cov = y > knee + 0.05 * H;                            // chân váy
+      else if (uB.x > 0.5) cov = y > knee + 0.035 * H;                           // quần short
+      else cov = y > ankle + 0.012 * H;                                          // quần dài
+      if (cov) {
+        bool dressLow = uT2.w > 0.5 && uT2.w < 1.5;
+        c = dressLow ? patt(uT.z, uv, uShirt, uShirt2) * fabK(uT.w, uv) : patt(uB.y, uv, uPants, uPants2) * fabK(uB.z, uv);
+        if (!dressLow && uB.y > 4.5 && abs(f) < 0.009 * H) c = uPants2;
+        if (!dressLow && uB.w > 0.5 && front && abs(y - knee) < 0.028 * H && hsh(floor(vBP * 600.0)) > 0.25) c = mix(vec3(-1.0), vec3(0.92), step(0.85, hsh(floor(vBP * 900.0)))); // rách gối
+        region = 7.0;
+      }
     }
-    // giày
-    if (y < ankle + 0.022 * H) c = uShoes;
+    // ---- giày ----
+    if (y < ankle + 0.022 * H) { c = y < foot + 0.008 * H ? uSole : uShoes; region = 8.0; clothR = uX.z > 0.5 ? 0.3 : 0.6; }
+    // bộ hoá trang: ẩn thân dưới cổ (thay bằng mô hình trang phục)
+    if (uX.w > 0.5 && y < neck - 0.01 * H) discard;
     clothK = c.r >= 0.0 ? 1.0 : 0.0;
-    if (clothK > 0.5) {
-      float n = fract(sin(dot(floor(vBP * 900.0), vec3(12.9898, 78.233, 37.719))) * 43758.5453);
-      diffuseColor.rgb = c * (0.93 + 0.07 * n);
-    } else diffuseColor.rgb *= uSkin;
+    if (clothK > 0.5) diffuseColor.rgb = c * (0.95 + 0.05 * hsh(floor(vBP * 900.0)));
+    else diffuseColor.rgb *= uSkin;
   }`)
-          .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = clothK > 0.5 ? 0.88 : 0.55;');
+        .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = clothK > 0.5 ? clothR : 0.55;');
     };
-    mat.customProgramCacheKey = () => 'clothes-v1';
+    mat.customProgramCacheKey = () => 'clothes-v2';
     mat.needsUpdate = true;
   }
 
   const SKIN_BASE = new THREE.Color('#ffe0c7');
   function setOutfit(u, look) {
+    const r3 = look.r3 || {}, T3 = r3.top || {}, B3 = r3.bottom || {}, S3 = r3.shoes || {};
     const top = look.top, bottom = look.bottom;
     u.uShirt.value.set(look.shirt || '#7ec8f0');
-    // áo trùng màu da thì nhìn như cởi trần → làm đậm màu áo
     const skc = new THREE.Color(look.skin || '#ffe0c7');
     const dc = Math.abs(u.uShirt.value.r - skc.r) + Math.abs(u.uShirt.value.g - skc.g) + Math.abs(u.uShirt.value.b - skc.b);
-    if (dc < 0.45) u.uShirt.value.set('#5f86b0');
-    u.uPants.value.set(look.pants || '#5c6b9a');
+    if (dc < 0.45 && !T3.fab) u.uShirt.value.set('#5f86b0'); // áo trùng màu da → đổi màu cho khỏi giống cởi trần
+    u.uShirt2.value.set(T3.c2 || '#f5f5f5');
+    u.uPants.value.set(look.aodaiPants || look.pants || '#5c6b9a');
+    u.uPants2.value.set(B3.c2 || '#f5f5f5');
     u.uShoes.value.set(look.shoes || '#5d4037');
+    u.uSole.value.set(S3.sole || '#3e2b22');
     u.uBelt.value.set(look.belt || '#3b4a6b');
-    const sk = new THREE.Color(look.skin || '#ffe0c7');
-    u.uSkin.value.setRGB(Math.min(1.1, sk.r / SKIN_BASE.r), Math.min(1.1, sk.g / SKIN_BASE.g), Math.min(1.1, sk.b / SKIN_BASE.b));
-    const sleeve = top === 'tee' || top === 'polo' || top === 'dress' ? 1 : 2;
-    const low = top === 'dress' ? 0 : bottom === 'shorts' ? 1 : bottom === 'skirt' ? 2 : 0;
-    u.uMode.value.set(sleeve, low, top === 'dress' ? 1 : 0, !top && look.belt ? 1 : 0);
+    const neck = r3.neck;
+    u.uTie.value.set(neck && neck.type === 'tie' ? neck.hex : '#c62828');
+    u.uSkin.value.setRGB(Math.min(1.1, skc.r / SKIN_BASE.r), Math.min(1.1, skc.g / SKIN_BASE.g), Math.min(1.1, skc.b / SKIN_BASE.b));
+    const sleeve = T3.sleeve ?? (top === 'tee' || top === 'polo' || top === 'dress' ? 1 : 2);
+    const neckT = NECK[T3.neck] ?? 0;
+    u.uT.value.set(sleeve, neckT, PAT[T3.pat] || 0, T3.fab ? FAB[T3.fab] : -1);
+    const dress = T3.aodai ? 2 : top === 'dress' ? 1 : 0;
+    u.uT2.value.set(T3.open ? 1 : 0, T3.crop ? 1 : 0, T3.btn ? 1 : 0, dress);
+    const low = dress === 1 ? 0 : bottom === 'shorts' ? 1 : bottom === 'skirt' ? 2 : 0;
+    u.uB.value.set(low, PAT[B3.pat] || 0, B3.fab ? FAB[B3.fab] : -1, B3.rip ? 1 : 0);
+    u.uX.value.set(!top && look.belt ? 1 : 0, neck && neck.type === 'tie' ? 1 : 0, S3.heel ? 1 : 0, r3.costume ? 1 : 0);
+  }
+
+  // ảnh hoa văn cho món đồ 3D rời (chân váy, tà áo dài)
+  const patC = {};
+  function patTex(pat, c1, c2) {
+    const k = pat + c1 + c2;
+    if (patC[k]) return patC[k];
+    const cv = document.createElement('canvas'); cv.width = cv.height = 128; const x = cv.getContext('2d');
+    x.fillStyle = c1; x.fillRect(0, 0, 128, 128);
+    x.fillStyle = c2;
+    if (pat === 'plaid') { x.globalAlpha = 0.5; for (let i = 0; i < 128; i += 32) { x.fillRect(i, 0, 9, 128); x.fillRect(0, i, 128, 9); } x.globalAlpha = 0.25; x.fillStyle = '#000'; for (let i = 16; i < 128; i += 32) { x.fillRect(i, 0, 2, 128); x.fillRect(0, i, 128, 2); } }
+    else if (pat === 'dots') for (let i = 8; i < 128; i += 16) for (let j = 8; j < 128; j += 16) { x.beginPath(); x.arc(i + (j % 32 ? 8 : 0), j, 3.2, 0, 7); x.fill(); }
+    else if (pat === 'floral') for (let i = 10; i < 128; i += 21) for (let j = 10; j < 128; j += 21) { for (let a = 0; a < 5; a++) { x.beginPath(); x.arc(i + Math.cos(a * 1.257) * 3.2, j + Math.sin(a * 1.257) * 3.2, 2.4, 0, 7); x.fill(); } x.fillStyle = '#ffd95a'; x.beginPath(); x.arc(i, j, 1.6, 0, 7); x.fill(); x.fillStyle = c2; }
+    else if (pat === 'stripes') for (let j = 0; j < 128; j += 16) x.fillRect(0, j, 128, 8);
+    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(4, 2);
+    return (patC[k] = t);
+  }
+
+  // món đồ 3D rời có da (skinned) theo xương hông – đùi: chân váy xoè / xếp ly, tà áo dài
+  function skinnedPiece(body, t, kind, color, pat, c2, fab) {
+    const J = t.J, U = t.up, X = t.side, F = t.fwd, H = J.H;
+    const bones = body.skeleton.bones, bi = (n) => bones.findIndex((b) => b.name === n);
+    const iP = bi('pelvis'), iL = bi('thigh_l'), iR = bi('thigh_r');
+    const base = t.bp.pelvis.clone().sub(U.clone().multiplyScalar(t.bp.pelvis.dot(U)));
+    const pos = [], uvs = [], si = [], sw = [], idx = [];
+    const vert = (p, uu, vv, wP, wL, wR) => { pos.push(p.x, p.y, p.z); uvs.push(uu, vv); const s = wP + wL + wR; si.push(iP, iL, iR, 0); sw.push(wP / s, wL / s, wR / s, 0); };
+    const P3 = (yy, cx, cf) => base.clone().add(U.clone().multiplyScalar(yy)).add(X.clone().multiplyScalar(cx)).add(F.clone().multiplyScalar(cf));
+    if (kind === 'skirt' || kind === 'dress') {
+      const y0 = J.hip + (kind === 'dress' ? 0.0 : 0.012) * H, y1 = J.knee + (kind === 'dress' ? -0.01 : 0.04) * H;
+      const rT = J.hw * 1.5, rB = rT * (fab === 'pleat' ? 1.45 : 1.75), N = 40, R = 6;
+      for (let r = 0; r <= R; r++) {
+        const tt = r / R, yy = y0 + (y1 - y0) * tt;
+        for (let j = 0; j <= N; j++) {
+          const th = j / N * Math.PI * 2, cs = Math.cos(th), sn = Math.sin(th);
+          let rad = rT + (rB - rT) * Math.pow(tt, 1.3);
+          if (fab === 'pleat') rad *= 1 + 0.045 * tt * Math.sign(Math.sin(th * 22));
+          const p = P3(yy, cs * rad, sn * rad * 0.82 + J.f0 - base.dot(F));
+          const side = (cs + 1) / 2, w = tt * 0.75;
+          vert(p, j / N, 1 - tt, 1 - w, w * side, w * (1 - side));
+        }
+      }
+      for (let r = 0; r < R; r++) for (let j = 0; j < N; j++) { const a = r * (N + 1) + j, b = a + N + 1; idx.push(a, b, a + 1, a + 1, b, b + 1); }
+    } else if (kind === 'aodai') {
+      // hai tà trước / sau từ eo xuống gần mắt cá
+      const y0 = J.hip + 0.07 * H, y1 = J.ankle + 0.1 * H, wd = J.hw * 1.55, N = 8, R = 10;
+      [1, -1].forEach((sd) => {
+        const off = pos.length / 3;
+        for (let r = 0; r <= R; r++) {
+          const tt = r / R, yy = y0 + (y1 - y0) * tt;
+          for (let j = 0; j <= N; j++) {
+            const u2 = j / N * 2 - 1, half = wd * (0.85 + 0.25 * tt);
+            const depth = J.hw * (0.82 + 0.35 * tt) * (1 - 0.35 * u2 * u2);
+            const p = P3(yy, u2 * half, sd * depth + J.f0 - base.dot(F));
+            const w = 0.25 + tt * 0.45;
+            vert(p, j / N, 1 - tt, 1 - w, w * (u2 + 1) / 2, w * (1 - u2) / 2);
+          }
+        }
+        for (let r = 0; r < R; r++) for (let j = 0; j < N; j++) { const a = off + r * (N + 1) + j, b = a + N + 1; idx.push(a, b, a + 1, a + 1, b, b + 1); }
+      });
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    g.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(si, 4));
+    g.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4));
+    g.setIndex(idx); g.computeVertexNormals();
+    const mat = new THREE.MeshStandardMaterial({ color: pat ? '#ffffff' : color, map: pat ? patTex(pat, color, c2 || '#ffffff') : null, roughness: fab === 'velvet' ? 0.95 : 0.8, side: THREE.DoubleSide });
+    const m = new THREE.SkinnedMesh(g, mat);
+    m.bind(body.skeleton, body.bindMatrix);
+    m.position.copy(body.position); m.quaternion.copy(body.quaternion); m.scale.copy(body.scale);
+    m.frustumCulled = false;
+    body.parent.add(m);
+    return m;
+  }
+
+  // ---------- đồ hoá trang (mô hình 3D thật) ----------
+  const costumeT = {}, costumeWait = {};
+  P.costume = function (name, sex, cb) {
+    const k = (sex === 'f' ? 'female_' : 'male_') + name.toLowerCase();
+    if (costumeT[k]) return costumeT[k];
+    if (!costumeWait[k]) {
+      costumeWait[k] = true;
+      new THREE.GLTFLoader().loadAsync('assets/costumes/' + k + '.gltf').then((g) => { costumeT[k] = g; if (P.onChange) P.onChange(); if (cb) cb(); }).catch((e) => console.warn('costume', e));
+    }
+    return null;
+  };
+  function attachCostume(root, bonesByName, gltf) {
+    const list = [];
+    gltf.scene.traverse((o) => { if (o.isSkinnedMesh) list.push(o); });
+    list.forEach((src) => {
+      const m = new THREE.SkinnedMesh(src.geometry, src.material);
+      const bones = src.skeleton.bones.map((b) => bonesByName[b.name]);
+      m.bind(new THREE.Skeleton(bones, src.skeleton.boneInverses), src.bindMatrix);
+      m.frustumCulled = false;
+      root.add(m);
+    });
+    return list.some((o) => /Hood/i.test(o.name));
   }
 
   // gắn tóc (lưới có xương riêng) vào khung xương của người
@@ -166,10 +333,21 @@
       }
     });
     setOutfit(body.material.userData.u, look);
+    const r3 = look.r3 || {}, T3 = r3.top || {}, B3 = r3.bottom || {};
+    // đồ hoá trang: tải riêng khi cần; chưa tải xong thì mặc đồ thường
+    const cg = r3.costume ? P.costume(r3.costume, sex) : null;
+    let hood = false;
+    if (cg) hood = attachCostume(root, bonesByName, cg); else body.material.userData.u.uX.value.w = 0;
+    // món đồ rời: tà áo dài, váy xoè, chân váy xếp ly
+    if (!cg) {
+      if (T3.aodai) skinnedPiece(body, t, 'aodai', look.shirt, T3.pat, T3.c2, T3.fab);
+      else if (look.top === 'dress' && T3.flare) skinnedPiece(body, t, 'dress', look.shirt, T3.pat, T3.c2, T3.fab);
+      else if (look.bottom === 'skirt' && B3.flare && look.top !== 'dress') skinnedPiece(body, t, 'skirt', look.pants, B3.pat, B3.c2, B3.flare === 2 ? 'pleat' : B3.fab);
+    }
     // tóc theo kiểu nhân vật
     const hairName = sex === 'f' ? (look.bowCol || look.hat === 'beanie' ? 'hair_buns' : 'hair_long') : (look.hair === '#bdbdbd' ? 'hair_buzzed' : 'hair_simpleparted');
     const hc = look.hair || '#4a3020';
-    attachHair(root, bonesByName, hairName, hc);
+    if (!hood) attachHair(root, bonesByName, hairName, hc);
     if (sex === 'm' && look.glasses && look.hair === '#bdbdbd') attachHair(root, bonesByName, 'hair_beard', hc);
 
     // phụ kiện bám theo xương đầu / lưng (tính lại mỗi khung hình)
@@ -179,7 +357,7 @@
     const stdM = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.8 }, o || {}));
     const hatT = look.hat || (look.cap ? 'cap' : null);
     const addAcc = (bone, obj, off) => { g.add(obj); acc.push({ bone, obj, off }); };
-    if (hatT && look.cap) {
+    if (hatT && look.cap && !cg) {
       const hat = new THREE.Group(), mat = stdM(look.cap, { roughness: 0.85 });
       if (hatT === 'sun') {
         const br = new THREE.Mesh(gg('sbr', () => new THREE.CylinderGeometry(0.2 * k * 0.6, 0.2 * k * 0.6, 0.006 * k, 24)), mat); br.position.y = 0.0; hat.add(br);
@@ -194,7 +372,7 @@
       }
       addAcc(head, hat, new THREE.Vector3(0, 0.086 * k, -0.004 * k));
     }
-    if (look.glasses) {
+    if (look.glasses && !hood) {
       const gl = new THREE.Group();
       const fm = stdM('#222222', { roughness: 0.3, metalness: 0.6 });
       const lm = look.glasses === 'sun' ? stdM('#141418', { roughness: 0.05, metalness: 0.4 }) : new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.05, transparent: true, opacity: 0.18 });
@@ -204,9 +382,31 @@
       });
       addAcc(head, gl, new THREE.Vector3(0, 0.018 * k, 0.07 * k));
     }
-    if (look.bag) {
+    if (look.bag && !cg) {
       const bp = new THREE.Mesh(gg('bag', () => new THREE.BoxGeometry(0.2 * k * 0.6, 0.24 * k * 0.6, 0.08 * k * 0.6)), stdM(look.bag, { roughness: 0.9 }));
       addAcc(spine, bp, new THREE.Vector3(0, -0.02 * k, -0.11 * k));
+    }
+    const neckB = bonesByName.neck_01, handB = bonesByName.hand_r;
+    if (r3.neck && !cg) {
+      const n3 = r3.neck;
+      if (n3.type === 'scarf') {
+        const sc = new THREE.Group(), m = stdM(n3.hex, { roughness: 0.95 });
+        const ring = new THREE.Mesh(gg('scarf', () => new THREE.TorusGeometry(0.052 * k, 0.019 * k, 10, 24)), m); ring.rotation.x = Math.PI / 2 - 0.25; ring.scale.set(1, 0.85, 1); sc.add(ring);
+        const end = new THREE.Mesh(gg('scend', () => new THREE.BoxGeometry(0.035 * k, 0.12 * k, 0.012 * k)), m); end.position.set(0.02 * k, -0.07 * k, 0.05 * k); end.rotation.z = 0.12; sc.add(end);
+        addAcc(neckB, sc, new THREE.Vector3(0, -0.005 * k, 0.004 * k));
+      } else if (n3.type === 'necklace') {
+        const nk = new THREE.Group(), m = stdM(n3.hex, { roughness: 0.2, metalness: 1 });
+        const ring = new THREE.Mesh(gg('neckl', () => new THREE.TorusGeometry(0.058 * k, 0.0022 * k, 6, 32)), m); ring.rotation.x = Math.PI / 2 - 0.55; nk.add(ring);
+        const pend = new THREE.Mesh(gg('pend', () => new THREE.OctahedronGeometry(0.008 * k, 0)), stdM('#e8f4ff', { roughness: 0.05, metalness: 0.3 })); pend.position.set(0, -0.03 * k, 0.055 * k); nk.add(pend);
+        addAcc(neckB, nk, new THREE.Vector3(0, -0.02 * k, 0.008 * k));
+      }
+    }
+    if (r3.hand && r3.hand.type === 'handbag' && !cg) {
+      const hb = new THREE.Group(), m = stdM(r3.hand.hex, { roughness: 0.45 });
+      const bx = new THREE.Mesh(gg('hbag', () => new THREE.BoxGeometry(0.1 * k, 0.075 * k, 0.035 * k)), m); bx.position.y = -0.07 * k; hb.add(bx);
+      const hd = new THREE.Mesh(gg('hbh', () => new THREE.TorusGeometry(0.03 * k, 0.004 * k, 6, 16, Math.PI)), m); hd.position.y = -0.032 * k; hb.add(hd);
+      const clasp = new THREE.Mesh(gg('hbc', () => new THREE.BoxGeometry(0.02 * k, 0.012 * k, 0.004 * k)), stdM('#d4af37', { metalness: 1, roughness: 0.25 })); clasp.position.set(0, -0.05 * k, 0.019 * k); hb.add(clasp);
+      addAcc(handB, hb, new THREE.Vector3(0, -0.01 * k, 0.0));
     }
     // bóng tròn dưới chân
     const blob = new THREE.Mesh(gg('blob', () => new THREE.CircleGeometry(0.3, 18)), new THREE.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: 0.22, depthWrite: false }));

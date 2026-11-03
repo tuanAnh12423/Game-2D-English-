@@ -26,11 +26,18 @@ G.applyOutfit = function (look, wear) {
   if (gl) L.glasses = gl.it.type === 'sun' ? 'sun' : true;
   if (wear.bag === 'none') L.bag = null; else { const bg = get('bag'); if (bg) L.bag = bg.hex; }
   if (!t && L.bag) L.tool = false;
+  // kiểu dáng 3D (người thật): vân vải, hoa văn, cổ áo, phụ kiện cổ/tay, đồ hoá trang
+  L.r3 = {
+    top: t && t.it.r3 ? t.it.r3 : null, bottom: b && b.it.r3 ? b.it.r3 : null, shoes: sh && sh.it.r3 ? sh.it.r3 : null,
+    neck: get('neck') ? { type: get('neck').it.type, hex: get('neck').hex } : null,
+    hand: get('hand') ? { type: get('hand').it.type, hex: get('hand').hex } : null,
+    costume: get('costume') ? get('costume').it.r3.costume : null,
+  };
   return L;
 };
 
 G.mall = {
-  SLOT_VI: { top: 'Áo / váy', bottom: 'Quần / chân váy', shoes: 'Giày dép', hat: 'Mũ', glasses: 'Kính', bag: 'Túi / ba lô' },
+  SLOT_VI: { top: 'Áo / váy', bottom: 'Quần / chân váy', shoes: 'Giày dép', hat: 'Mũ', glasses: 'Kính', bag: 'Túi / ba lô', neck: 'Cà vạt / khăn / vòng cổ', hand: 'Túi xách tay', costume: '🎭 Hoá trang (mặc đè lên tất cả)' },
   imgCache: {},
 
   wr() {
@@ -195,10 +202,11 @@ G.mall = {
     const p = ui.open(`<h2>🪞 Tủ đồ</h2>${tabs}
       <div class="center"><img class="bigprev" src="${this.img(w.wear, [0, 2, 3, 1], 100)}" alt=""></div>
       <button class="btn ghost" id="wuni">👔 Mặc đồng phục kỹ thuật viên</button>
+      <div class="job"><div class="jt">✨ Bộ phối sẵn — chạm để mặc thử nguyên bộ</div><div class="tchips">${(window.OUTFIT_SETS || []).map((o) => `<button class="tchip" data-set="${o.id}">${o.icon} ${G.esc(o.vi)} <i>${G.esc(o.en)}</i></button>`).join('')}</div></div>
       ${Object.keys(this.SLOT_VI).map((slot) => {
         const mine = w.owned.filter((o) => G.CLOTH_BY[o.id] && G.CLOTH_BY[o.id].slot === slot);
-        const canNone = slot === 'hat' || slot === 'glasses' || slot === 'bag';
-        const def = slot === 'glasses' || slot === 'bag' ? null : 'Đồng phục';
+        const canNone = slot !== 'top' && slot !== 'bottom' && slot !== 'shoes';
+        const def = slot === 'top' || slot === 'bottom' || slot === 'shoes' || slot === 'hat' ? 'Đồng phục' : null;
         return `<div class="job"><div class="jt">${G.esc(this.SLOT_VI[slot])}: <span class="rew">${G.esc(cur(slot))}</span></div><div class="tchips">
           ${def ? `<button class="tchip ${!w.wear[slot] ? 'on' : ''}" data-w="${slot}" data-v="def">${def}</button>` : ''}
           ${canNone ? `<button class="tchip ${w.wear[slot] === 'none' || (!def && !w.wear[slot]) ? 'on' : ''}" data-w="${slot}" data-v="none">Không</button>` : ''}
@@ -208,6 +216,18 @@ G.mall = {
     this.keepW = false;
     ui.on(p, '[data-mt]', (x) => { this.tab = x.dataset.mt; this.open(this.b, x.dataset.mt); });
     ui.on(p, '#wuni', () => { w.wear = {}; this.keepW = true; this.changed(); this.wardrobe(fromHome); });
+    ui.on(p, '[data-set]', (x) => {
+      const o = OUTFIT_SETS.find((q) => q.id === x.dataset.set); if (!o) return;
+      w.wear = {};
+      Object.entries(o.wear).forEach(([slot, v]) => {
+        if (v === 'none') { w.wear[slot] = 'none'; return; }
+        const [id, c] = v;
+        if (!this.owns(id, c)) w.owned.push({ id, c }); // bộ phối sẵn: được tặng luôn để mặc thử
+        w.wear[slot] = { id, c };
+      });
+      G.tts.speak('What a stylish ' + o.en + '!');
+      this.keepW = true; this.changed(); this.wardrobe(fromHome);
+    });
     ui.on(p, '[data-w]', (x) => {
       const slot = x.dataset.w, v = x.dataset.v;
       if (v === 'def') delete w.wear[slot];

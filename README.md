@@ -177,3 +177,12 @@ vữa, gạch, ngói, gỗ, vỏ cây là **ảnh chụp thật từ Poly Haven 
   mũ – kính – ba lô bám theo xương đầu và lưng. Đổi đồ ở 👗 Tủ đồ là nhân vật đổi ngay. Thú cưng và vật nuôi vẫn là mô hình hoạt hình.
 - `js/lib/three-gltf.js`: GLTFLoader + SkeletonUtils của three.js r160 (MIT) chuyển sang script thường.
 - Nhà che mất nhân vật thì tự làm mờ. Chế độ Như thật là **mặc định**; máy yếu có thể chọn 🌸 Hoạt hình trong Cài đặt.
+
+## 👗 Thời trang (người thật 3D)
+- `js/data/fashion.js`: 22 món mới (áo sọc, croptop, áo len cổ lọ, cardigan, áo khoác jean/da, blazer, áo thể thao, sơ mi ca-rô,
+  váy chấm bi / hoa nhí / nhung, **áo dài**, quần jean rách, jogger, quần lụa, chân váy xếp ly / ca-rô, giày cao gót, giày lười,
+  cà vạt, khăn choàng, vòng cổ, túi xách) + 8 màu mới + 22 từ vựng thời trang. Đồ cũ được thêm vân vải 3D.
+- **10 bộ phối sẵn** trong 👗 Tủ đồ (công sở, dạo phố, dễ thương, thể thao, dự tiệc, mùa hè, áo dài, cá tính, 2 bộ hoá trang) — chạm là mặc, được tặng sẵn.
+- Vân vải thật Poly Haven (CC0) gộp ở `assets/fabric/atlas.jpg`; hoa văn, cổ áo, vạt áo mở, hàng cúc, cà vạt, quần rách vẽ bằng shader (`js/people.js`).
+  Chân váy xoè / xếp ly và tà áo dài là lưới 3D có da gắn xương hông–đùi nên bay theo bước đi.
+- **Hoá trang**: Quaternius *Modular Character Outfits – Fantasy* (CC0), bộ Thợ săn và Làng quê cho nam/nữ, ở `assets/costumes/` (chỉ tải khi mặc).
