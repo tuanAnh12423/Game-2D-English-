@@ -348,7 +348,7 @@
   // DỰNG THẾ GIỚI TĨNH
   // ============================================================
   const BASE_OF = () => ({ grass: T.GRASS, city: T.PAVE, sand: T.SAND, forest: T.DARK, industrial: T.CONCRETE });
-  let doorList = [], lampSpots = [], evDeco = [], lockSprites = [], farmIdx = new Map(), cropSprites = [], scarecrows = [];
+  let fadeList = [], doorList = [], lampSpots = [], evDeco = [], lockSprites = [], farmIdx = new Map(), cropSprites = [], scarecrows = [];
 
   function groundColor(t, tx, ty) {
     const v = G.hash2(tx, ty), odd = (tx + ty) % 2;
@@ -663,6 +663,11 @@
       }
       const sign = label((bt.icon ? bt.icon + ' ' : '') + b.name, 0.42);
       sign.position.set(b.t === 'station' ? 0 : b.dx + 0.5 - cx, signY, front);
+      if (REAL && b.t !== 'station') { g.scale.y = 1.6; sign.scale.y /= 1.6; sign.position.y += 0.2; }
+      // mỗi nhà có vật liệu riêng để làm mờ khi che mất người chơi
+      const mats = [];
+      g.traverse((o) => { if (o.isMesh && o.material && !o.material.isSpriteMaterial) { o.material = o.material.clone(); mats.push(o.material); } });
+      fadeList.push({ b, mats, op: 1 });
       g.add(sign);
       scene.add(g);
       doorList.push(b);
@@ -725,7 +730,7 @@
     } catch (e) { return false; }
     const over = document.getElementById('game');
     over.parentNode.insertBefore(renderer.domElement, over);
-    try { const sv = G.store && G.store.load(); REAL = /[?&]style=real/.test(location.search) || !!(sv && sv.settings && sv.settings.style3 === 'real'); } catch (e) { REAL = false; }
+    try { const sv = G.store && G.store.load(); const q = location.search.match(/[?&]style=(real|cute)/); REAL = q ? q[1] === 'real' : !(sv && sv.settings && sv.settings.style3 === 'cute'); /* mặc định: Như thật */ } catch (e) { REAL = false; }
     R3.real = REAL;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = REAL ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
@@ -811,6 +816,11 @@
       R3.skyScene.add(new THREE.Mesh(new THREE.SphereGeometry(10, 32, 16), R3.skyMat));
       R3.envKey = '';
     }
+    if (REAL && G.people) G.people.load(() => {
+      // tải xong → dựng lại nhân vật bằng người thật
+      R3.ents.forEach((e) => scene.remove(e.obj.g)); R3.ents.clear();
+      if (G.mall) G.mall.imgCache = {};
+    });
     const BASE = BASE_OF();
     W.regions.forEach((r) => { buildGround(r, BASE); buildRegionProps(r); });
     buildBuildings();
@@ -841,10 +851,11 @@
     const n = dirs.length, w = Math.round(size * 0.8), h = size, sc = 2;
     const rt = new THREE.WebGLRenderTarget(w * n * sc, h * sc, { samples: 4 });
     const sc2 = new THREE.Scene();
+    if (REAL) sc2.environment = scene.environment;
     sc2.add(new THREE.HemisphereLight('#ffffff', '#e8d6e8', 1.25));
     const dl = new THREE.DirectionalLight('#ffffff', 1.4); dl.position.set(2, 4, 5); sc2.add(dl);
     dirs.forEach((d, i) => {
-      const c = chibi(look); c.anim(0, false);
+      const c = person(look); c.anim(0.016, false);
       c.g.position.set((i - (n - 1) / 2) * 1.2, 0, 0);
       c.g.rotation.y = [0, -Math.PI / 2, Math.PI / 2, Math.PI][d] || 0;
       c.g.children[c.g.children.length - 1].visible = false;
@@ -906,9 +917,12 @@
     g.position.set(nx, 0, nz);
     if (e.ang !== undefined) { let dr = e.ang - g.rotation.y; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); g.rotation.y += dr * Math.min(1, dt * 12); }
     e.mvT = moving ? 0.12 : Math.max(0, (e.mvT || 0) - dt);
-    e.obj.anim(dt, e.mvT > 0 && !(emo && emo.pet), emo && !emo.pet ? emo : undefined);
+    if (dt > 0 && d < 3) e.spd = (e.spd || 0) * 0.8 + (d / dt) * 0.2;
+    e.obj.anim(dt, e.mvT > 0 && !(emo && emo.pet), emo && !emo.pet ? emo : undefined, e.spd);
   }
   const lookKey = (l) => JSON.stringify(l);
+  // người thật (chế độ Như thật, khi đã tải xong) hoặc chibi
+  const person = (look) => (REAL && G.people && G.people.ready ? G.people.make(look) : chibi(look));
 
   function syncWorld(game, dt) {
     const s = game.state, p = game.player;
@@ -917,7 +931,7 @@
     const look = G.playerLook(); const lk = lookKey(look);
     let me = R3.ents.get('me');
     if (me && me.lk !== lk) { scene.remove(me.obj.g); R3.ents.delete('me'); me = null; }
-    me = ent('me', () => ({ obj: chibi(look), lk }));
+    me = ent('me', () => ({ obj: person(look), lk }));
     if (me.ang === undefined) me.obj.g.position.set(p.x / S, 0, p.y / S);
     const emo = R3.emo;
     if (emo) { emo.t += dt; if (emo.t > emo.dur || p.moving) R3.emo = null; }
@@ -934,8 +948,8 @@
     }
     // NPC (chỉ những ai ở gần)
     game.npcs.forEach((n, i) => {
-      if (Math.abs(n.x - p.x) > 30 * S || Math.abs(n.y - p.y) > 24 * S) return;
-      const e = ent('npc:' + i + ':' + (n.name || ''), () => ({ obj: chibi(n.look) }));
+      if (Math.abs(n.x - p.x) > (REAL ? 18 : 30) * S || Math.abs(n.y - p.y) > (REAL ? 15 : 24) * S) return;
+      const e = ent('npc:' + i + ':' + (n.name || ''), () => ({ obj: person(n.look) }));
       // người chơi nhảy ở gần → NPC nhảy theo
       const near = R3.emo && (R3.emo.id === 'dance' || R3.emo.id === 'cheer' || R3.emo.id === 'clap') && Math.hypot(n.x - p.x, n.y - p.y) < 4 * S;
       placeWalker(e, n.x, n.y, dt, n.dir, near ? { id: R3.emo.id, t: R3.emo.t + i * 0.13, dur: R3.emo.dur } : undefined);
@@ -944,7 +958,7 @@
     if (G.online && G.online.peers) Object.entries(G.online.peers).forEach(([id, pr]) => {
       if (!pr.online && !G.online.isOn()) return;
       if (Math.abs(pr.x - p.x) > 30 * S || Math.abs(pr.y - p.y) > 24 * S) return;
-      const e = ent('peer:' + id + lookKey(pr.look || {}), () => ({ obj: chibi(G.playerLook(pr.look || {})) }));
+      const e = ent('peer:' + id + lookKey(pr.look || {}), () => ({ obj: person(G.playerLook(pr.look || {})) }));
       placeWalker(e, pr.x, pr.y, dt, pr.dir || 0);
       const ppk = pr.look && pr.look.pet;
       if (ppk && G.PETS[ppk]) { const pt = G.petFollow(pr, pr.x, pr.y, pr.dir || 0, dt); placeWalker(ent('ppet:' + id + ppk, () => ({ obj: pet3d(ppk) })), pt.x, pt.y, dt, pt.dir); }
@@ -1241,12 +1255,27 @@
     ctx.fillStyle = '#c2255c'; ctx.fillText(lbl, lx, ly + 4 * s);
   }
 
+  // nhà nằm giữa camera và người chơi → làm mờ để luôn thấy nhân vật
+  function fadeBuildings(game, dt) {
+    const px = game.player.x / S, pz = game.player.y / S;
+    fadeList.forEach((f) => {
+      const b = f.b;
+      const hide = px > b.x - 0.8 && px < b.x + b.w + 0.8 && b.y + b.h > pz - 0.3 && b.y < pz + 6;
+      const want = hide ? 0.28 : 1;
+      if (Math.abs(f.op - want) < 0.01) return;
+      f.op += (want - f.op) * Math.min(1, dt * 8);
+      if (Math.abs(f.op - want) < 0.01) f.op = want;
+      f.mats.forEach((m) => { const tr = f.op < 0.99; if (m.transparent !== tr) { m.transparent = tr; m.needsUpdate = true; } m.opacity = f.op * (m.userData.baseOp ?? (m.userData.baseOp = 1)); m.depthWrite = !tr; });
+    });
+  }
+
   // ---------- tự giảm chất lượng khi máy chậm ----------
   function perf(dt) {
     const st = G.state && G.state.settings;
     if (st && st.q3 !== undefined) return; // người chơi đã tự chọn
     if (dt > 0.028) R3.slow += dt; else R3.slow = Math.max(0, R3.slow - dt * 0.5);
     if (R3.slow > 2.5 && R3.quality > 0) { R3.slow = 0; R3.setQuality(R3.quality - 1); }
+    else if (REAL && R3.quality === 0 && R3.slow > 5 && !R3.hinted) { R3.hinted = true; G.ui.toast('🐢 Máy hơi yếu với đồ hoạ Như thật — vào ⚙️ Cài đặt → Phong cách 3D → 🌸 Hoạt hình để chơi mượt hơn.'); }
   }
 
   // ============================================================
@@ -1262,6 +1291,7 @@
     syncWorld(game, busy ? dt * 4 : dt);
     applyLight(game);
     updateCamera(game, dt);
+    fadeBuildings(game, dt);
     renderer.render(scene, camera);
     overlay(game);
     game.drawMini();

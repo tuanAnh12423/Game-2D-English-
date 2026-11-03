@@ -169,3 +169,11 @@ Logic game (nhiệm vụ, từ vựng, trại, sự kiện…) giữ nguyên, ch
 ánh sáng môi trường từ bầu trời (đổi theo giờ/thời tiết), bóng đổ mềm, mặt nước gợn sóng phản chiếu, tán lá nhiều lớp và búi cỏ.
 Ảnh chất liệu ở `assets/real/` (`*_c.jpg` màu, `*_n.jpg` pháp tuyến, `*_r.jpg` độ nhám): đường nhựa, sỏi, cát, gạch lát, bê tông, đất ruộng,
 vữa, gạch, ngói, gỗ, vỏ cây là **ảnh chụp thật từ Poly Haven (CC0)**, thu nhỏ 512px; cỏ, lá, mặt nước tạo bằng code. Danh sách nguồn: `assets/real/CREDITS.txt`. Chế độ này nặng hơn “Hoạt hình” khoảng 2–3 lần.
+
+## 🧍 Người thật có khung xương (mặc định ở chế độ Như thật)
+- Người mẫu nam/nữ + tóc: Quaternius **Universal Base Characters**; động tác: **Universal Animation Library** (CC0) — file ở `assets/people/`.
+  14 động tác được trích ra `anims.json` (đứng, đi, chạy, nhảy múa, ngồi, nhảy lên, nói chuyện, cúi nhặt…).
+- `js/people.js`: quần áo vẽ lên cơ thể bằng shader theo vị trí xương (áo / tay áo ngắn-dài / quần dài / short / chân váy / váy liền / giày / thắt lưng đồng phục),
+  mũ – kính – ba lô bám theo xương đầu và lưng. Đổi đồ ở 👗 Tủ đồ là nhân vật đổi ngay. Thú cưng và vật nuôi vẫn là mô hình hoạt hình.
+- `js/lib/three-gltf.js`: GLTFLoader + SkeletonUtils của three.js r160 (MIT) chuyển sang script thường.
+- Nhà che mất nhân vật thì tự làm mờ. Chế độ Như thật là **mặc định**; máy yếu có thể chọn 🌸 Hoạt hình trong Cài đặt.
