@@ -163,3 +163,9 @@ Logic game (nhiệm vụ, từ vựng, trại, sự kiện…) giữ nguyên, ch
 - **Nút 💃** (`js/emote.js`): 10 động tác 3D (dance, wave, jump, spin, clap, cheer, bow, heart, sit down, sleepy), mỗi động tác dạy 1 từ + 1 câu (+3 XP lần đầu mỗi ngày). NPC đứng gần nhảy theo, thú cưng nhảy quanh.
   Trò chơi **Nhảy theo lệnh**: nghe lệnh tiếng Anh (“Clap your hands!”) → bấm đúng động tác, 8 vòng, nhanh dần; thưởng XP + xu 3 lần/ngày.
 - **Nút 👗**: mở tủ đồ ở bất cứ đâu, ảnh xem trước 3D. Người chơi được tặng sẵn 12 món (áo thun, hoodie, váy, chân váy, quần short, jean, giày, mũ rộng vành, mũ len, kính, ba lô). Mua thêm ở Trung Tâm Thương Mại.
+
+## 📷 Phong cách “Như thật” (thử nghiệm)
+⚙️ Cài đặt → 🎨 Phong cách 3D → **📷 Như thật** (hoặc thêm `?style=real` vào link). Dùng vật liệu vật lý (PBR), tone mapping ACES,
+ánh sáng môi trường từ bầu trời (đổi theo giờ/thời tiết), bóng đổ mềm, mặt nước gợn sóng phản chiếu, tán lá nhiều lớp và búi cỏ.
+Ảnh chất liệu ở `assets/real/` hiện được **tạo bằng code** (`*_c.jpg` màu, `*_n.jpg` pháp tuyến). Có thể thay bằng ảnh chụp thật
+(ví dụ Poly Haven, CC0) cùng tên file mà không phải sửa code. Chế độ này nặng hơn “Hoạt hình” khoảng 2–3 lần.

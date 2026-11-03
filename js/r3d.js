@@ -16,8 +16,28 @@
   let T, W;
   const dummy = new THREE.Object3D(), col = new THREE.Color(), V = new THREE.Vector3(), V2 = new THREE.Vector3();
   const SKY = { day: new THREE.Color('#bfe9ff'), eve: new THREE.Color('#ffc9b0'), night: new THREE.Color('#3a3f7c'), rain: new THREE.Color('#aab8cc') };
-  const toon = (c, o) => new THREE.MeshToonMaterial(Object.assign({ color: c }, o || {}));
-  const lam = (c, o) => new THREE.MeshLambertMaterial(Object.assign({ color: c }, o || {}));
+  // REAL = chế độ “Như thật”: vật liệu vật lý (PBR), ảnh chất liệu, ánh sáng môi trường, tone mapping
+  let REAL = false;
+  const pbr = (c, o) => { o = Object.assign({}, o || {}); delete o.flatShading; return new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.82, metalness: 0 }, o)); };
+  const toon = (c, o) => REAL ? pbr(c, o) : new THREE.MeshToonMaterial(Object.assign({ color: c }, o || {}));
+  const lam = (c, o) => REAL ? pbr(c, o) : new THREE.MeshLambertMaterial(Object.assign({ color: c }, o || {}));
+  // ảnh chất liệu (assets/real/*), lặp liền mạch
+  const TL = new THREE.TextureLoader(), texC = {};
+  function tex(name, rep, srgb) {
+    const k = name + '|' + rep;
+    if (texC[k]) return texC[k];
+    const base = texC[name] || (texC[name] = TL.load('assets/real/' + name, () => { R3.texLoaded = (R3.texLoaded || 0) + 1; if (renderer) renderer.shadowMap.needsUpdate = true; }));
+    const t = base.clone(); // dùng chung ảnh, chỉ khác độ lặp
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(rep, rep);
+    t.anisotropy = renderer ? Math.min(8, renderer.capabilities.getMaxAnisotropy()) : 4;
+    if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+    t.needsUpdate = true;
+    texC[k] = t;
+    return t;
+  }
+  const surf = (name, o) => pbr('#ffffff', Object.assign({ map: tex(name + '_c.jpg', (o && o.rep) || 1, true), normalMap: tex(name + '_n.jpg', (o && o.rep) || 1), roughness: 0.9 }, o && o.m));
+  const realRoof = (hex) => { const c = new THREE.Color(hex), h = {}; c.getHSL(h); return new THREE.Color().setHSL(h.h, h.s * 0.45, Math.min(0.42, h.l * 0.55)); };
   const basic = (c, o) => new THREE.MeshBasicMaterial(Object.assign({ color: c }, o || {}));
 
   // ---------- tiện ích ----------
@@ -338,6 +358,82 @@
     }
   }
 
+  // mặt đất chế độ Như thật: mỗi loại nền 1 khối, toạ độ ảnh theo thế giới (liền mạch giữa các ô)
+  function buildGroundReal(r, BASE) {
+    const ox = r.gx * G.RW, oy = r.gy * G.RH;
+    const groups = {};
+    const K = (t) => t === T.SAND ? 'sand' : t === T.PAVE ? 'paving' : t === T.CONCRETE ? 'concrete' : t === T.PATH ? 'dirt' : t === T.ROAD ? 'asphalt' : t === T.FARM ? 'soil' : 'grass';
+    const isWet = (t) => t === T.WATER || t === T.BRIDGE;
+    const quad = (key, a, b, c, d, shade) => {
+      const gq = groups[key] || (groups[key] = { pos: [], uv: [], col: [] });
+      const side = a[1] !== b[1] || a[1] !== c[1];
+      [a, b, c, a, c, d].forEach((p) => {
+        gq.pos.push(p[0], p[1], p[2]);
+        if (side) gq.uv.push((p[0] + p[2]) / 3, p[1] / 3); else gq.uv.push(p[0] / 3, p[2] / 3);
+        gq.col.push(shade[0], shade[1], shade[2]);
+      });
+    };
+    for (let ty = oy; ty < oy + G.RH; ty++) for (let tx = ox; tx < ox + G.RW; tx++) {
+      const t = W.get(tx, ty);
+      if (isWet(t)) continue;
+      const base = BASE[r.ground] ?? T.GRASS;
+      const under = (t === T.TREE || t === T.BUSH || t === T.ROCK || t === T.FLOWER || t === T.LAMP || t === T.FENCE || t === T.PINE || t === T.BUILD || t === T.DOOR) ? (base === T.PAVE || base === T.CONCRETE ? (t === T.TREE || t === T.FLOWER || t === T.BUSH ? T.GRASS : base) : base) : t;
+      const v = 0.9 + G.hash2(tx, ty) * 0.14;
+      const sh = under === T.DARK || under === T.PINE ? [v * 0.78, v * 0.86, v * 0.8] : [v, v, v];
+      const key = K(under);
+      quad(key, [tx, 0, ty + 1], [tx + 1, 0, ty + 1], [tx + 1, 0, ty], [tx, 0, ty], sh);
+      const sk = under === T.SAND ? 'sand' : 'dirt', ss = [0.75, 0.72, 0.7];
+      if (isWet(W.get(tx, ty + 1))) quad(sk, [tx, -0.55, ty + 1], [tx + 1, -0.55, ty + 1], [tx + 1, 0, ty + 1], [tx, 0, ty + 1], ss);
+      if (isWet(W.get(tx, ty - 1))) quad(sk, [tx + 1, -0.55, ty], [tx, -0.55, ty], [tx, 0, ty], [tx + 1, 0, ty], ss);
+      if (isWet(W.get(tx + 1, ty))) quad(sk, [tx + 1, -0.55, ty + 1], [tx + 1, -0.55, ty], [tx + 1, 0, ty], [tx + 1, 0, ty + 1], ss);
+      if (isWet(W.get(tx - 1, ty))) quad(sk, [tx, -0.55, ty], [tx, -0.55, ty + 1], [tx, 0, ty + 1], [tx, 0, ty], ss);
+    }
+    Object.entries(groups).forEach(([key, gq]) => {
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(gq.pos, 3));
+      geo.setAttribute('uv', new THREE.Float32BufferAttribute(gq.uv, 2));
+      geo.setAttribute('color', new THREE.Float32BufferAttribute(gq.col, 3));
+      geo.computeVertexNormals(); geo.computeBoundingSphere();
+      const m = new THREE.Mesh(geo, R3.gmat[key]);
+      m.receiveShadow = true;
+      scene.add(m);
+    });
+  }
+
+  // gộp nhiều hình thành 1 (dùng cho tán lá, búi cỏ)
+  function merge(list) {
+    const pos = [], uv = [], nor = [];
+    list.forEach((g) => { const n = g.index ? g.toNonIndexed() : g; const P = n.attributes.position.array, U = n.attributes.uv.array; for (let i = 0; i < P.length; i++) pos.push(P[i]); for (let i = 0; i < U.length; i++) uv.push(U[i]); });
+    const out = new THREE.BufferGeometry();
+    out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    out.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    out.computeVertexNormals();
+    return out;
+  }
+  // tán lá: nhiều tấm lá đan chéo, pháp tuyến hướng ra ngoài như khối cầu → ánh sáng mềm tự nhiên
+  function clumpGeo(cards, rad, seed) {
+    const r = G.mulberry(seed), parts = [];
+    for (let i = 0; i < cards; i++) {
+      const pl = new THREE.PlaneGeometry(rad * 1.25, rad * 1.25);
+      pl.rotateX((r() - 0.5) * Math.PI); pl.rotateY(r() * Math.PI); pl.rotateZ((r() - 0.5) * Math.PI);
+      const a = r() * Math.PI * 2, e = (r() - 0.5) * 1.4, d = rad * 0.45 * r();
+      pl.translate(Math.cos(a) * Math.cos(e) * d, Math.sin(e) * d * 0.8, Math.sin(a) * Math.cos(e) * d);
+      parts.push(pl);
+    }
+    const g = merge(parts);
+    const P = g.attributes.position, N = g.attributes.normal;
+    for (let i = 0; i < P.count; i++) { V.set(P.getX(i), P.getY(i) + rad * 0.25, P.getZ(i)).normalize(); N.setXYZ(i, V.x, V.y, V.z); }
+    return g;
+  }
+  function tuftGeo() {
+    const a = new THREE.PlaneGeometry(0.55, 0.32); a.translate(0, 0.16, 0);
+    const b = a.clone(); b.rotateY(Math.PI / 2);
+    const c = a.clone(); c.rotateY(Math.PI / 4);
+    const g = merge([a, b, c]);
+    const N = g.attributes.normal; for (let i = 0; i < N.count; i++) N.setXYZ(i, 0, 1, 0);
+    return g;
+  }
+
   function buildGround(r, BASE) {
     const ox = r.gx * G.RW, oy = r.gy * G.RH;
     const pos = [], cols = [];
@@ -361,6 +457,7 @@
       if (isWet(W.get(tx + 1, ty))) quad([tx + 1, -0.55, ty + 1], [tx + 1, -0.55, ty], [tx + 1, 0, ty], [tx + 1, 0, ty + 1], side);
       if (isWet(W.get(tx - 1, ty))) quad([tx, -0.55, ty], [tx, -0.55, ty + 1], [tx, 0, ty + 1], [tx, 0, ty], side);
     }
+    if (REAL) return buildGroundReal(r, BASE);
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
     geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
@@ -435,21 +532,36 @@
       }
     }
     const G3 = R3.geo, M3 = R3.mat;
+    if (REAL) {
+      // cây thật hơn: thân vân gỗ + tán lá nhiều lớp, búi cỏ trên nền cỏ
+      L.trees.forEach((p) => { p.c = null; }); L.blossoms.forEach((p) => { p.c = null; });
+      L.bushes.forEach((p) => { p.c = null; p.sy = p.sx * 0.75; });
+      L.rocks.forEach((p) => { p.c = null; });
+      L.pines.forEach((p) => { p.c = null; });
+      L.tufts = [];
+      for (let ty = oy; ty < oy + G.RH; ty++) for (let tx = ox; tx < ox + G.RW; tx++) {
+        const t = W.get(tx, ty);
+        if (t !== T.GRASS && t !== T.DARK && t !== T.FLOWER && t !== T.TREE) continue;
+        const n = Math.floor(h2(tx * 3, ty * 5) * 1.8);
+        for (let k = 0; k < n; k++) { const a = h2(tx * 17 + k, ty * 13), b = h2(tx * 7, ty * 19 + k); L.tufts.push({ x: tx + 0.15 + a * 0.7, y: 0, z: ty + 0.15 + b * 0.7, sx: 0.45 + a * 0.35, sy: 0.4 + b * 0.45, sz: 0.45 + a * 0.35, ry: a * 6 }); }
+      }
+      inst(G3.tuft, M3.tuft, L.tufts, { receive: true });
+    }
     inst(G3.flat, M3.line, L.lines);
     inst(G3.flat, M3.zebra, L.zebra);
     inst(G3.box, M3.curb, L.curbs);
-    inst(G3.box, M3.plank, L.planks, { cast: true });
+    inst(G3.box, REAL ? M3.wood : M3.plank, L.planks, { cast: true });
     inst(G3.box, M3.brail, L.brails, { cast: true });
-    inst(G3.trunk, M3.white, L.trunks, { cast: true });
+    inst(G3.trunk, REAL ? M3.bark : M3.white, L.trunks, { cast: true });
     inst(G3.foliage, M3.leaf, L.trees, { cast: true });
-    inst(G3.foliage, M3.leaf, L.blossoms, { cast: true });
-    inst(G3.cone, M3.leaf, L.pines, { cast: true });
-    inst(G3.bush, M3.white, L.bushes, { cast: true });
-    inst(G3.rock, M3.leaf, L.rocks, { cast: true });
+    inst(G3.foliage, REAL ? M3.blossom : M3.leaf, L.blossoms, { cast: true });
+    inst(G3.cone, REAL ? M3.pine : M3.leaf, L.pines, { cast: true });
+    inst(REAL ? G3.foliage : G3.bush, REAL ? M3.leaf : M3.white, L.bushes, { cast: true });
+    inst(G3.rock, REAL ? M3.rock : M3.leaf, L.rocks, { cast: true });
     inst(G3.stem, M3.stem, L.stems);
     inst(G3.flower, M3.white, L.flowers);
-    inst(G3.post, M3.white, L.posts, { cast: true });
-    inst(G3.rail, M3.white, L.rails, { cast: true });
+    inst(G3.post, REAL ? M3.wood : M3.white, L.posts, { cast: true });
+    inst(G3.rail, REAL ? M3.wood : M3.white, L.rails, { cast: true });
     inst(G3.lamp, M3.lamp, L.lamps, { cast: true });
     inst(G3.bulb, bulbMat, L.bulbs);
     const pm = inst(G3.pool, poolMat, L.pools, { receive: false });
@@ -467,14 +579,25 @@
   function buildBuildings() {
     const BIG = new Set(['service', 'shop', 'library', 'factory', 'hotel', 'airport', 'mall', 'hvac']);
     const AWN = new Set(['cafe', 'koi', 'phela', 'farmshop', 'petshop', 'shop', 'mall']);
-    const doorMat = toon('#b9785a'), frameMat = toon('#ffffff'), acMat = toon('#f4f6fb'), fanMat = toon('#8f9bb5'), baseMat = toon('#ecdcd2');
+    const doorMat = REAL ? surf('wood') : toon('#b9785a'), frameMat = toon('#ffffff'), acMat = toon('#f4f6fb', REAL ? { roughness: 0.35, metalness: 0.4 } : {}), fanMat = toon('#8f9bb5'), baseMat = REAL ? surf('concrete') : toon('#ecdcd2');
+    const BRICK = new Set(['shop', 'factory', 'library', 'station', 'cafe', 'ranch']);
+    const wallsC = {}, roofsC = {};
     const winGeo = new THREE.BoxGeometry(0.4, 0.36, 0.05), wfGeo = new THREE.BoxGeometry(0.5, 0.46, 0.04);
     W.buildings.forEach((b) => {
       const bt = BUILDING_TYPES[b.t] || BUILDING_TYPES.house;
       const g = new THREE.Group();
       const cx = b.x + b.w / 2, cz = b.y + b.h / 2;
       g.position.set(cx, 0, cz);
-      const wallMat = tm(bt.wall), roofMat = tm(bt.roof);
+      let wallMat = tm(bt.wall), roofMat = tm(bt.roof);
+      if (REAL) {
+        const wk = (BRICK.has(b.t) ? 'brick' : 'plaster') + bt.wall;
+        wallMat = wallsC[wk] || (wallsC[wk] = BRICK.has(b.t) ? surf('brick', { m: { color: '#ffffff' } }) : surf('plaster', { m: { color: bt.wall } }));
+        const big = BIG.has(b.t) || b.w >= 7;
+        const rk = big ? 'flat' : bt.roof;
+        // mái nhà thật: ngói đỏ đất nung (pha chút màu riêng của từng loại nhà); nhà lớn mái bằng bê tông
+        roofMat = roofsC[rk] || (roofsC[rk] = big ? surf('concrete', { m: { color: '#9a958e' } })
+          : surf('rooftile', { rep: 1, m: { color: new THREE.Color('#a4503a').lerp(realRoof(bt.roof), 0.25), roughness: 0.75 } }));
+      }
       let signY = 2.3, front = b.h / 2;
       if (b.t === 'station') {
         const roof = new THREE.Mesh(new THREE.BoxGeometry(b.w - 0.2, 0.12, b.h - 0.3), roofMat); roof.position.y = 1.3; roof.castShadow = true; g.add(roof);
@@ -541,7 +664,7 @@
 
   function buildFarm() {
     const list = W.farmTiles.map((f) => ({ x: f.x + 0.5, y: 0.03, z: f.y + 0.5, sx: 0.92, sy: 0.06, sz: 0.92, c: '#b98262' }));
-    soilMesh = inst(R3.geo.box, lam('#ffffff'), list);
+    soilMesh = inst(R3.geo.box, REAL ? surf('soil', { m: { roughness: 1 } }) : lam('#ffffff'), list);
     W.farmTiles.forEach((f, i) => {
       farmIdx.set(f.x + ',' + f.y, i);
       const sp = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthWrite: true, alphaTest: 0.3 }));
@@ -595,8 +718,11 @@
     } catch (e) { return false; }
     const over = document.getElementById('game');
     over.parentNode.insertBefore(renderer.domElement, over);
+    try { const sv = G.store && G.store.load(); REAL = /[?&]style=real/.test(location.search) || !!(sv && sv.settings && sv.settings.style3 === 'real'); } catch (e) { REAL = false; }
+    R3.real = REAL;
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.shadowMap.type = REAL ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+    if (REAL) { renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0; }
     renderer.shadowMap.autoUpdate = false;
     R3.quality = 2; // 2 đẹp, 1 vừa, 0 nhẹ — tự giảm khi máy chậm
 
@@ -607,7 +733,7 @@
     hemi = new THREE.HemisphereLight('#ffffff', '#c8e6a8', 1.15); scene.add(hemi);
     sun = new THREE.DirectionalLight('#fff3df', 1.7);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.mapSize.set(REAL ? 2048 : 1024, REAL ? 2048 : 1024);
     Object.assign(sun.shadow.camera, { left: -20, right: 20, top: 20, bottom: -20, near: 1, far: 50 });
     sun.shadow.bias = -0.001; sun.shadow.normalBias = 0.03;
     scene.add(sun, sun.target);
@@ -628,21 +754,56 @@
       balloon: new THREE.SphereGeometry(0.15, 10, 8), string: new THREE.CylinderGeometry(0.006, 0.006, 0.9, 3), flag: new THREE.ConeGeometry(0.09, 0.18, 3),
       orb: new THREE.IcosahedronGeometry(0.22, 2), ring: new THREE.TorusGeometry(0.3, 0.025, 5, 22), guide: new THREE.RingGeometry(0.42, 0.56, 28),
     };
+    if (REAL) {
+      R3.geo.foliage = clumpGeo(14, 0.62, 5);
+      R3.geo.cone = new THREE.ConeGeometry(0.5, 0.85, 10, 3);
+      R3.geo.trunk = new THREE.CylinderGeometry(0.07, 0.12, 0.62, 8);
+      R3.geo.rock = new THREE.DodecahedronGeometry(0.5, 1);
+      R3.geo.tuft = tuftGeo();
+      R3.gmat = {};
+      ['grass', 'sand', 'paving', 'concrete', 'dirt', 'asphalt', 'soil'].forEach((k) => { R3.gmat[k] = surf(k, { m: { vertexColors: true, roughness: k === 'asphalt' ? 0.85 : 0.95 } }); });
+      const noFlip = (m) => { m.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>', THREE.ShaderChunk.normal_fragment_begin.replace('normal *= faceDirection;', '')); }; m.customProgramCacheKey = () => 'noflip'; return m; };
+      R3.noFlip = noFlip;
+      const leafM = (img) => noFlip(pbr('#ffffff', { map: tex(img, 1, true), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.75 }));
+      R3.realMat = { leaf: leafM('leaves.png'), blossom: leafM('blossom.png') };
+    }
     R3.mat = {
       white: toon('#ffffff'), leaf: toon('#ffffff', { flatShading: true }), line: lam('#fff4b0'), zebra: lam('#ffffff'), curb: lam('#f4f2fa'),
       plank: toon('#ffffff'), brail: toon('#bd6c4a'), stem: lam('#5fae5a'), lamp: toon('#ffb3d1'),
     };
+    if (REAL) Object.assign(R3.mat, {
+      leaf: R3.realMat.leaf, blossom: R3.realMat.blossom, pine: surf('bark', { m: { map: tex('pineleaf.png', 2, true), normalMap: null, color: '#ffffff', roughness: 0.85 } }),
+      bark: surf('bark'), wood: surf('wood'), rock: surf('concrete', { m: { color: '#b8b4ae' } }), curb: surf('concrete'),
+      line: pbr('#f2e7a0', { roughness: 0.6 }), zebra: pbr('#f4f4f4', { roughness: 0.6 }), brail: surf('wood'),
+      lamp: pbr('#4a4f57', { roughness: 0.35, metalness: 0.8 }), stem: pbr('#3f6b2a'),
+      tuft: R3.noFlip(pbr('#e6f0d0', { map: tex('grasstuft.png', 1, true), alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.9 })),
+    });
 
     // nước + đáy
     const big = 140;
-    waterMat = new THREE.MeshLambertMaterial({ color: '#7ccfee', transparent: true, opacity: 0.86 });
+    waterMat = REAL
+      ? new THREE.MeshStandardMaterial({ color: '#1f5d72', roughness: 0.06, metalness: 0.15, transparent: true, opacity: 0.88, normalMap: tex('water_n.jpg', 24), normalScale: new THREE.Vector2(0.6, 0.6) })
+      : new THREE.MeshLambertMaterial({ color: '#7ccfee', transparent: true, opacity: 0.86 });
     const water = new THREE.Mesh(new THREE.PlaneGeometry(W.w + big, W.h + big), waterMat);
     water.rotation.x = -Math.PI / 2; water.position.set(W.w / 2, -0.14, W.h / 2); water.receiveShadow = true;
     scene.add(water);
-    const bed = new THREE.Mesh(new THREE.PlaneGeometry(W.w + big, W.h + big), lam('#6fb3d6'));
+    const bed = new THREE.Mesh(new THREE.PlaneGeometry(W.w + big, W.h + big), REAL ? surf('sand', { rep: 60, m: { color: '#6d8c86' } }) : lam('#6fb3d6'));
     bed.rotation.x = -Math.PI / 2; bed.position.set(W.w / 2, -0.55, W.h / 2);
     scene.add(bed);
 
+    if (REAL) {
+      winMat = new THREE.MeshStandardMaterial({ color: '#5d7f99', roughness: 0.05, metalness: 0.9, emissive: '#ffd77a', emissiveIntensity: 0 });
+      R3.pmrem = new THREE.PMREMGenerator(renderer);
+      R3.skyScene = new THREE.Scene();
+      R3.skyMat = new THREE.ShaderMaterial({
+        side: THREE.BackSide, depthWrite: false,
+        uniforms: { top: { value: new THREE.Color('#5d9be0') }, hor: { value: new THREE.Color('#dce9f2') }, gnd: { value: new THREE.Color('#6d7a5c') }, sunDir: { value: new THREE.Vector3(-0.4, 0.8, 0.35).normalize() }, sunCol: { value: new THREE.Color('#fff2d6') } },
+        vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+        fragmentShader: 'uniform vec3 top; uniform vec3 hor; uniform vec3 gnd; uniform vec3 sunDir; uniform vec3 sunCol; varying vec3 vD; void main(){ float y = vD.y; vec3 c = y > 0.0 ? mix(hor, top, pow(y, 0.6)) : mix(hor, gnd, pow(-y, 0.4)); float s = max(dot(normalize(vD), sunDir), 0.0); c += sunCol * (pow(s, 600.0) * 8.0 + pow(s, 12.0) * 0.35); gl_FragColor = vec4(c, 1.0); }',
+      });
+      R3.skyScene.add(new THREE.Mesh(new THREE.SphereGeometry(10, 32, 16), R3.skyMat));
+      R3.envKey = '';
+    }
     const BASE = BASE_OF();
     W.regions.forEach((r) => { buildGround(r, BASE); buildRegionProps(r); });
     buildBuildings();
@@ -909,6 +1070,27 @@
     winMat.emissiveIntensity = Math.max(0, n * 1.1 - 0.1) + eve * 0.2;
     bulbMat.emissiveIntensity = 0.15 + n * 1.5;
     poolMat.opacity = n * 0.45;
+    if (REAL) {
+      hemi.intensity = (0.55 - n * 0.4) * (1 - wet * 0.3);
+      sun.intensity = (3.2 - wet * 1.6) * (1 - n * 0.9);
+      renderer.toneMappingExposure = 1.0 - n * 0.25;
+      waterMat.color.setHSL(0.53, 0.55, 0.26 - n * 0.14);
+      if (waterMat.normalMap) { waterMat.normalMap.offset.x = game.t * 0.006; waterMat.normalMap.offset.y = game.t * 0.004; }
+      // bản đồ ánh sáng môi trường (bầu trời) — tạo lại khi trời đổi màu rõ
+      const key = [Math.round(n * 10), Math.round(eve * 10), Math.round(wet * 4)].join(',');
+      if (key !== R3.envKey && (!R3.envAt || game.t - R3.envAt > 1.5)) {
+        R3.envKey = key; R3.envAt = game.t;
+        const u = R3.skyMat.uniforms;
+        u.top.value.set('#4f8fd8').lerp(new THREE.Color('#e08a6a'), eve * 0.5).lerp(new THREE.Color('#8a96a8'), wet * 0.7).lerp(new THREE.Color('#0d1330'), n);
+        u.hor.value.set('#dfeaf2').lerp(new THREE.Color('#ffb07a'), eve).lerp(new THREE.Color('#b8c0c8'), wet * 0.7).lerp(new THREE.Color('#29305a'), n);
+        u.gnd.value.set('#66745a').lerp(new THREE.Color('#1a1d24'), n);
+        u.sunCol.value.set('#fff2d6').lerp(new THREE.Color('#ff9a5a'), eve).multiplyScalar(1 - n * 0.95 - wet * 0.6);
+        const old = scene.environment;
+        scene.environment = R3.pmrem.fromScene(R3.skyScene, 0.02).texture;
+        if (old) old.dispose();
+      }
+      return;
+    }
     waterMat.color.setHSL(0.54, 0.7, 0.7 - n * 0.28 + Math.sin(game.t * 1.2) * 0.012);
   }
 
@@ -1019,7 +1201,7 @@
     });
     ctx.globalAlpha = 1;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    if (game.weather === 'rain') game.drawRain(ctx, cv); else game.drawPetals(ctx, cv);
+    if (game.weather === 'rain') game.drawRain(ctx, cv); else if (!REAL) game.drawPetals(ctx, cv);
     if (R3.gt) guideArrow(game, ctx, R3.gt);
   }
 

@@ -1122,7 +1122,9 @@ G.ui = {
       <div class="set">Kiểu ca <button class="tchip ${G.work.flex() ? 'on' : ''}" data-wm="flex">🕒 Linh hoạt</button><button class="tchip ${G.work.flex() ? '' : 'on'}" data-wm="fixed">📌 Cố định</button></div>
       <label class="set ${G.work.flex() ? 'hide' : ''}">Giờ vào ca <select id="s-start">${[6, 7, 8, 9, 10, 11, 12, 13, 14].map((h) => `<option value="${h}" ${G.work.cfg().start === h ? 'selected' : ''}>${G.work.hhmm(h)}</option>`).join('')}</select></label>
       <p class="hint" id="s-sched">${G.esc(G.work.scheduleText())}. Ngày không đi làm là ngày nghỉ. Ngoài giờ làm, Trung Tâm Bảo Hành đóng cửa và khách có thể gọi bắt bạn đến.</p>
-      ${G.r3d && G.r3d.ok ? `<div class="set">🔭 Góc nhìn 3D ${['Gần', 'Vừa', 'Xa'].map((t, k) => `<button class="tchip ${(s.z3 ?? 1) === k ? 'on' : ''}" data-z3="${k}">${t}</button>`).join('')}</div>
+      ${G.r3d && G.r3d.ok ? `<div class="set">🎨 Phong cách 3D <button class="tchip ${s.style3 !== 'real' ? 'on' : ''}" data-st3="cute">🌸 Hoạt hình</button><button class="tchip ${s.style3 === 'real' ? 'on' : ''}" data-st3="real">📷 Như thật (thử nghiệm)</button></div>
+      <p class="hint">“Như thật” dùng chất liệu thật (cỏ, đường nhựa, gạch, ngói, gỗ), ánh sáng bầu trời và mặt nước phản chiếu — đẹp hơn nhưng nặng hơn. Đổi xong game tự tải lại.</p>
+      <div class="set">🔭 Góc nhìn 3D ${['Gần', 'Vừa', 'Xa'].map((t, k) => `<button class="tchip ${(s.z3 ?? 1) === k ? 'on' : ''}" data-z3="${k}">${t}</button>`).join('')}</div>
       <div class="set">⚡ Chất lượng ${[['auto', 'Tự động'], [2, 'Đẹp'], [1, 'Vừa'], [0, 'Mượt nhất']].map(([v, t]) => `<button class="tchip ${(s.q3 === undefined ? 'auto' : s.q3) === v ? 'on' : ''}" data-q3="${v}">${t}</button>`).join('')}</div>
       <p class="hint">Máy bị giật hoặc nóng: chọn “Mượt nhất” (tắt bóng đổ, giảm độ nét).</p>` : `<p class="hint">Máy này chưa hỗ trợ 3D (WebGL) nên đang chơi bản 2D.</p>`}
       <button class="btn ghost" id="s-char">🧑‍🔧 Đổi tên / nhân vật / thú cưng 🐾</button>
@@ -1140,6 +1142,7 @@ G.ui = {
     p.querySelector('#s-vi').addEventListener('change', (e) => { s.vi = e.target.checked; });
     p.querySelector('#s-calls').addEventListener('change', (e) => { s.calls = e.target.checked; });
     p.querySelector('#s-rate').addEventListener('input', (e) => { s.rate = +e.target.value; this.el('s-rv').textContent = s.rate; });
+    p.querySelectorAll('[data-st3]').forEach((b) => b.addEventListener('click', () => { const v = b.dataset.st3 === 'real' ? 'real' : 'cute'; if ((s.style3 || 'cute') === v) return; s.style3 = v; G.game.save(); G.ui.toast('Đang đổi phong cách đồ hoạ…'); setTimeout(() => location.reload(), 400); }));
     p.querySelectorAll('[data-z3]').forEach((b) => b.addEventListener('click', () => { s.z3 = +b.dataset.z3; G.audio.sfx('click'); this.settings(); }));
     p.querySelectorAll('[data-q3]').forEach((b) => b.addEventListener('click', () => { const v = b.dataset.q3; if (v === 'auto') delete s.q3; else { s.q3 = +v; G.r3d.setQuality(s.q3); } G.audio.sfx('click'); this.settings(); }));
     p.querySelectorAll('[data-vp]').forEach((b) => b.addEventListener('click', () => { s.vpref = b.dataset.vp; s.voice = ''; G.tts.choose(); G.tts.speak('Hello! This is my new voice.'); this.settings(); }));
