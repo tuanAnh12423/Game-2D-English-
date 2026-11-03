@@ -167,5 +167,5 @@ Logic game (nhiệm vụ, từ vựng, trại, sự kiện…) giữ nguyên, ch
 ## 📷 Phong cách “Như thật” (thử nghiệm)
 ⚙️ Cài đặt → 🎨 Phong cách 3D → **📷 Như thật** (hoặc thêm `?style=real` vào link). Dùng vật liệu vật lý (PBR), tone mapping ACES,
 ánh sáng môi trường từ bầu trời (đổi theo giờ/thời tiết), bóng đổ mềm, mặt nước gợn sóng phản chiếu, tán lá nhiều lớp và búi cỏ.
-Ảnh chất liệu ở `assets/real/` hiện được **tạo bằng code** (`*_c.jpg` màu, `*_n.jpg` pháp tuyến). Có thể thay bằng ảnh chụp thật
-(ví dụ Poly Haven, CC0) cùng tên file mà không phải sửa code. Chế độ này nặng hơn “Hoạt hình” khoảng 2–3 lần.
+Ảnh chất liệu ở `assets/real/` (`*_c.jpg` màu, `*_n.jpg` pháp tuyến, `*_r.jpg` độ nhám): đường nhựa, sỏi, cát, gạch lát, bê tông, đất ruộng,
+vữa, gạch, ngói, gỗ, vỏ cây là **ảnh chụp thật từ Poly Haven (CC0)**, thu nhỏ 512px; cỏ, lá, mặt nước tạo bằng code. Danh sách nguồn: `assets/real/CREDITS.txt`. Chế độ này nặng hơn “Hoạt hình” khoảng 2–3 lần.

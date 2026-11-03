@@ -36,7 +36,14 @@
     texC[k] = t;
     return t;
   }
-  const surf = (name, o) => pbr('#ffffff', Object.assign({ map: tex(name + '_c.jpg', (o && o.rep) || 1, true), normalMap: tex(name + '_n.jpg', (o && o.rep) || 1), roughness: 0.9 }, o && o.m));
+  // ảnh chụp thật Poly Haven (CC0) có thêm bản đồ độ nhám *_r.jpg
+  const ROUGH = new Set(['dirt', 'sand', 'asphalt', 'paving', 'concrete', 'soil', 'plaster', 'brick', 'rooftile', 'wood', 'bark']);
+  const surf = (name, o) => {
+    const rep = (o && o.rep) || 1;
+    const m = pbr('#ffffff', Object.assign({ map: tex(name + '_c.jpg', rep, true), normalMap: tex(name + '_n.jpg', rep), roughness: 1 }, o && o.m));
+    if (ROUGH.has(name) && !(o && o.m && 'roughness' in o.m)) m.roughnessMap = tex(name + '_r.jpg', rep);
+    return m;
+  };
   const realRoof = (hex) => { const c = new THREE.Color(hex), h = {}; c.getHSL(h); return new THREE.Color().setHSL(h.h, h.s * 0.45, Math.min(0.42, h.l * 0.55)); };
   const basic = (c, o) => new THREE.MeshBasicMaterial(Object.assign({ color: c }, o || {}));
 
@@ -591,12 +598,12 @@
       let wallMat = tm(bt.wall), roofMat = tm(bt.roof);
       if (REAL) {
         const wk = (BRICK.has(b.t) ? 'brick' : 'plaster') + bt.wall;
-        wallMat = wallsC[wk] || (wallsC[wk] = BRICK.has(b.t) ? surf('brick', { m: { color: '#ffffff' } }) : surf('plaster', { m: { color: bt.wall } }));
+        wallMat = wallsC[wk] || (wallsC[wk] = BRICK.has(b.t) ? surf('brick', { m: { color: '#ffffff' } }) : surf('plaster', { m: { color: new THREE.Color(bt.wall).lerp(new THREE.Color('#ffffff'), 0.3) } }));
         const big = BIG.has(b.t) || b.w >= 7;
         const rk = big ? 'flat' : bt.roof;
         // mái nhà thật: ngói đỏ đất nung (pha chút màu riêng của từng loại nhà); nhà lớn mái bằng bê tông
         roofMat = roofsC[rk] || (roofsC[rk] = big ? surf('concrete', { m: { color: '#9a958e' } })
-          : surf('rooftile', { rep: 1, m: { color: new THREE.Color('#a4503a').lerp(realRoof(bt.roof), 0.25), roughness: 0.75 } }));
+          : surf('rooftile', { rep: 1, m: { color: new THREE.Color('#ffffff').lerp(realRoof(bt.roof), 0.12) } }));
       }
       let signY = 2.3, front = b.h / 2;
       if (b.t === 'station') {
@@ -761,7 +768,7 @@
       R3.geo.rock = new THREE.DodecahedronGeometry(0.5, 1);
       R3.geo.tuft = tuftGeo();
       R3.gmat = {};
-      ['grass', 'sand', 'paving', 'concrete', 'dirt', 'asphalt', 'soil'].forEach((k) => { R3.gmat[k] = surf(k, { m: { vertexColors: true, roughness: k === 'asphalt' ? 0.85 : 0.95 } }); });
+      ['grass', 'sand', 'paving', 'concrete', 'dirt', 'asphalt', 'soil'].forEach((k) => { R3.gmat[k] = surf(k, { m: { vertexColors: true } }); });
       const noFlip = (m) => { m.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>', THREE.ShaderChunk.normal_fragment_begin.replace('normal *= faceDirection;', '')); }; m.customProgramCacheKey = () => 'noflip'; return m; };
       R3.noFlip = noFlip;
       const leafM = (img) => noFlip(pbr('#ffffff', { map: tex(img, 1, true), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.75 }));
